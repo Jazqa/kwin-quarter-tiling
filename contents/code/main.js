@@ -1,3 +1,5 @@
+var panel = null;
+
 var ignoredClients = [
 	"spotify",
 	"kate",
@@ -21,18 +23,55 @@ var ignoredCaptions = [
 	"Move to Trash",
 ];
 
-var activeClients = [];
-
 var gap = 10;
 
 var screen = {
-	x: 0 + gap,
-	y: 26 + gap,
-	width: workspace.displayWidth - gap * 2,
-	height: workspace.displayHeight - 26 - gap * 2,
+	x: 0,
+	y: 0,
+	width: workspace.displayWidth,
+	height: workspace.displayHeight,
 };
 
+var currentDesktop = workspace.currentDesktop;
+
+var activeClients = {};
+
+activeClients[currentDesktop] = [];
+
+// Adds all the clients that existed before the script was ran
+function addClients() {
+	var clients = workspace.clientList();
+	for (var i = 0; i < clients.length; i++) {
+		addClient(clients[i]);
+	}
+}
+
+// Runs an ignore-check and if it passes, adds a client to activeClients[]
 function addClient(client) {
+	// Find the panel and calculates the available screen space
+	if(panel == null) {
+		var plasmaClass = "plasmashell";
+		var plasmaCaption = "Plasma";
+		if (plasmaClass.indexOf(client.resourceClass.toString()) > -1 &&
+			plasmaCaption.indexOf(client.caption.toString()) > -1 ) {
+			panel = client;
+			if (panel.geometry.y < workspace.displayHeight / 2) {
+				screen = {
+					x: gap,
+					y: panel.geometry.height + gap,
+					width: workspace.displayWidth - gap * 2,
+					height: workspace.displayHeight - panel.geometry.height - gap * 2,
+				};
+			} else {
+					screen = {
+					x: gap,
+					y: gap,
+					width: workspace.displayWidth - gap * 2,
+					height: workspace.displayHeight - panel.geometry.height - gap * 2,
+				};
+			}
+		}
+	} 
 	// Ignore-check for client types and resourceClasses
 	if (client.comboBox == true ||
 		client.desktopWindow == true ||
@@ -52,98 +91,110 @@ function addClient(client) {
 		ignoredCaptions.indexOf(client.caption.toString()) > -1) {
 		return;
 	}
-	activeClients.push(client);
-	tileClients(client);
+	client.clientStartUserMovedResized.connect(saveOldPos);
+	client.clientFinishUserMovedResized.connect(moveClient);
+	activeClients[currentDesktop].push(client);
+	tileClients();
 }
 
+// Removes the closed client from activeClients[]
 function removeClient(client) {
-	for (var i = 0; i < activeClients.length; i++) {
-		if (activeClients[i] == client) {
-			activeClients.splice(i, 1);
-			splitClients();
+	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
+		if (activeClients[currentDesktop][i] == client) {
+			activeClients[currentDesktop].splice(i, 1);
+			tileClients();
 		}
 	}
 }
 
-function tileClients(client) {
-	var rect = client.geometry;
-	rect.x = screen.x;
-	rect.y = screen.y;
-	rect.width = screen.width;
-	rect.height = screen.height;
-	client.geometry = rect;
-	splitClients();
-}
-
-function splitClients() {
+// Calculates the geometries to maintain the layout
+function tileClients() {
 	var rect = [];
-	for (var i = 0; i < activeClients.length; i++) {
-		rect[i] = activeClients[i].geometry;
+	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
+		rect[i] = {}; // Need to clone the properties, can't just rect = screen!
 		rect[i].x = screen.x;
 		rect[i].y = screen.y;
 		rect[i].width = screen.width;
 		rect[i].height = screen.height;
 		if (i == 1) {
-			rect[0].width = rect[0].width / 2 - gap / 2;
-			rect[1].width = rect[0].width;
-			rect[1].x = rect[1].x + rect[1].width + gap;
+			rect[0].width = rect[0].width * 0.5 - gap * 0.5;
+			rect[i].width = rect[0].width;
+			rect[i].x = rect[i].x + rect[i].width + gap;
 		}
 		if (i == 2) {
-			rect[1].height = rect[1].height / 2 - gap / 2;
-			rect[2].height = rect[1].height;
-			rect[2].width = rect[2].width / 2;
-			rect[2].y = rect[2].y + rect[2].height + gap;
-			rect[2].x = rect[2].x + rect[2].width + gap;
+			rect[1].height = rect[1].height * 0.5 - gap * 0.5;
+			rect[i].height = rect[1].height;
+			rect[i].y = rect[i].y + rect[i].height + gap;
+			rect[i].width = rect[i].width * 0.5 - gap * 0.5;
+			rect[i].x = rect[i].x + rect[i].width + gap;
 		}
 		if (i == 3) {
-			rect[0].height = rect[0].height / 2 - gap / 2;
-			rect[3].height = rect[0].height;
-			rect[3].width = rect[3].width / 2 - gap / 2;
-			rect[3].y = rect[3].y + rect[3].height + gap;
+			rect[0].height = rect[0].height * 0.5 - gap *0.5;
+			rect[i].height = rect[0].height;
+			rect[i].width = rect[i].width * 0.5 - gap * 0.5;
+			rect[i].y = rect[i].y + rect[i].height + gap;
 		}
 	}
 
-	for (i = 0; i < activeClients.length; i++) {
-		activeClients[i].geometry = rect[i];
+	for (i = 0; i < activeClients[currentDesktop].length; i++) {
+		activeClients[currentDesktop][i].geometry = rect[i];
 	}
 }
 
-// Cloning function by A. Levy (https://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-object)
-function clone(obj) {
-	var copy;
-
-	// Handle the 3 simple types, and null or undefined
-	if (null == obj || "object" != typeof obj) return obj;
-
-	// Handle Date
-	if (obj instanceof Date) {
-		copy = new Date();
-		copy.setTime(obj.getTime());
-		return copy;
-	}
-
-	// Handle Array
-	if (obj instanceof Array) {
-		copy = [];
-		for (var i = 0, len = obj.length; i < len; i++) {
-			copy[i] = clone(obj[i]);
-		}
-		return copy;
-	}
-
-	// Handle Object
-	if (obj instanceof Object) {
-		copy = {};
-		for (var attr in obj) {
-			if (obj.hasOwnProperty(attr)) copy[attr] = clone(obj[attr]);
-		}
-		return copy;
-	}
-
-	throw new Error("Unable to copy obj! Its type isn't supported.");
+var oldPos; // The pre-movement position for the latest client.StartUserMovedResized
+// This function gets called every time a resize or move event starts
+function saveOldPos(client) {
+	oldPos = client.geometry;
 }
 
+// Moves clients and adjusts the layout
+function moveClient(client) {
+	// If the size equals the pre-movement size, user is trying to move the client, not resize it
+	if (client.geometry.width == oldPos.width && client.geometry.height == oldPos.height) {
+		var centerX = client.geometry.x + client.width / 2;
+		var centerY = client.geometry.y + client.height / 2;
+		var geometries = [];
+		geometries.push(oldPos);
+		// Adds all the existing clients to the geometries[]...
+		for (var i = 0; i < activeClients[currentDesktop].length; i++) {
+			// ...except for the client being moved
+			// (it's of the grid and needs to be snapped back to the oldPos variable)
+			if (activeClients[currentDesktop][i] != client) {
+				geometries.push(activeClients[currentDesktop][i].geometry);
+			}
+		}
+		// Sorts the geometries[] and finds the geometry closest to the moved client
+		geometries.sort(function(a, b) {
+			return Math.sqrt(Math.pow((centerX - (a.x + a.width / 2)), 2) + Math.pow((centerY - (a.y + a.height / 2)), 2)) - Math.sqrt(Math.pow((centerX - (b.x + b.width / 2)), 2) + Math.pow((centerY - (b.y + b.height / 2)), 2));
+		});
+		// If the closest geometry is not the client's old position...
+		if (geometries[0] != oldPos) {
+			// ...switches the geometries...
+			var index;
+			for (i = 0; i < activeClients[currentDesktop].length; i++) {
+				if (activeClients[currentDesktop][i] == client) {
+					index = i;
+				}
+			}
+			// ...and activeClients indexes
+			for (i = 0; i < activeClients[currentDesktop].length; i++) {
+				if (activeClients[currentDesktop][i] != client) {
+					if (activeClients[currentDesktop][i].geometry.x == geometries[0].x && activeClients[currentDesktop][i].geometry.y == geometries[0].y) {
+						client.geometry = activeClients[currentDesktop][i].geometry;
+						activeClients[currentDesktop][i].geometry = oldPos;
+						var temp = activeClients[currentDesktop][index];
+						activeClients[currentDesktop][index]  = activeClients[currentDesktop][i];
+						activeClients[currentDesktop][i] = temp;
+					}
+				}
+			}
+			tileClients();
+		} else {
+			client.geometry = oldPos;
+		}
+	} else client.geometry = oldPos;
+}
 
-
+addClients();
 workspace.clientAdded.connect(addClient);
 workspace.clientRemoved.connect(removeClient);
