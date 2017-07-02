@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Quartertile
+Comment=Automatically rescales windows to use the screen space as efficiently as possible and maintains the layout as the user opens & closes new windows
+
+X-Plasma-API=javascript
+X-Plasma-MainScript=code/main.js
+
+X-KDE-PluginInfo-Author=Jasu Koponen
+X-KDE-PluginInfo-Email=jasu.koponen@hotmail.com
+X-KDE-PluginInfo-Name=quartertile
+X-KDE-PluginInfo-Version=0.01
+
+X-KDE-PluginInfo-License=GPL
+X-KDE-ServiceTypes=KWin/Script
+Type=Service
