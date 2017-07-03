@@ -3,7 +3,7 @@ var panel = null;
 var ignoredClients = [
 	"spotify",
 	"kate",
-	"kazam", 
+	"kazam",
 	"krunner",
 	"ksmserver",
 	"lattedock",
@@ -48,11 +48,11 @@ function addClients() {
 // Runs an ignore-check and if it passes, adds a client to activeClients[]
 function addClient(client) {
 	// Find the panel and calculates the available screen space
-	if(panel == null) {
+	if (panel == null) {
 		var plasmaClass = "plasmashell";
 		var plasmaCaption = "Plasma";
 		if (plasmaClass.indexOf(client.resourceClass.toString()) > -1 &&
-			plasmaCaption.indexOf(client.caption.toString()) > -1 ) {
+			plasmaCaption.indexOf(client.caption.toString()) > -1) {
 			panel = client;
 			if (panel.geometry.y < workspace.displayHeight / 2) {
 				screen = {
@@ -62,7 +62,7 @@ function addClient(client) {
 					height: workspace.displayHeight - panel.geometry.height - gap * 2,
 				};
 			} else {
-					screen = {
+				screen = {
 					x: gap,
 					y: gap,
 					width: workspace.displayWidth - gap * 2,
@@ -70,7 +70,7 @@ function addClient(client) {
 				};
 			}
 		}
-	} 
+	}
 	// Ignore-check for client types and resourceClasses
 	if (client.comboBox == true ||
 		client.desktopWindow == true ||
@@ -95,7 +95,9 @@ function addClient(client) {
 	if (activeClients[currentDesktop].length == 4) {
 		workspace.desktops += 1;
 		workspace.currentDesktop = workspace.desktops;
-		if (typeof activeClients[currentDesktop] == "undefined") { activeClients[currentDesktop] = []; }
+		if (typeof activeClients[currentDesktop] == "undefined") {
+			activeClients[currentDesktop] = [];
+		}
 		client.desktop = currentDesktop;
 		activeClients[currentDesktop].push(client);
 		tileClients(currentDesktop);
@@ -108,9 +110,11 @@ function addClient(client) {
 
 // Removes the closed client from activeClients[]
 function removeClient(client) {
+	// First for- and if-loops find the closed client 
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
 		if (activeClients[currentDesktop][i] == client) {
 			activeClients[currentDesktop].splice(i, 1);
+			// If there are still tiles after the removal, calculates the geometries
 			if (activeClients[currentDesktop].length > 0) {
 				tileClients(currentDesktop);
 			}
@@ -118,15 +122,20 @@ function removeClient(client) {
 	}
 }
 
-function removeDesktop(desktop) {
+function adjustDesktops(desktop) {
+	// Checks if a workspace is removed
 	if (workspace.desktops < desktop) {
-		if (activeClients[desktop].length > 0) {
+		if (typeof activeClients[desktop] != "undefined" && activeClients[desktop].length > 0) {
 			for (i = 0; i < activeClients[desktop].length; i++) {
 				activeClients[desktop][i].closeWindow();
 			}
 			activeClients[desktop] = [];
+			tileClients(currentDesktop);
 		}
-		tileClients(workspace.desktops);
+	}
+	// Checks if a workspace is added 
+	else if (workspace.desktops > desktop) {
+		tileClients(currentDesktop);
 	}
 }
 
@@ -152,7 +161,7 @@ function tileClients(desktop) {
 			rect[i].x = rect[i].x + rect[i].width + gap;
 		}
 		if (i == 3) {
-			rect[0].height = rect[0].height * 0.5 - gap *0.5;
+			rect[0].height = rect[0].height * 0.5 - gap * 0.5;
 			rect[i].height = rect[0].height;
 			rect[i].width = rect[i].width * 0.5 - gap * 0.5;
 			rect[i].y = rect[i].y + rect[i].height + gap;
@@ -214,7 +223,7 @@ function moveClient(client) {
 						client.geometry = activeClients[currentDesktop][i].geometry;
 						activeClients[currentDesktop][i].geometry = oldPos;
 						var temp = activeClients[currentDesktop][index];
-						activeClients[currentDesktop][index]  = activeClients[currentDesktop][i];
+						activeClients[currentDesktop][index] = activeClients[currentDesktop][i];
 						activeClients[currentDesktop][i] = temp;
 					}
 				}
@@ -231,8 +240,8 @@ workspace.clientAdded.connect(addClient);
 workspace.clientRemoved.connect(removeClient);
 workspace.currentDesktopChanged.connect(function() {
 	currentDesktop = workspace.currentDesktop;
-	if (typeof activeClients[currentDesktop] == "object") {
+	if (typeof activeClients[currentDesktop] != "undefined") {
 		tileClients(currentDesktop);
 	}
 });
-workspace.numberDesktopsChanged.connect(removeDesktop);
+workspace.numberDesktopsChanged.connect(adjustDesktops);
