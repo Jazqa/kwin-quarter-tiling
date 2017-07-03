@@ -95,6 +95,7 @@ function addClient(client) {
 	if (activeClients[currentDesktop].length == 4) {
 		workspace.desktops += 1;
 		workspace.currentDesktop = workspace.desktops;
+		if (typeof activeClients[currentDesktop] == "undefined") { activeClients[currentDesktop] = []; }
 		client.desktop = currentDesktop;
 		activeClients[currentDesktop].push(client);
 		tileClients(currentDesktop);
@@ -112,11 +113,20 @@ function removeClient(client) {
 			activeClients[currentDesktop].splice(i, 1);
 			if (activeClients[currentDesktop].length > 0) {
 				tileClients(currentDesktop);
-			} else if (currentDesktop > 1) {
-				workspace.currentDesktop -= 1;
-				workspace.desktops -= 1;
 			}
 		}
+	}
+}
+
+function removeDesktop(desktop) {
+	if (workspace.desktops < desktop) {
+		if (activeClients[desktop].length > 0) {
+			for (i = 0; i < activeClients[desktop].length; i++) {
+				activeClients[desktop][i].closeWindow();
+			}
+			activeClients[desktop] = [];
+		}
+		tileClients(workspace.desktops);
 	}
 }
 
@@ -221,8 +231,8 @@ workspace.clientAdded.connect(addClient);
 workspace.clientRemoved.connect(removeClient);
 workspace.currentDesktopChanged.connect(function() {
 	currentDesktop = workspace.currentDesktop;
-	if (typeof activeClients[currentDesktop] == "undefined") {
-		activeClients[currentDesktop] = [];
+	if (typeof activeClients[currentDesktop] == "object") {
+		tileClients(currentDesktop);
 	}
-	tileAll();
 });
+workspace.numberDesktopsChanged.connect(removeDesktop);
