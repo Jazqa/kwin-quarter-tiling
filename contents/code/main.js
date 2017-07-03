@@ -33,7 +33,6 @@ var screen = {
 };
 
 var currentDesktop = workspace.currentDesktop;
-
 var activeClients = {};
 
 activeClients[currentDesktop] = [];
@@ -93,8 +92,17 @@ function addClient(client) {
 	}
 	client.clientStartUserMovedResized.connect(saveOldPos);
 	client.clientFinishUserMovedResized.connect(moveClient);
-	activeClients[currentDesktop].push(client);
-	tileClients();
+	if (activeClients[currentDesktop].length == 4) {
+		workspace.desktops += 1;
+		workspace.currentDesktop = workspace.desktops;
+		client.desktop = currentDesktop;
+		activeClients[currentDesktop].push(client);
+		tileClients(currentDesktop);
+	} else {
+		client.desktop = currentDesktop;
+		activeClients[currentDesktop].push(client);
+		tileClients(currentDesktop);
+	}
 }
 
 // Removes the closed client from activeClients[]
@@ -102,15 +110,20 @@ function removeClient(client) {
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
 		if (activeClients[currentDesktop][i] == client) {
 			activeClients[currentDesktop].splice(i, 1);
-			tileClients();
+			if (activeClients[currentDesktop].length > 0) {
+				tileClients(currentDesktop);
+			} else if (currentDesktop > 1) {
+				workspace.currentDesktop -= 1;
+				workspace.desktops -= 1;
+			}
 		}
 	}
 }
 
 // Calculates the geometries to maintain the layout
-function tileClients() {
+function tileClients(desktop) {
 	var rect = [];
-	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
+	for (var i = 0; i < activeClients[desktop].length; i++) {
 		rect[i] = {}; // Need to clone the properties, can't just rect = screen!
 		rect[i].x = screen.x;
 		rect[i].y = screen.y;
@@ -136,8 +149,16 @@ function tileClients() {
 		}
 	}
 
-	for (i = 0; i < activeClients[currentDesktop].length; i++) {
-		activeClients[currentDesktop][i].geometry = rect[i];
+	for (i = 0; i < activeClients[desktop].length; i++) {
+		activeClients[desktop][i].geometry = rect[i];
+	}
+}
+
+function tileAll() {
+	for (i = activeClients.length; i > 0; i--) {
+		if (activeClients[i].length > 0) {
+			tileClients(i);
+		}
 	}
 }
 
@@ -188,7 +209,7 @@ function moveClient(client) {
 					}
 				}
 			}
-			tileClients();
+			tileClients(currentDesktop);
 		} else {
 			client.geometry = oldPos;
 		}
@@ -198,3 +219,10 @@ function moveClient(client) {
 addClients();
 workspace.clientAdded.connect(addClient);
 workspace.clientRemoved.connect(removeClient);
+workspace.currentDesktopChanged.connect(function() {
+	currentDesktop = workspace.currentDesktop;
+	if (typeof activeClients[currentDesktop] == "undefined") {
+		activeClients[currentDesktop] = [];
+	}
+	tileAll();
+});
