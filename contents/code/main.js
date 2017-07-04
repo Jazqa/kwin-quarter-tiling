@@ -7,9 +7,10 @@ Todo:
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
 */
+
 var plasma = false;
 
-var gap = 10;
+var gap = 16;
 
 var screen = {
 	x: 0,
@@ -22,13 +23,19 @@ var oldPos; // The pre-movement position for the latest client.StartUserMovedRes
 
 var currentDesktop = workspace.currentDesktop;
 var activeClients = {};
-
 function init() {
 	workspace.desktops = 1;
 	for (i = 1; i <= 20; i++) {
 		activeClients[i] = []; // Initializes 20 empty arrays for virtual desktops to avoid crashes caused by undefined objects
 		activeClients[i].max = 4;
 	}
+	registerShortcut(
+		"Float On/Off",
+		"Float On/Off",
+		"Meta+F",
+		function () {
+			removeClient(workspace.activeClient);
+	});
 	addClients();
 	workspace.clientAdded.connect(addClient);
 	workspace.clientRemoved.connect(removeClient);
@@ -70,6 +77,10 @@ function removeClient(client) {
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
 		if (activeClients[currentDesktop][i] == client) {
 			activeClients[currentDesktop].splice(i, 1);
+			client.clientStartUserMovedResized.disconnect(saveClientPos);
+			client.clientFinishUserMovedResized.disconnect(moveClient);
+			client.clientMinimized.disconnect(minimizeClient);
+			client.clientUnminimized.disconnect(unminimizeClient);
 			// If there are still tiles after the removal, calculates the geometries
 			if (activeClients[currentDesktop].length > 0) {
 				tileClients(currentDesktop);
@@ -84,10 +95,9 @@ function removeClient(client) {
 	}
 }
 
+// Ignore-check to see if the client is valid for the script
 function checkClient(client) {
 	var ignoredClients = [
-		"spotify",
-		"steam",
 		"kate",
 		"kazam",
 		"krunner",
@@ -99,6 +109,9 @@ function checkClient(client) {
 		"plasma-desktop",
 		"plasmashell",
 		"plugin-container",
+		"simplescreenrecorder",
+		"spotify",
+		"steam",
 		"wine",
 		"yakuake",
 	];
@@ -106,6 +119,10 @@ function checkClient(client) {
 		"Spotify",
 		"File Upload",
 		"Move to Trash",
+	];
+	var largeClients = [
+		"gimp",
+		"krita",
 	];
 	// Hack: Global variable to skip this step once plasma panel has been found
 	// If the plasma panel has not been found yet, it's most likely the first client with resourceClass: "plasmashell" and caption: "Plasma"
@@ -290,6 +307,7 @@ function adjustDesktops(desktop) {
 	}
 	// Checks if a workspace is added 
 	else if (workspace.desktops > desktop) {
+		activeClients[workspace.desktops].max = 4;
 		tileClients(currentDesktop);
 	}
 }
