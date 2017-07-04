@@ -1,27 +1,12 @@
-var panel = null;
-
-var ignoredClients = [
-	"spotify",
-	"kate",
-	"kazam",
-	"krunner",
-	"ksmserver",
-	"lattedock",
-	"pinentry",
-	"Plasma",
-	"plasma",
-	"plasma-desktop",
-	"plasmashell",
-	"plugin-container",
-	"wine",
-	"yakuake",
-];
-
-var ignoredCaptions = [
-	"Spotify",
-	"File Upload",
-	"Move to Trash",
-];
+/*
+Todo:
+	- Make clients floatable with a button
+	- Interactive virtual desktop removal
+	- Support for large programs (Gimp, Krita, Kate)
+		- Automatically occupies the largest tile
+		- Max clients (default: 4) -= 1 per large program
+*/
+var plasma = false;
 
 var gap = 10;
 
@@ -32,79 +17,47 @@ var screen = {
 	height: workspace.displayHeight,
 };
 
+var oldPos; // The pre-movement position for the latest client.StartUserMovedResized
+
 var currentDesktop = workspace.currentDesktop;
 var activeClients = {};
 
-activeClients[currentDesktop] = [];
+function init() {
+	activeClients[currentDesktop] = [];
+	addClients();
+	workspace.clientAdded.connect(addClient);
+	workspace.clientRemoved.connect(removeClient);
+	workspace.currentDesktopChanged.connect(changeDesktop);
+	workspace.numberDesktopsChanged.connect(adjustDesktops);
+}
+
+// Runs an ignore-check and if it passes, adds a client to activeClients[]
+function addClient(client) {
+	if (checkClient(client) == true) {
+		client.clientStartUserMovedResized.connect(saveClientPos);
+		client.clientFinishUserMovedResized.connect(moveClient);
+		if (activeClients[currentDesktop].length == 4) {
+			workspace.desktops += 1;
+			workspace.currentDesktop = workspace.desktops;
+			if (typeof activeClients[currentDesktop] == "undefined") {
+				activeClients[currentDesktop] = [];
+			}
+			client.desktop = currentDesktop;
+			activeClients[currentDesktop].push(client);
+			tileClients(currentDesktop);
+		} else {
+			client.desktop = currentDesktop;
+			activeClients[currentDesktop].push(client);
+			tileClients(currentDesktop);
+		}
+	}
+}
 
 // Adds all the clients that existed before the script was ran
 function addClients() {
 	var clients = workspace.clientList();
 	for (var i = 0; i < clients.length; i++) {
 		addClient(clients[i]);
-	}
-}
-
-// Runs an ignore-check and if it passes, adds a client to activeClients[]
-function addClient(client) {
-	// Find the panel and calculates the available screen space
-	if (panel == null) {
-		var plasmaClass = "plasmashell";
-		var plasmaCaption = "Plasma";
-		if (plasmaClass.indexOf(client.resourceClass.toString()) > -1 &&
-			plasmaCaption.indexOf(client.caption.toString()) > -1) {
-			panel = client;
-			if (panel.geometry.y < workspace.displayHeight / 2) {
-				screen = {
-					x: gap,
-					y: panel.geometry.height + gap,
-					width: workspace.displayWidth - gap * 2,
-					height: workspace.displayHeight - panel.geometry.height - gap * 2,
-				};
-			} else {
-				screen = {
-					x: gap,
-					y: gap,
-					width: workspace.displayWidth - gap * 2,
-					height: workspace.displayHeight - panel.geometry.height - gap * 2,
-				};
-			}
-		}
-	}
-	// Ignore-check for client types and resourceClasses
-	if (client.comboBox == true ||
-		client.desktopWindow == true ||
-		client.dndIcon == true ||
-		client.dock == true ||
-		client.dropdownMenu == true ||
-		client.menu == true ||
-		client.notification == true ||
-		client.popupMenu == true ||
-		client.specialWindow == true ||
-		client.splash == true ||
-		client.toolbar == true ||
-		client.tooltip == true ||
-		client.utility == true ||
-		client.transient == true ||
-		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
-		ignoredCaptions.indexOf(client.caption.toString()) > -1) {
-		return;
-	}
-	client.clientStartUserMovedResized.connect(saveOldPos);
-	client.clientFinishUserMovedResized.connect(moveClient);
-	if (activeClients[currentDesktop].length == 4) {
-		workspace.desktops += 1;
-		workspace.currentDesktop = workspace.desktops;
-		if (typeof activeClients[currentDesktop] == "undefined") {
-			activeClients[currentDesktop] = [];
-		}
-		client.desktop = currentDesktop;
-		activeClients[currentDesktop].push(client);
-		tileClients(currentDesktop);
-	} else {
-		client.desktop = currentDesktop;
-		activeClients[currentDesktop].push(client);
-		tileClients(currentDesktop);
 	}
 }
 
@@ -122,21 +75,77 @@ function removeClient(client) {
 	}
 }
 
-function adjustDesktops(desktop) {
-	// Checks if a workspace is removed
-	if (workspace.desktops < desktop) {
-		if (typeof activeClients[desktop] != "undefined" && activeClients[desktop].length > 0) {
-			for (i = 0; i < activeClients[desktop].length; i++) {
-				activeClients[desktop][i].closeWindow();
+function checkClient(client) {
+	var ignoredClients = [
+		"spotify",
+		"steam",
+		"kate",
+		"kazam",
+		"krunner",
+		"ksmserver",
+		"lattedock",
+		"pinentry",
+		"Plasma",
+		"plasma",
+		"plasma-desktop",
+		"plasmashell",
+		"plugin-container",
+		"wine",
+		"yakuake",
+	];
+	var ignoredCaptions = [
+		"Spotify",
+		"File Upload",
+		"Move to Trash",
+	];
+	// Hack: Global variable to skip this step once plasma panel has been found
+	// If the plasma panel has not been found yet, it's most likely the first client with resourceClass: "plasmashell" and caption: "Plasma"
+		if (plasma == false) {
+		var panel = {
+			resourceClass: "plasmashell",
+			caption: "Plasma",
+		};
+		if (panel.resourceClass.indexOf(client.resourceClass.toString()) > -1 &&
+			panel.caption.indexOf(client.caption.toString()) > -1) {
+			if (client.geometry.y < workspace.displayHeight / 2) {
+				screen = {
+					x: gap,
+					y: client.geometry.height + gap,
+					width: workspace.displayWidth - gap * 2,
+					height: workspace.displayHeight - client.geometry.height - gap * 2,
+				};
+			} else {
+				screen = {
+					x: gap,
+					y: gap,
+					width: workspace.displayWidth - gap * 2,
+					height: workspace.displayHeight - client.geometry.height - gap * 2,
+				};
 			}
-			activeClients[desktop] = [];
 			tileClients(currentDesktop);
+			plasma = true;
+			return false;
 		}
 	}
-	// Checks if a workspace is added 
-	else if (workspace.desktops > desktop) {
-		tileClients(currentDesktop);
+	if (client.comboBox == true ||
+		client.desktopWindow == true ||
+		client.dndIcon == true ||
+		client.dock == true ||
+		client.dropdownMenu == true ||
+		client.menu == true ||
+		client.notification == true ||
+		client.popupMenu == true ||
+		client.specialWindow == true ||
+		client.splash == true ||
+		client.toolbar == true ||
+		client.tooltip == true ||
+		client.utility == true ||
+		client.transient == true ||
+		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
+		ignoredCaptions.indexOf(client.caption.toString()) > -1) {
+		return false;
 	}
+	return true;
 }
 
 // Calculates the geometries to maintain the layout
@@ -173,7 +182,7 @@ function tileClients(desktop) {
 	}
 }
 
-function tileAll() {
+function tileAllClients() {
 	for (i = activeClients.length; i > 0; i--) {
 		if (activeClients[i].length > 0) {
 			tileClients(i);
@@ -181,9 +190,7 @@ function tileAll() {
 	}
 }
 
-var oldPos; // The pre-movement position for the latest client.StartUserMovedResized
-// This function gets called every time a resize or move event starts
-function saveOldPos(client) {
+function saveClientPos(client) {
 	oldPos = client.geometry;
 }
 
@@ -235,13 +242,29 @@ function moveClient(client) {
 	} else client.geometry = oldPos;
 }
 
-addClients();
-workspace.clientAdded.connect(addClient);
-workspace.clientRemoved.connect(removeClient);
-workspace.currentDesktopChanged.connect(function() {
+function changeDesktop() {
 	currentDesktop = workspace.currentDesktop;
+	// Only tiles a desktop if it contains clients
 	if (typeof activeClients[currentDesktop] != "undefined") {
 		tileClients(currentDesktop);
 	}
-});
-workspace.numberDesktopsChanged.connect(adjustDesktops);
+}
+
+function adjustDesktops(desktop) {
+	// Checks if a workspace is removed
+	if (workspace.desktops < desktop) {
+		if (typeof activeClients[desktop] != "undefined" && activeClients[desktop].length > 0) {
+			for (i = 0; i < activeClients[desktop].length; i++) {
+				activeClients[desktop][i].closeWindow();
+			}
+			activeClients[desktop] = [];
+		}
+		tileClients(currentDesktop);
+	}
+	// Checks if a workspace is added 
+	else if (workspace.desktops > desktop) {
+		tileClients(currentDesktop);
+	}
+}
+
+init();
