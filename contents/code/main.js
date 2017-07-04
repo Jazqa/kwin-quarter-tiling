@@ -44,13 +44,15 @@ function addClient(client) {
 		client.clientMinimized.connect(minimizeClient);
 		client.clientUnminimized.connect(unminimizeClient);
 		if (activeClients[currentDesktop].length == activeClients[currentDesktop].max) {
-			// Todo: Use a workspace with space available
 			workspace.desktops += 1;
 			workspace.currentDesktop = workspace.desktops;
 		}
 		client.desktop = currentDesktop;
 		activeClients[currentDesktop].push(client);
 		tileClients(currentDesktop);
+		if (client.minimized == true) {
+			minimizeClient(client);
+		}
 	}
 }
 
@@ -73,8 +75,10 @@ function removeClient(client) {
 				tileClients(currentDesktop);
 			} else if (activeClients[currentDesktop].length == 0) {
 				activeClients[currentDesktop] = [];
-				workspace.currentDesktop -= 1;
-				// workspace.desktops -= 1; 
+				if (currentDesktop != 1) {
+					workspace.currentDesktop -= 1;
+					// workspace.desktops -= 1; 
+				}
 			}
 		}
 	}
@@ -105,7 +109,7 @@ function checkClient(client) {
 	];
 	// Hack: Global variable to skip this step once plasma panel has been found
 	// If the plasma panel has not been found yet, it's most likely the first client with resourceClass: "plasmashell" and caption: "Plasma"
-		if (plasma == false) {
+	if (plasma == false) {
 		var panel = {
 			resourceClass: "plasmashell",
 			caption: "Plasma",
@@ -250,7 +254,7 @@ function moveClient(client) {
 // Todo: Make the minimized clients reserve their desktop
 function minimizeClient(client) {
 	for (i = 0; i < activeClients[currentDesktop].length; i++) {
-		if (activeClients[currentDesktop][i] == client) {
+		if (activeClients[currentDesktop][i]  == client)  {
 			activeClients[currentDesktop].splice(i, 1);
 			activeClients[currentDesktop].max -= 1;
 		}
@@ -281,7 +285,7 @@ function adjustDesktops(desktop) {
 				activeClients[desktop][i].closeWindow();
 			}
 		}
-		activeClients[desktop] = [];
+		activeClients[desktop]  = [];
 		tileClients(currentDesktop);
 	}
 	// Checks if a workspace is added 
