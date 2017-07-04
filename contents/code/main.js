@@ -2,6 +2,7 @@
 Todo:
 	- Make clients floatable with a button
 	- Interactive virtual desktop removal
+	- Allow clients to switch desktops
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
@@ -23,7 +24,11 @@ var currentDesktop = workspace.currentDesktop;
 var activeClients = {};
 
 function init() {
-	activeClients[currentDesktop] = [];
+	workspace.desktops = 1;
+	for (i = 1; i <= 20; i++) {
+		activeClients[i] = []; // Initializes 20 empty arrays for virtual desktops to avoid crashes caused by undefined objects
+		activeClients[i].max = 4;
+	}
 	addClients();
 	workspace.clientAdded.connect(addClient);
 	workspace.clientRemoved.connect(removeClient);
@@ -36,20 +41,16 @@ function addClient(client) {
 	if (checkClient(client) == true) {
 		client.clientStartUserMovedResized.connect(saveClientPos);
 		client.clientFinishUserMovedResized.connect(moveClient);
-		if (activeClients[currentDesktop].length == 4) {
+		client.clientMinimized.connect(minimizeClient);
+		client.clientUnminimized.connect(unminimizeClient);
+		if (activeClients[currentDesktop].length == activeClients[currentDesktop].max) {
+			// Todo: Use a workspace with space available
 			workspace.desktops += 1;
 			workspace.currentDesktop = workspace.desktops;
-			if (typeof activeClients[currentDesktop] == "undefined") {
-				activeClients[currentDesktop] = [];
-			}
-			client.desktop = currentDesktop;
-			activeClients[currentDesktop].push(client);
-			tileClients(currentDesktop);
-		} else {
-			client.desktop = currentDesktop;
-			activeClients[currentDesktop].push(client);
-			tileClients(currentDesktop);
 		}
+		client.desktop = currentDesktop;
+		activeClients[currentDesktop].push(client);
+		tileClients(currentDesktop);
 	}
 }
 
@@ -70,6 +71,10 @@ function removeClient(client) {
 			// If there are still tiles after the removal, calculates the geometries
 			if (activeClients[currentDesktop].length > 0) {
 				tileClients(currentDesktop);
+			} else if (activeClients[currentDesktop].length == 0) {
+				activeClients[currentDesktop] = [];
+				workspace.currentDesktop -= 1;
+				// workspace.desktops -= 1; 
 			}
 		}
 	}
@@ -122,7 +127,6 @@ function checkClient(client) {
 					height: workspace.displayHeight - client.geometry.height - gap * 2,
 				};
 			}
-			tileClients(currentDesktop);
 			plasma = true;
 			return false;
 		}
@@ -150,35 +154,36 @@ function checkClient(client) {
 
 // Calculates the geometries to maintain the layout
 function tileClients(desktop) {
-	var rect = [];
-	for (var i = 0; i < activeClients[desktop].length; i++) {
-		rect[i] = {}; // Need to clone the properties, can't just rect = screen!
-		rect[i].x = screen.x;
-		rect[i].y = screen.y;
-		rect[i].width = screen.width;
-		rect[i].height = screen.height;
-		if (i == 1) {
-			rect[0].width = rect[0].width * 0.5 - gap * 0.5;
-			rect[i].width = rect[0].width;
-			rect[i].x = rect[i].x + rect[i].width + gap;
+	if (activeClients[desktop].length > 0) { // Todo: is this needed?
+		var rect = [];
+		for (var i = 0; i < activeClients[desktop].length; i++) {
+			rect[i] = {}; // Need to clone the properties, can't just rect = screen!
+			rect[i].x = screen.x;
+			rect[i].y = screen.y;
+			rect[i].width = screen.width;
+			rect[i].height = screen.height;
+			if (i == 1) {
+				rect[0].width = rect[0].width * 0.5 - gap * 0.5;
+				rect[i].width = rect[0].width;
+				rect[i].x = rect[i].x + rect[i].width + gap;
+			}
+			if (i == 2) {
+				rect[1].height = rect[1].height * 0.5 - gap * 0.5;
+				rect[i].height = rect[1].height;
+				rect[i].y = rect[i].y + rect[i].height + gap;
+				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
+				rect[i].x = rect[i].x + rect[i].width + gap;
+			}
+			if (i == 3) {
+				rect[0].height = rect[0].height * 0.5 - gap * 0.5;
+				rect[i].height = rect[0].height;
+				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
+				rect[i].y = rect[i].y + rect[i].height + gap;
+			}
 		}
-		if (i == 2) {
-			rect[1].height = rect[1].height * 0.5 - gap * 0.5;
-			rect[i].height = rect[1].height;
-			rect[i].y = rect[i].y + rect[i].height + gap;
-			rect[i].width = rect[i].width * 0.5 - gap * 0.5;
-			rect[i].x = rect[i].x + rect[i].width + gap;
+		for (i = 0; i < activeClients[desktop].length; i++) {
+			activeClients[desktop][i].geometry = rect[i];
 		}
-		if (i == 3) {
-			rect[0].height = rect[0].height * 0.5 - gap * 0.5;
-			rect[i].height = rect[0].height;
-			rect[i].width = rect[i].width * 0.5 - gap * 0.5;
-			rect[i].y = rect[i].y + rect[i].height + gap;
-		}
-	}
-
-	for (i = 0; i < activeClients[desktop].length; i++) {
-		activeClients[desktop][i].geometry = rect[i];
 	}
 }
 
@@ -242,23 +247,41 @@ function moveClient(client) {
 	} else client.geometry = oldPos;
 }
 
+// Todo: Make the minimized clients reserve their desktop
+function minimizeClient(client) {
+	for (i = 0; i < activeClients[currentDesktop].length; i++) {
+		if (activeClients[currentDesktop][i] == client) {
+			activeClients[currentDesktop].splice(i, 1);
+			activeClients[currentDesktop].max -= 1;
+		}
+	}
+	tileClients(currentDesktop);
+}
+
+// Todo: Make the clients unminimize on their reserved desktops
+function unminimizeClient(client) {
+	activeClients[client.desktop].push(client);
+	activeClients[client.desktop].max += 1;
+	workspace.currentDesktop = client.desktop;
+	tileClients(currentDesktop);
+}
+
 function changeDesktop() {
 	currentDesktop = workspace.currentDesktop;
-	// Only tiles a desktop if it contains clients
-	if (typeof activeClients[currentDesktop] != "undefined") {
-		tileClients(currentDesktop);
-	}
+	tileClients(currentDesktop);
 }
 
 function adjustDesktops(desktop) {
 	// Checks if a workspace is removed
 	if (workspace.desktops < desktop) {
-		if (typeof activeClients[desktop] != "undefined" && activeClients[desktop].length > 0) {
+		// Because the API returns desktops as an integer, they can not be recognized
+		// For that reason, the latest workspace is always the one removed
+		if (activeClients[desktop].length > 0) {
 			for (i = 0; i < activeClients[desktop].length; i++) {
 				activeClients[desktop][i].closeWindow();
 			}
-			activeClients[desktop] = [];
 		}
+		activeClients[desktop] = [];
 		tileClients(currentDesktop);
 	}
 	// Checks if a workspace is added 
