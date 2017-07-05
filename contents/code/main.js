@@ -15,6 +15,38 @@ Todo:
 // Hack: The way Plasma panel is found also finds multiple other Plasma-related clients
 // Plasma panel is the first client to be found, so after it has been found, a global variable
 // is used to skip the step looking for Plasma in the checkClient() function
+
+// Add programs that don't tile well
+// Names usually in lowercase with no spaces
+var ignoredClients = [
+	"kate",
+	"kazam",
+	"krunner",
+	"ksmserver",
+	"lattedock",
+	"pinentry",
+	"Plasma",
+	"plasma",
+	"plasma-desktop",
+	"plasmashell",
+	"plugin-container",
+	"simplescreenrecorder",
+	"spotify",
+	"steam",
+	"wine",
+	"yakuake",
+];
+// If the program can't be blacklisted via the array above (resourceClass)
+// Try adding its caption to the array below
+var ignoredCaptions = [
+	"File Upload",
+	"Move to Trash",
+];
+var largeClients = [
+	"gimp",
+	"krita",
+];
+
 var plasmaNotFound = true;
 
 var gap = 16;
@@ -128,36 +160,6 @@ function disconnectClient(client) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
-	// Add programs that don't tile well
-	// Names usually in lowercase with no spaces
-	var ignoredClients = [
-		"kate",
-		"kazam",
-		"krunner",
-		"ksmserver",
-		"lattedock",
-		"pinentry",
-		"Plasma",
-		"plasma",
-		"plasma-desktop",
-		"plasmashell",
-		"plugin-container",
-		"simplescreenrecorder",
-		"spotify",
-		"steam",
-		"wine",
-		"yakuake",
-	];
-	// If the program can't be blacklisted via the array above (resourceClass)
-	// Try adding its caption to the array below
-	var ignoredCaptions = [
-		"File Upload",
-		"Move to Trash",
-	];
-	var largeClients = [
-		"gimp",
-		"krita",
-	];
 	// Hack: Global variable to skip this step once plasma panel has been found
 	// If the plasma panel has not been found yet, it's most likely the first client with resourceClass: "plasmashell" and caption: "Plasma"
 	if (plasmaNotFound) {
