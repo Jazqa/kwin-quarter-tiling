@@ -36,12 +36,16 @@ var ignoredClients = [
 	"wine",
 	"yakuake",
 ];
+
 // If the program can't be blacklisted via the array above (resourceClass)
 // Try adding its caption to the array below
 var ignoredCaptions = [
 	"File Upload",
 	"Move to Trash",
 ];
+
+// Clients that don't play well when reduced to a quarter
+// Todo: Recognize these and reduce activeClients[].max by one
 var largeClients = [
 	"gimp",
 	"krita",
@@ -49,7 +53,9 @@ var largeClients = [
 
 var plasmaNotFound = true;
 
-var gap = 16;
+var gap = readConfig("gap", 10);
+
+var noBorders = readConfig("noBorders", false);
 
 var screen = {
 	x: 0,
@@ -83,6 +89,7 @@ function init() {
 	// Connects the KWin:Workspace signals to the following functions
 	workspace.clientAdded.connect(addClient);
 	workspace.clientRemoved.connect(removeClient);
+	// workspace.clientMaximizeSet.connect(maximizeClient);
 	workspace.currentDesktopChanged.connect(changeDesktop);
 	workspace.numberDesktopsChanged.connect(adjustDesktops);
 }
@@ -90,7 +97,9 @@ function init() {
 // Runs an ignore-check and if it passes, adds a client to activeClients[]
 function addClient(client) {
 	if (checkClient(client)) {
-		connectClient(client);
+		if (noBorders) {
+			client.noBorders = true;
+		}
 		if (activeClients[currentDesktop].length === activeClients[currentDesktop].max ||
 			activeClients[currentDesktop].length === 4) {
 			// Sometimes the desktop creation stops working, this should be a quick fix
@@ -103,7 +112,26 @@ function addClient(client) {
 		client.desktop = currentDesktop;
 		activeClients[currentDesktop].push(client);
 		tileClients(currentDesktop);
+		connectClient(client);
 		// If the client is minimized, triggers the minimization signal after it's added
+		if (client.minimized) {
+			minimizeClient(client);
+		}
+	}
+}
+
+// Runs an ignore-check and if it passes, adds a client to activeClients[]
+// Unlike addClient(), takes target desktop as a parameter and does not follow or connect the client
+function addClientNoFollow(client, desktop) {
+	if (checkClient(client)) {
+		if (noBorders) {
+			client.noBorders = true;
+		}
+		client.desktop = desktop;
+		activeClients[desktop].push(client);
+		// If the client is minimized, triggers the minimization signal after it's added
+		tileClients(currentDesktop);
+		connectClient(client);
 		if (client.minimized) {
 			minimizeClient(client);
 		}
@@ -123,17 +151,37 @@ function removeClient(client) {
 	// First for- and if-loops find the closed client 
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
 		if (activeClients[currentDesktop][i] == client) {
+			activeClients[currentDesktop].splice(i, 1);	
+			disconnectClient(client);
+			// If there are still tiles after the removal, calculates the geometries
+			if (activeClients[currentDesktop].length > 0) {
+				tileClients(currentDesktop);
+			} else if (activeClients[currentDesktop].length === 0) {
+				activeClients[currentDesktop] = [];
+				activeClients[currentDesktop].max = 4;
+				if (currentDesktop != 1) {
+					workspace.currentDesktop -= 1;
+					// workspace.desktops -= 1; 
+				}
+			}
+		}
+	}
+}
+
+// Removes the closed client from activeClients[]
+// Unlike removeClient(), does not disconnect or follow the client
+function removeClientNoFollow(client) {
+	// First for- and if-loops find the closed client 
+	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
+		if (activeClients[currentDesktop][i] == client) {
 			activeClients[currentDesktop].splice(i, 1);
 			disconnectClient(client);
 			// If there are still tiles after the removal, calculates the geometries
 			if (activeClients[currentDesktop].length > 0) {
 				tileClients(currentDesktop);
-			} else if (activeClients[currentDesktop].length == 0) {
+			} else if (activeClients[currentDesktop].length === 0) {
 				activeClients[currentDesktop] = [];
-				if (currentDesktop != 1) {
-					workspace.currentDesktop -= 1;
-					// workspace.desktops -= 1; 
-				}
+				activeClients[currentDesktop].max = 4;
 			}
 		}
 	}
@@ -145,6 +193,12 @@ function connectClient(client) {
 	client.clientFinishUserMovedResized.connect(moveClient);
 	client.clientMinimized.connect(minimizeClient);
 	client.clientUnminimized.connect(unminimizeClient);
+	client.desktopChanged.connect(function() {
+		removeClientNoFollow(client);
+		if (activeClients[client.desktop].length < activeClients[client.desktop].max) {
+			addClientNoFollow(client, client.desktop);
+		}
+	});
 	client.float = false;
 }
 
@@ -317,8 +371,25 @@ function moveClient(client) {
 	} else client.geometry = oldPos;
 }
 
+
+/* Todo: - Figure out what to do with maximized clients
+		 - Maximize stays on after closing
+		 - Maximized property does not exist
+	     - Knowing which clients are maximized is difficult'
+	     - Currently the best solution: compare to the screen size
+	     - Problem: User has no gaps, first window would always be "maximized"
+
+function maximizeClient(client, h, v) {
+	if (h && v) {
+		removeClient(client);
+	} else {
+		addClient(client);
+	}
+}
+*/
+
 function minimizeClient(client) {
-	for (i = 0; i < activeClients[currentDesktop].length; i++) {
+	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
 		if (activeClients[currentDesktop][i]  == client)  {
 			activeClients[currentDesktop].splice(i, 1);
 			activeClients[currentDesktop].max -= 1;

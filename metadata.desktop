@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Quarter Tiling
+Comment=Improves the workflow by automatically tiling windows and creating virtual desktops
 Icon=preferences-system-windows-script-test
-Comment=Automatically rescales windows to use the screen space as efficiently as possible and maintains the layout as the user opens & closes new windows
 
 X-Plasma-API=javascript
 X-Plasma-MainScript=code/main.js
@@ -9,8 +9,14 @@ X-Plasma-MainScript=code/main.js
 X-KDE-PluginInfo-Author=Jasu Koponen
 X-KDE-PluginInfo-Email=jasu.koponen@hotmail.com
 X-KDE-PluginInfo-Name=quarter-tiling
-X-KDE-PluginInfo-Version=0.01
+X-KDE-PluginInfo-Version=0.0.3
 
+X-KDE-PluginInfo-Depends=
 X-KDE-PluginInfo-License=GPL
-X-KDE-ServiceTypes=KWin/Script
+X-KDE-ServiceTypes=KWin/Script,KCModule
+
+X-KDE-Library=kwin/effects/configs/kcm_kwin4_genericscripted
+X-KDE-PluginKeyword=quarter-tiling
+X-KDE-ParentComponents=quarter-tiling
+
 Type=Service

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+    <kcfgfile name=""/>
+    <group name="">
+    	<entry name="gap" type="int">
+		  <label>Pixels between the windows and screen edges</label>
+		  <default>10</default>
+		</entry>
+		<entry name="noBorders" type="bool">
+		  <label>If set to true, removes the window borders and title bars</label>
+		  <default>false</default>
+		</entry>
+        <entry name="ignoredClients" type="string">
+		  <label>Programs that should be ignored by the script (f.ex. "kate", "steam")</label>
+		  <default>kate</default>
+        </entry>
+         <entry name="ignoredCaptions" type="string">
+		  <label>(Parts of) Window captions that should be ignored by the script (f.ex "move to trash"</label>
+		  <default>move to trash</default>
+        </entry>
+         <entry name="largeClients" type="string">
+		  <label>Clients that should always occupy at least half of the screen<label>
+		  <default>gimp, krita</default>
+        </entry>
+   	</group>
+</kcfg>
