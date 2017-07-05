@@ -9,6 +9,7 @@
 - You use a vertical Plasma panel (easy fix)
 - You except it to work flawlessly (spoiler: it doesn't)
 - You use more than one screen (I have only one so I can't guarantee it doesn't explode when used with more)
+- You wish to remain sane
 
 ## Screenshots
 
