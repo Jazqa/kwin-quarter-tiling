@@ -12,7 +12,7 @@
 
 ## Screenshots
 
-![Video demonstration (a gfycat link)](https://gfycat.com/TintedRepentantKawala)
+[Video demonstration (a gfycat link)](https://gfycat.com/TintedRepentantKawala)
 
 
 ![Screenshot](https://u.teknik.io/IZz6t.png)
