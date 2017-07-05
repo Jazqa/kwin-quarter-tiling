@@ -19,8 +19,9 @@
 
 
 ## Help
-- To install, move or clone to ~/.local/share/kwin/scripts and enable the script via KWin scripts, I'll "package" it later
-- It's in a very early state so if it crashes (no notification, it'll just stop tiling), disable and enable it via KWin scripts
+- To install, move or clone to ~/.local/share/kwin/scripts and enable the script via KWin Scripts, I'll "package" it later
+- **In case of problems: Meta+F or disable and enable through KWin Scripts**
+- It's in a very early state so if it crashes (no notification, it'll just stop tiling), disable and enable it via KWin Scripts
 - **Note:** If you remove a virtual desktop, all of the tiled clients on the desktop will also be closed
 - By default, Meta+F excludes the **active window** from the script
 - Virtual desktops are not automatically removed (it crashes Plasma, I'm still looking into it)
