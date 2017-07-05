@@ -1,13 +1,18 @@
 /*
 Todo:
-	- Make clients floatable with a button
-	- Interactive virtual desktop removal
+	- Configuration for 
+	- Shortcut to disable floating (Already tried adding it to the same shortcut with 
+	  a client.floating property but the if (client.floating == true) never triggered)
+	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
 	- Allow clients to switch desktops
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
 */
 
+// Hack: The way Plasma panel is found also finds multiple other Plasma-related clients
+// Plasma panel is the first client to be found, so after it has been found, a global variable
+// is used to skip the step looking for Plasma in the addClient() function
 var plasma = false;
 
 var gap = 16;
@@ -19,7 +24,7 @@ var screen = {
 	height: workspace.displayHeight,
 };
 
-var oldPos; // The pre-movement position for the latest client.StartUserMovedResized
+var oldPos; // Hack: Saves the pre-movement position as a global variable
 
 var currentDesktop = workspace.currentDesktop;
 var activeClients = {};
@@ -37,6 +42,7 @@ function init() {
 			removeClient(workspace.activeClient);
 	});
 	addClients();
+	// Connects the KWin:Workspace signals to the following functions
 	workspace.clientAdded.connect(addClient);
 	workspace.clientRemoved.connect(removeClient);
 	workspace.currentDesktopChanged.connect(changeDesktop);
@@ -46,6 +52,7 @@ function init() {
 // Runs an ignore-check and if it passes, adds a client to activeClients[]
 function addClient(client) {
 	if (checkClient(client) == true) {
+		// Connects the signals of the new KWin:Client the following functions
 		client.clientStartUserMovedResized.connect(saveClientPos);
 		client.clientFinishUserMovedResized.connect(moveClient);
 		client.clientMinimized.connect(minimizeClient);
@@ -77,6 +84,8 @@ function removeClient(client) {
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
 		if (activeClients[currentDesktop][i] == client) {
 			activeClients[currentDesktop].splice(i, 1);
+			// Disconnects the signals from removed clients
+			// So they will not trigger when a manually floated client is interacted with
 			client.clientStartUserMovedResized.disconnect(saveClientPos);
 			client.clientFinishUserMovedResized.disconnect(moveClient);
 			client.clientMinimized.disconnect(minimizeClient);
@@ -97,6 +106,8 @@ function removeClient(client) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
+	// Add programs that don't tile well
+	// Names usually in lowercase with no spaces
 	var ignoredClients = [
 		"kate",
 		"kazam",
@@ -115,8 +126,9 @@ function checkClient(client) {
 		"wine",
 		"yakuake",
 	];
+	// If the program can't be blacklisted via the array above (resourceClass)
+	// Try adding its caption to the array below
 	var ignoredCaptions = [
-		"Spotify",
 		"File Upload",
 		"Move to Trash",
 	];
@@ -174,11 +186,13 @@ function checkClient(client) {
 }
 
 // Calculates the geometries to maintain the layout
+// Note: All the geometries are currently calculated from the screen size
+// Calculating the geometries from the older geometries messed things up
 function tileClients(desktop) {
-	if (activeClients[desktop].length > 0) { // Todo: is this needed?
+	if (activeClients[desktop].length > 0) {
 		var rect = [];
 		for (var i = 0; i < activeClients[desktop].length; i++) {
-			rect[i] = {}; // Need to clone the properties, can't just rect = screen!
+			rect[i] = {}; // Note: Need to clone the properties, can't just rect = screen!
 			rect[i].x = screen.x;
 			rect[i].y = screen.y;
 			rect[i].width = screen.width;
@@ -208,14 +222,7 @@ function tileClients(desktop) {
 	}
 }
 
-function tileAllClients() {
-	for (i = activeClients.length; i > 0; i--) {
-		if (activeClients[i].length > 0) {
-			tileClients(i);
-		}
-	}
-}
-
+// Saves the pre-movement position when called
 function saveClientPos(client) {
 	oldPos = client.geometry;
 }
@@ -268,7 +275,6 @@ function moveClient(client) {
 	} else client.geometry = oldPos;
 }
 
-// Todo: Make the minimized clients reserve their desktop
 function minimizeClient(client) {
 	for (i = 0; i < activeClients[currentDesktop].length; i++) {
 		if (activeClients[currentDesktop][i]  == client)  {
@@ -279,7 +285,6 @@ function minimizeClient(client) {
 	tileClients(currentDesktop);
 }
 
-// Todo: Make the clients unminimize on their reserved desktops
 function unminimizeClient(client) {
 	activeClients[client.desktop].push(client);
 	activeClients[client.desktop].max += 1;
