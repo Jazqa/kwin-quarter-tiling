@@ -4,6 +4,7 @@ Todo:
 	- Shortcut to disable floating (Already tried adding it to the same shortcut with 
 	  a client.floating property but the if (client.floating == true) never triggered)
 	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
+	- Windows will fill desktops with space, instead of creating new ones
 	- Allow clients to switch desktops
 	- Make minimized clients reserve their spot
 	- Support for large programs (Gimp, Krita, Kate)
@@ -14,7 +15,7 @@ Todo:
 // Hack: The way Plasma panel is found also finds multiple other Plasma-related clients
 // Plasma panel is the first client to be found, so after it has been found, a global variable
 // is used to skip the step looking for Plasma in the checkClient() function
-var plasma = false;
+var plasmaNotFound = true;
 
 var gap = 16;
 
@@ -40,7 +41,11 @@ function init() {
 		"Float On/Off",
 		"Meta+F",
 		function () {
-			removeClient(workspace.activeClient);
+			if (workspace.activeClient.float) {
+				addClient(workspace.activeClient);
+			} else {
+				removeClient(workspace.activeClient);
+			}
 	});
 	addClients();
 	// Connects the KWin:Workspace signals to the following functions
@@ -52,16 +57,12 @@ function init() {
 
 // Runs an ignore-check and if it passes, adds a client to activeClients[]
 function addClient(client) {
-	if (checkClient(client) == true) {
-		// Connects the signals of the new KWin:Client the following functions
-		client.clientStartUserMovedResized.connect(saveClientPos);
-		client.clientFinishUserMovedResized.connect(moveClient);
-		client.clientMinimized.connect(minimizeClient);
-		client.clientUnminimized.connect(unminimizeClient);
-		if (activeClients[currentDesktop].length == activeClients[currentDesktop].max ||
-			activeClients[currentDesktop].length == 4) {
+	if (checkClient(client)) {
+		connectClient(client);
+		if (activeClients[currentDesktop].length === activeClients[currentDesktop].max ||
+			activeClients[currentDesktop].length === 4) {
 			// Sometimes the desktop creation stops working, this should be a quick fix
-			if (activeClients[currentDesktop].length == 4) {
+			if (activeClients[currentDesktop].length === 4) {
 				activeClients[currentDesktop].max = 4;
 			}
 			workspace.desktops += 1;
@@ -71,7 +72,7 @@ function addClient(client) {
 		activeClients[currentDesktop].push(client);
 		tileClients(currentDesktop);
 		// If the client is minimized, triggers the minimization signal after it's added
-		if (client.minimized == true) {
+		if (client.minimized) {
 			minimizeClient(client);
 		}
 	}
@@ -91,12 +92,7 @@ function removeClient(client) {
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
 		if (activeClients[currentDesktop][i] == client) {
 			activeClients[currentDesktop].splice(i, 1);
-			// Disconnects the signals from removed clients
-			// So they will not trigger when a manually floated client is interacted with
-			client.clientStartUserMovedResized.disconnect(saveClientPos);
-			client.clientFinishUserMovedResized.disconnect(moveClient);
-			client.clientMinimized.disconnect(minimizeClient);
-			client.clientUnminimized.disconnect(unminimizeClient);
+			disconnectClient(client);
 			// If there are still tiles after the removal, calculates the geometries
 			if (activeClients[currentDesktop].length > 0) {
 				tileClients(currentDesktop);
@@ -109,6 +105,25 @@ function removeClient(client) {
 			}
 		}
 	}
+}
+
+// Connects the signals of the new KWin:Client the following functions
+function connectClient(client) {
+	client.clientStartUserMovedResized.connect(saveClientPos);
+	client.clientFinishUserMovedResized.connect(moveClient);
+	client.clientMinimized.connect(minimizeClient);
+	client.clientUnminimized.connect(unminimizeClient);
+	client.float = false;
+}
+
+// Disconnects the signals from removed clients
+// So they will not trigger when a manually floated client is interacted with
+function disconnectClient(client) {
+	client.clientStartUserMovedResized.disconnect(saveClientPos);
+	client.clientFinishUserMovedResized.disconnect(moveClient);
+	client.clientMinimized.disconnect(minimizeClient);
+	client.clientUnminimized.disconnect(unminimizeClient);
+	client.float = true;
 }
 
 // Ignore-check to see if the client is valid for the script
@@ -145,7 +160,7 @@ function checkClient(client) {
 	];
 	// Hack: Global variable to skip this step once plasma panel has been found
 	// If the plasma panel has not been found yet, it's most likely the first client with resourceClass: "plasmashell" and caption: "Plasma"
-	if (plasma == false) {
+	if (plasmaNotFound) {
 		var panel = {
 			resourceClass: "plasmashell",
 			caption: "Plasma",
@@ -185,24 +200,24 @@ function checkClient(client) {
 					};
 				}
 			}
-			plasma = true;
+			plasmaNotFound = false;
 			return false;
 		}
 	}
-	if (client.comboBox == true ||
-		client.desktopWindow == true ||
-		client.dndIcon == true ||
-		client.dock == true ||
-		client.dropdownMenu == true ||
-		client.menu == true ||
-		client.notification == true ||
-		client.popupMenu == true ||
-		client.specialWindow == true ||
-		client.splash == true ||
-		client.toolbar == true ||
-		client.tooltip == true ||
-		client.utility == true ||
-		client.transient == true ||
+	if (client.comboBox ||
+		client.desktopWindow ||
+		client.dndIcon ||
+		client.dock ||
+		client.dropdownMenu ||
+		client.menu ||
+		client.notification ||
+		client.popupMenu ||
+		client.specialWindow  ||
+		client.splash ||
+		client.toolbar ||
+		client.tooltip ||
+		client.utility ||
+		client.transient ||
 		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
 		ignoredCaptions.indexOf(client.caption.toString()) > -1) {
 		return false;
@@ -222,19 +237,19 @@ function tileClients(desktop) {
 			rect[i].y = screen.y;
 			rect[i].width = screen.width;
 			rect[i].height = screen.height;
-			if (i == 1) {
+			if (i === 1) {
 				rect[0].width = rect[0].width * 0.5 - gap * 0.5;
 				rect[i].width = rect[0].width;
 				rect[i].x = rect[i].x + rect[i].width + gap;
 			}
-			if (i == 2) {
+			if (i === 2) {
 				rect[1].height = rect[1].height * 0.5 - gap * 0.5;
 				rect[i].height = rect[1].height;
 				rect[i].y = rect[i].y + rect[i].height + gap;
 				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
 				rect[i].x = rect[i].x + rect[i].width + gap;
 			}
-			if (i == 3) {
+			if (i === 3) {
 				rect[0].height = rect[0].height * 0.5 - gap * 0.5;
 				rect[i].height = rect[0].height;
 				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
