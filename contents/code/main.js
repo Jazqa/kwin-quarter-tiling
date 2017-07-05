@@ -12,7 +12,7 @@ Todo:
 
 // Hack: The way Plasma panel is found also finds multiple other Plasma-related clients
 // Plasma panel is the first client to be found, so after it has been found, a global variable
-// is used to skip the step looking for Plasma in the addClient() function
+// is used to skip the step looking for Plasma in the checkClient() function
 var plasma = false;
 
 var gap = 16;
@@ -32,7 +32,7 @@ function init() {
 	workspace.desktops = 1;
 	for (i = 1; i <= 20; i++) {
 		activeClients[i] = []; // Initializes 20 empty arrays for virtual desktops to avoid crashes caused by undefined objects
-		activeClients[i].max = 4;
+		activeClients[i].max = 4; // Maximum number of (tiled) clients on a virtual desktop
 	}
 	registerShortcut(
 		"Float On/Off",
@@ -64,6 +64,7 @@ function addClient(client) {
 		client.desktop = currentDesktop;
 		activeClients[currentDesktop].push(client);
 		tileClients(currentDesktop);
+		// If the client is minimized, triggers the minimization signal after it's added
 		if (client.minimized == true) {
 			minimizeClient(client);
 		}
@@ -145,20 +146,38 @@ function checkClient(client) {
 		};
 		if (panel.resourceClass.indexOf(client.resourceClass.toString()) > -1 &&
 			panel.caption.indexOf(client.caption.toString()) > -1) {
-			if (client.geometry.y < workspace.displayHeight / 2) {
-				screen = {
-					x: gap,
-					y: client.geometry.height + gap,
-					width: workspace.displayWidth - gap * 2,
-					height: workspace.displayHeight - client.geometry.height - gap * 2,
-				};
+			if (client.geometry.width > client.geometry.height) {			
+				if (client.geometry.y < workspace.displayHeight / 2) {
+					screen = {
+						x: gap,
+						y: client.geometry.height + gap,
+						width: workspace.displayWidth - gap * 2,
+						height: workspace.displayHeight - client.geometry.height - gap * 2,
+					};
+				} else {
+					screen = {
+						x: gap,
+						y: gap,
+						width: workspace.displayWidth - gap * 2,
+						height: workspace.displayHeight - client.geometry.height - gap * 2,
+					};
+				}
 			} else {
-				screen = {
-					x: gap,
-					y: gap,
-					width: workspace.displayWidth - gap * 2,
-					height: workspace.displayHeight - client.geometry.height - gap * 2,
-				};
+				if (client.geometry.x < workspace.displayWidth / 2) {
+					screen = {
+						x: client.geometry.width + gap,
+						y: gap,
+						width: workspace.displayWidth - client.geometry.width - gap * 2,
+						height: workspace.displayHeight - gap * 2,
+					};
+				} else {
+					screen = {
+						x: gap,
+						y: gap,
+						width: workspace.displayWidth - client.geometry.width - gap * 2,
+						height: workspace.displayHeight - gap * 2,
+					};
+				}
 			}
 			plasma = true;
 			return false;
