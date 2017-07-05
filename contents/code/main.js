@@ -5,6 +5,7 @@ Todo:
 	  a client.floating property but the if (client.floating == true) never triggered)
 	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
 	- Allow clients to switch desktops
+	- Make minimized clients reserve their spot
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
@@ -57,7 +58,12 @@ function addClient(client) {
 		client.clientFinishUserMovedResized.connect(moveClient);
 		client.clientMinimized.connect(minimizeClient);
 		client.clientUnminimized.connect(unminimizeClient);
-		if (activeClients[currentDesktop].length == activeClients[currentDesktop].max) {
+		if (activeClients[currentDesktop].length == activeClients[currentDesktop].max ||
+			activeClients[currentDesktop].length == 4) {
+			// Sometimes the desktop creation stops working, this should be a quick fix
+			if (activeClients[currentDesktop].length == 4) {
+				activeClients[currentDesktop].max = 4;
+			}
 			workspace.desktops += 1;
 			workspace.currentDesktop = workspace.desktops;
 		}
