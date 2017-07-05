@@ -4,6 +4,12 @@
 - Automatically switches and creates virtual desktops
 - Allows windows to be exluced from the script with a shortcut (Meta+F by default)
 
+## Do not use yet if...
+- You use more than one Plasma panel
+- You use a vertical Plasma panel (easy fix)
+- You except it to work flawlessly (spoiler: it doesn't)
+- You use more than one screen (I have only one so I can't guarantee it doesn't explode when used with more)
+
 ## Screenshots
 
 ![Video demonstration (a gfycat link)](https://gfycat.com/TintedRepentantKawala)
