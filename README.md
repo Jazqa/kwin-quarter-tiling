@@ -4,7 +4,12 @@
 - Automatically switches and creates virtual desktops
 - Allows windows to be exluced from the script with a shortcut (Meta+F by default)
 
-[Demonstration](https://gfycat.com/TintedRepentantKawala)
+## Screenshots
+
+![Video demonstration (a gfycat link)](https://gfycat.com/TintedRepentantKawala)
+
+
+![Screenshot](https://u.teknik.io/IZz6t.png)
 
 
 ## Help
