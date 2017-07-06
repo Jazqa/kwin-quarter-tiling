@@ -1,4 +1,4 @@
-  /*----------/
+    /*----------/
    / TODO-LIST /
   /----------*/
   /*
@@ -257,10 +257,11 @@
   			} else if (activeClients[currentDesktop].length === 0) {
   				activeClients[currentDesktop] = [];
   				activeClients[currentDesktop].max = 4;
-  				if (currentDesktop != 1) {
-  					client.desktop = 1; // Hack: Throws the removed client to first desktop to avoid plasma crash when removing a desktop
+  				if (workspace.currentDesktop > 1) {
+  					// client.desktop = null;
   					workspace.currentDesktop -= 1;
-  					workspace.desktops -= 1;
+  					// workspace.activeClient = activeClients[currentDesktop][0];
+  					// workspace.desktops -= 1;
   				}
   			}
   		}
