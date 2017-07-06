@@ -5,13 +5,18 @@
 - Maintains the tiled layout when windows are interacted with
 - Automatically creates and switches virtual desktops
 - **Shortcut to exclude windows (Meta+F by default)**
+- ** To bind shortcuts go to settings -> shortcuts -> global shortcuts -> kwin and search for "Quarter" to find all the script specific shortcuts!**
+
 
 ## Screenshots
 
-[Video demonstration (a gfycat link)](https://gfycat.com/TintedRepentantKawala)
+#### Movement keys:
+![Keybindings](http://imgur.com/W3HzO5A.gif)
 
-
+#### Screenshot with three windows:
 ![Screenshot](https://u.teknik.io/IZz6t.png)
+
+[Video demonstration (a gfycat link)](https://gfycat.com/TintedRepentantKawala)
 
 
 ## Installation
