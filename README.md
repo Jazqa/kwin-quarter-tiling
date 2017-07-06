@@ -3,7 +3,7 @@
 ## Features
 - Tiles windows
 - Maintains the tiled layout when windows are interacted with
-- Automatically creates and switches virtual desktops
+- Automatically creates, switches and removes virtual desktops
 - Shortcuts for moving windows within the script
 - Shortcut for excluding windows
 - **NOTE: You might have to bind the keys manually. To do so, go to settings --> shortcuts --> global shortcuts --> kwin and search for "Quarter" to find all the script specific shortcuts!**
@@ -33,8 +33,7 @@
   - If above does not work, try adding a recognizable and unique part of the window caption to "var ignoredCaptions"
 
 ## Note
-- If you remove a virtual desktop, all of the tiled clients on the desktop will also be closed
-- Virtual desktops are not automatically removed because doing so via script crashes plasma (I suspect it's a plasma bug)
+- If you remove a virtual desktop, all of the tiled clients on the desktop will also be closed (it's a feature)
 - Some programs, like Spotify, do not play nice with tiling and can not be recognized and/or automatically excluded. If you use such programs, use the "Float On/Off" shortcut to disable them.
 
 ## Upcoming features
