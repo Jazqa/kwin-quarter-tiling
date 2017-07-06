@@ -112,26 +112,60 @@
   	registerShortcut(
   		"Quarter: Move Up",
   		"Quarter: Move Up",
-  		"Meta+Left",
+  		"Meta+Up",
   		function() {
   			var client = workspace.activeClient;
-  			var i = findClientIndex(client, currentDesktop);
-  			if (i > 0) {
-  				swapClients(i, i - 1, currentDesktop);
-  				tileClients(currentDesktop);
-  			}
+   			var i = findClientIndex(client, currentDesktop);
+  			if (i === 2) {
+  				swapClients(i, 1, currentDesktop);
+  			} else if (i === 3) {
+  				swapClients(i, 0, currentDesktop);
+  			} else return;
+  			tileClients(currentDesktop);
   		});
   	registerShortcut(
   		"Quarter: Move Down",
   		"Quarter: Move Down",
+  		"Meta+Down",
+  		function() {
+  			var client = workspace.activeClient;
+   			var i = findClientIndex(client, currentDesktop);
+  			if (i === 0 && activeClients[currentDesktop].length === 4) {
+  				swapClients(i, 3, currentDesktop);
+  			} else if (i === 1 && activeClients[currentDesktop].length >= 3) {
+  				swapClients(i, 2, currentDesktop);
+  			} else return;
+  			tileClients(currentDesktop);
+  		});
+  	registerShortcut(
+  		"Quarter: Move Left",
+  		"Quarter: Move Left",
+  		"Meta+Left",
+  		function() {
+  			var client = workspace.activeClient;
+   			var i = findClientIndex(client, currentDesktop);
+  			if (i === 1) {
+  				swapClients(i, 0, currentDesktop);
+  			} else if (i === 2 && activeClients[currentDesktop].length === 4) {
+  				swapClients(i, 3, currentDesktop);
+  			} else if (i === 2) {
+  				swapClients(i, 0, currentDesktop);
+  			} else return;
+  			tileClients(currentDesktop);
+  		});
+  	registerShortcut(
+  		"Quarter: Move Right",
+  		"Quarter: Move Right",
   		"Meta+Right",
   		function() {
   			var client = workspace.activeClient;
-  			var i = findClientIndex(client, currentDesktop);
-  			if (i < activeClients[currentDesktop].max) {
-  				swapClients(i, i + 1, currentDesktop);
-  				tileClients(currentDesktop);
-  			}
+   			var i = findClientIndex(client, currentDesktop);
+  			if (i === 0 && activeClients[currentDesktop].length > 1) {
+  				swapClients(i, 1, currentDesktop);
+  			} else if (i === 3) {
+  				swapClients(i, 2, currentDesktop);
+  			} else return;
+  			tileClients(currentDesktop);
   		});
   }
 
