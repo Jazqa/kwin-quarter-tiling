@@ -11,7 +11,7 @@
 ## Screenshots
 
 #### Basic functionality: 
-![Functionality](http://i.imgur.com/3Cg4dN5.gif)
+![Functionality](http://i.imgur.com/GYfyHTY.gif)
 
 #### Movement keys:
 ![Keybindings](http://imgur.com/W3HzO5A.gif)
