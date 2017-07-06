@@ -1,8 +1,10 @@
 # Quarter Tiling Script for KWin
-- Tiles windows (maximum four per desktop)
-- Maintains the tiled layout when windows are interacted with (open, close, move, minimize, maximize)
-- Automatically switches and creates virtual desktops
-- Allows windows to be exluced from the script with a shortcut (Meta+F by default)
+
+## Features
+- Tiles windows
+- Maintains the tiled layout when windows are interacted with
+- Automatically creates and switches virtual desktops
+- **Shortcut to exclude windows (Meta+F by default)**
 
 ## Screenshots
 
@@ -16,9 +18,19 @@
 - Move or clone to ~/.local/share/kwin/scripts and enable the script via KWin Scripts
 
 ## Help
-- **Meta (WinKey) + F excludes the current window from the script**
-- In case Meta + F is not working, go to settings > shortcuts > global shortcuts > kwin and search for "Float", bind a shortcut for the action "Float On/Off"
-- In case of trouble, disable the script and enable it again via KWin Scripts
-- **Note:** If you remove a virtual desktop, all of the tiled clients on the desktop will also be closed
-- Virtual desktops are not automatically removed (it crashes Plasma, I'm still looking into it)
-- Spotify can not be recognized or automatically excluded, if you use Spotify, manually exclude it with Meta+F each launch to avoid trouble
+- In case Meta+F is not working, go to settings -> shortcuts -> global shortcuts -> kwin and search for "Float", bind a shortcut for the action "Float On/Off"
+- In case of trouble, restart the script by disabling it and enabling it again via KWin Scripts
+- To adjust gapsize, edit /contents/code/main.js, find var gap and change the integer
+- To disable borders, edit /contents/code/main.js, find var noBorders and change the boolean
+- To add/remove programs from the blacklist edit /contents/code/main.js and add/remove entries from ignoredClients
+- If above does not work, try adding a recognizable and unique part of the window caption to ignoredCaptions
+
+## Note
+- If you remove a virtual desktop, all of the tiled clients on the desktop will also be closed
+- Virtual desktops are not automatically removed because doing so via script crashes plasma (I suspect it's a plasma bug)
+- Some programs, like Spotify can not be recognized or automatically excluded. If you use such programs, use Meta+F to disable them to avoid problems.
+
+## Upcoming features
+- Configuration interface
+- Window resizing
+- Support for chosen programs to always occupy at least half of the screen
