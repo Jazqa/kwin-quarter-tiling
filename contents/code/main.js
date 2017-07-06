@@ -283,15 +283,9 @@ function checkClient(client) {
 }
 
 // Compare two clients without unnecessary type conversion (see issue #1)
-// Can also compare geometries, just make sure you don't mix clients & geometries as a parameter
 function sameClient(client1, client2) {
 	if (typeof client1.frameId !== undefined && typeof client2.frameId !== undefined) {
 		if (client1.frameId === client2.frameId) {
-			return true;
-		} else return false;
-	} else {
-		// For now, coordinates are enough, two windows never have the same location
-		if (client1.x === client2.x && client1.y === client2.y) {
 			return true;
 		} else return false;
 	}
@@ -371,9 +365,10 @@ function moveClient(client) {
 			}
 			// ...and activeClients indexes
 			for (i = 0; i < activeClients[currentDesktop].length; i++) {
-				if (sameClient(activeClients[currentDesktop][i], client) != true) {
+				if (sameClient(activeClients[currentDesktop][i], client) !== true) {
 					// Can't call sameClient() again because geometries[] doesn't save clients, only their geometries
-					if (sameClient(activeClients[currentDesktop][i].geometry, geometries[0])) {
+					if (activeClients[currentDesktop][i].geometry.x === geometries[0].x &&
+						activeClients[currentDesktop][i].geometry.y === geometries[0].y) {
 						client.geometry = activeClients[currentDesktop][i].geometry;
 						activeClients[currentDesktop][i].geometry = oldPos;
 						var temp = activeClients[currentDesktop][index];
