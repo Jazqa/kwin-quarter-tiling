@@ -1,20 +1,13 @@
 /*
 Todo:
-	- Configuration for 
-	- Shortcut to disable floating (Already tried adding it to the same shortcut with 
-	  a client.floating property but the if (client.floating == true) never triggered)
+	- Configuration interface
 	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
 	- Windows will fill desktops with space, instead of creating new ones
-	- Allow clients to switch desktops
-	- Make minimized clients reserve their spot
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
+	- Resizing the layout
 */
-
-// Hack: The way Plasma panel is found also finds multiple other Plasma-related clients
-// Plasma panel is the first client to be found, so after it has been found, a global variable
-// is used to skip the step looking for Plasma in the checkClient() function
 
 // Add programs that don't tile well
 // Names usually in lowercase with no spaces
@@ -51,11 +44,14 @@ var largeClients = [
 	"krita",
 ];
 
+// Hack: The way Plasma panel is found also finds multiple other Plasma-related clients
+// Plasma panel is the first client to be found, so after it has been found, a global variable
+// is used to skip the step looking for Plasma in the checkClient() function
 var plasmaNotFound = true;
 
-var gap = readConfig("gap", 10);
+var gap = readConfig("gap", 14); // Gap size in pixels
 
-var noBorders = readConfig("noBorders", false);
+var noBorders = readConfig("noBorders", false); // Due to readConfig(), always if (noBorders === true) vs. if (noBorders)
 
 var screen = {
 	x: 0,
@@ -85,6 +81,7 @@ function init() {
 				removeClient(workspace.activeClient);
 			}
 	});
+	// Todo: Shortcut for +/- gapsize?
 	addClients();
 	// Connects the KWin:Workspace signals to the following functions
 	workspace.clientAdded.connect(addClient);
@@ -97,12 +94,13 @@ function init() {
 // Runs an ignore-check and if it passes, adds a client to activeClients[]
 function addClient(client) {
 	if (checkClient(client)) {
-		if (noBorders) {
-			client.noBorders = true;
+		if (noBorders === true) {
+			client.noBorder = true;
 		}
+		// If activeClients.length exceeds the maximum amount, creates a new virtual desktop
 		if (activeClients[currentDesktop].length === activeClients[currentDesktop].max ||
 			activeClients[currentDesktop].length === 4) {
-			// Sometimes the desktop creation stops working, this should be a quick fix
+			// Makes sure that desktops can't get a max value higher than four
 			if (activeClients[currentDesktop].length === 4) {
 				activeClients[currentDesktop].max = 4;
 			}
@@ -124,8 +122,8 @@ function addClient(client) {
 // Unlike addClient(), takes target desktop as a parameter and does not follow or connect the client
 function addClientNoFollow(client, desktop) {
 	if (checkClient(client)) {
-		if (noBorders) {
-			client.noBorders = true;
+		if (noBorders === true) {
+			client.noBorder = true;
 		}
 		client.desktop = desktop;
 		activeClients[desktop].push(client);
@@ -138,7 +136,7 @@ function addClientNoFollow(client, desktop) {
 	}
 }
 
-// Adds all the clients that existed before the script was ran
+// Adds all the clients that existed before the script was executed
 function addClients() {
 	var clients = workspace.clientList();
 	for (var i = 0; i < clients.length; i++) {
@@ -150,7 +148,7 @@ function addClients() {
 function removeClient(client) {
 	// First for- and if-loops find the closed client 
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
-		if (activeClients[currentDesktop][i] == client) {
+		if (sameClient(activeClients[currentDesktop][i], client)) {
 			activeClients[currentDesktop].splice(i, 1);	
 			disconnectClient(client);
 			// If there are still tiles after the removal, calculates the geometries
@@ -161,7 +159,7 @@ function removeClient(client) {
 				activeClients[currentDesktop].max = 4;
 				if (currentDesktop != 1) {
 					workspace.currentDesktop -= 1;
-					// workspace.desktops -= 1; 
+					// workspace.desktops -= 1; Despite crashing plasma, this works as its supposed to (plasma bug?)
 				}
 			}
 		}
@@ -169,11 +167,11 @@ function removeClient(client) {
 }
 
 // Removes the closed client from activeClients[]
-// Unlike removeClient(), does not disconnect or follow the client
+// Unlike removeClient(), does not follow the client
 function removeClientNoFollow(client) {
 	// First for- and if-loops find the closed client 
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
-		if (activeClients[currentDesktop][i] == client) {
+		if (sameClient(activeClients[currentDesktop][i], client)) {
 			activeClients[currentDesktop].splice(i, 1);
 			disconnectClient(client);
 			// If there are still tiles after the removal, calculates the geometries
@@ -187,12 +185,14 @@ function removeClientNoFollow(client) {
 	}
 }
 
-// Connects the signals of the new KWin:Client the following functions
+// Connects the signals of the new KWin:Client to the following functions
 function connectClient(client) {
 	client.clientStartUserMovedResized.connect(saveClientPos);
 	client.clientFinishUserMovedResized.connect(moveClient);
 	client.clientMinimized.connect(minimizeClient);
 	client.clientUnminimized.connect(unminimizeClient);
+	// desktopChanged function is declared here, because unlike other client signals,
+	// this one doesn't keep client as a parameter if calling a function
 	client.desktopChanged.connect(function() {
 		removeClientNoFollow(client);
 		if (activeClients[client.desktop].length < activeClients[client.desktop].max) {
@@ -204,6 +204,7 @@ function connectClient(client) {
 
 // Disconnects the signals from removed clients
 // So they will not trigger when a manually floated client is interacted with
+// Or when a client is removed & added between desktops
 function disconnectClient(client) {
 	client.clientStartUserMovedResized.disconnect(saveClientPos);
 	client.clientFinishUserMovedResized.disconnect(moveClient);
@@ -281,9 +282,24 @@ function checkClient(client) {
 	return true;
 }
 
+// Compare two clients without unnecessary type conversion (see issue #1)
+// Can also compare geometries, just make sure you don't mix clients & geometries as a parameter
+function sameClient(client1, client2) {
+	if (typeof client1.frameId !== undefined && typeof client2.frameId !== undefined) {
+		if (client1.frameId === client2.frameId) {
+			return true;
+		} else return false;
+	} else {
+		// For now, coordinates are enough, two windows never have the same location
+		if (client1.x === client2.x && client1.y === client2.y) {
+			return true;
+		} else return false;
+	}
+}
+
 // Calculates the geometries to maintain the layout
 // Note: All the geometries are currently calculated from the screen size
-// Calculating the geometries from the older geometries messed things up
+// Calculating the geometries from the older geometries messes things up
 function tileClients(desktop) {
 	if (activeClients[desktop].length > 0) {
 		var rect = [];
@@ -326,7 +342,7 @@ function saveClientPos(client) {
 // Moves clients and adjusts the layout
 function moveClient(client) {
 	// If the size equals the pre-movement size, user is trying to move the client, not resize it
-	if (client.geometry.width == oldPos.width && client.geometry.height == oldPos.height) {
+	if (client.geometry.width === oldPos.width && client.geometry.height === oldPos.height) {
 		var centerX = client.geometry.x + client.width / 2;
 		var centerY = client.geometry.y + client.height / 2;
 		var geometries = [];
@@ -337,6 +353,7 @@ function moveClient(client) {
 			// (it's of the grid and needs to be snapped back to the oldPos variable)
 			if (activeClients[currentDesktop][i] != client) {
 				geometries.push(activeClients[currentDesktop][i].geometry);
+				// If more geometry comparison is to be done, geometries[i].frameId = client.frameId to easily compare with sameClient
 			}
 		}
 		// Sorts the geometries[] and finds the geometry closest to the moved client
@@ -348,14 +365,15 @@ function moveClient(client) {
 			// ...switches the geometries...
 			var index;
 			for (i = 0; i < activeClients[currentDesktop].length; i++) {
-				if (activeClients[currentDesktop][i] == client) {
+				if (sameClient(activeClients[currentDesktop][i], client)) {
 					index = i;
 				}
 			}
 			// ...and activeClients indexes
 			for (i = 0; i < activeClients[currentDesktop].length; i++) {
-				if (activeClients[currentDesktop][i] != client) {
-					if (activeClients[currentDesktop][i].geometry.x == geometries[0].x && activeClients[currentDesktop][i].geometry.y == geometries[0].y) {
+				if (sameClient(activeClients[currentDesktop][i], client) != true) {
+					// Can't call sameClient() again because geometries[] doesn't save clients, only their geometries
+					if (sameClient(activeClients[currentDesktop][i].geometry, geometries[0])) {
 						client.geometry = activeClients[currentDesktop][i].geometry;
 						activeClients[currentDesktop][i].geometry = oldPos;
 						var temp = activeClients[currentDesktop][index];
@@ -375,7 +393,7 @@ function moveClient(client) {
 /* Todo: - Figure out what to do with maximized clients
 		 - Maximize stays on after closing
 		 - Maximized property does not exist
-	     - Knowing which clients are maximized is difficult'
+	     - Knowing which clients are maximized is problematic
 	     - Currently the best solution: compare to the screen size
 	     - Problem: User has no gaps, first window would always be "maximized"
 
@@ -390,7 +408,7 @@ function maximizeClient(client, h, v) {
 
 function minimizeClient(client) {
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
-		if (activeClients[currentDesktop][i]  == client)  {
+		if (sameClient(activeClients[currentDesktop][i], client))  {
 			activeClients[currentDesktop].splice(i, 1);
 			activeClients[currentDesktop].max -= 1;
 		}
@@ -414,7 +432,7 @@ function adjustDesktops(desktop) {
 	// Checks if a workspace is removed
 	if (workspace.desktops < desktop) {
 		// Because the API returns desktops as an integer, they can not be recognized
-		// For that reason, the latest workspace is always the one removed
+		// which is why the latest workspace is always the one removed
 		if (activeClients[desktop].length > 0) {
 			for (i = 0; i < activeClients[desktop].length; i++) {
 				activeClients[desktop][i].closeWindow();
