@@ -4,9 +4,9 @@
 - Tiles windows
 - Maintains the tiled layout when windows are interacted with
 - Automatically creates and switches virtual desktops
-- Keybindings for moving windows within the script
-- Keybinding for excluding windows
-- **NOTE: You might have to bind the keys manually. To bind shortcuts go to settings -> shortcuts -> global shortcuts -> kwin and search for "Quarter" to find all the script specific shortcuts!**
+- Shortcuts for moving windows within the script
+- Shortcut for excluding windows
+- **NOTE: You might have to bind the keys manually. To do so, go to settings --> shortcuts --> global shortcuts --> kwin and search for "Quarter" to find all the script specific shortcuts!**
 
 
 ## Screenshots
@@ -24,17 +24,18 @@
 - Move or clone to ~/.local/share/kwin/scripts and enable the script via KWin Scripts
 
 ## Help
-- **To bind shortcuts go to settings -> shortcuts -> global shortcuts -> kwin and search for "Quarter" to find all the script specific shortcuts!**
+- **To bind shortcuts go to settings --> shortcuts --> global shortcuts --> kwin and search for "Quarter" to find all the script specific shortcuts!**
 - In case of trouble, restart the script by disabling it and enabling it again via KWin Scripts
-- To adjust gapsize, edit /contents/code/main.js, find var gap and change the integer
-- To disable borders, edit /contents/code/main.js, find var noBorders and change the boolean
-- To add/remove programs from the blacklist edit /contents/code/main.js and add/remove entries from ignoredClients
-- If above does not work, try adding a recognizable and unique part of the window caption to ignoredCaptions
+- As of now, configuration is done via main.js
+  - To adjust gapsize, edit "var gap" (size in pixels)
+  - To disable borders, edit "var noBorders" (true or false)
+  - To add/remove programs from the blacklist edit "var ignoredClients"
+  - If above does not work, try adding a recognizable and unique part of the window caption to "var ignoredCaptions"
 
 ## Note
 - If you remove a virtual desktop, all of the tiled clients on the desktop will also be closed
 - Virtual desktops are not automatically removed because doing so via script crashes plasma (I suspect it's a plasma bug)
-- Some programs, like Spotify can not be recognized or automatically excluded. If you use such programs, use Meta+F to disable them to avoid problems.
+- Some programs, like Spotify, do not play nice with tiling and can not be recognized and/or automatically excluded. If you use such programs, use the "Float On/Off" shortcut to disable them.
 
 ## Upcoming features
 - Configuration interface
