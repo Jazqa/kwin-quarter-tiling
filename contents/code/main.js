@@ -1,5 +1,7 @@
+/*-----------------
+	TODO-LIST
+-----------------*/
 /*
-Todo:
 	- Configuration interface
 	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
 	- Windows will fill desktops with space, instead of creating new ones
@@ -8,6 +10,13 @@ Todo:
 		- Max clients (default: 4) -= 1 per large program
 	- Resizing the layout
 */
+
+
+
+
+/*---------------------
+	GLOBAL VARIABLES
+-----------------------*/
 
 // Add programs that don't tile well
 // Names usually in lowercase with no spaces
@@ -64,12 +73,31 @@ var oldPos; // Hack: Saves the pre-movement position as a global variable
 
 var currentDesktop = workspace.currentDesktop;
 var activeClients = {};
+
+
+
+/*------------------
+	INIT FUNCTIONS
+-------------------*/
+
 function init() {
 	workspace.desktops = 1;
 	for (i = 1; i <= 20; i++) {
 		activeClients[i] = []; // Initializes 20 empty arrays for virtual desktops to avoid crashes caused by undefined objects
 		activeClients[i].max = 4; // Maximum number of (tiled) clients on a virtual desktop
 	}
+	registerKeys();
+	// Todo: Shortcut for +/- gapsize?
+	addClients();
+	// Connects the KWin:Workspace signals to the following functions
+	workspace.clientAdded.connect(addClient);
+	workspace.clientRemoved.connect(removeClient);
+	// workspace.clientMaximizeSet.connect(maximizeClient);
+	workspace.currentDesktopChanged.connect(changeDesktop);
+	workspace.numberDesktopsChanged.connect(adjustDesktops);
+}
+
+function registerKeys() {
 	registerShortcut(
 		"Float On/Off",
 		"Float On/Off",
@@ -81,15 +109,12 @@ function init() {
 				removeClient(workspace.activeClient);
 			}
 	});
-	// Todo: Shortcut for +/- gapsize?
-	addClients();
-	// Connects the KWin:Workspace signals to the following functions
-	workspace.clientAdded.connect(addClient);
-	workspace.clientRemoved.connect(removeClient);
-	// workspace.clientMaximizeSet.connect(maximizeClient);
-	workspace.currentDesktopChanged.connect(changeDesktop);
-	workspace.numberDesktopsChanged.connect(adjustDesktops);
+	// registerShortcut() for moving clients
 }
+
+/*---------------------------------------
+	CLIENT ADDING, MOVING & REMOVAL
+---------------------------------------*/
 
 // Runs an ignore-check and if it passes, adds a client to activeClients[]
 function addClient(client) {
@@ -135,13 +160,29 @@ function addClientNoFollow(client, desktop) {
 		}
 	}
 }
-
 // Adds all the clients that existed before the script was executed
 function addClients() {
 	var clients = workspace.clientList();
 	for (var i = 0; i < clients.length; i++) {
 		addClient(clients[i]);
 	}
+}
+
+// Connects the signals of the new KWin:Client to the following functions
+function connectClient(client) {
+	client.clientStartUserMovedResized.connect(saveClientPos);
+	client.clientFinishUserMovedResized.connect(moveClient);
+	client.clientMinimized.connect(minimizeClient);
+	client.clientUnminimized.connect(unminimizeClient);
+	// desktopChanged function is declared here, because unlike other client signals,
+	// this one doesn't keep client as a parameter if calling a function
+	client.desktopChanged.connect(function() {
+		removeClientNoFollow(client);
+		if (activeClients[client.desktop].length < activeClients[client.desktop].max) {
+			addClientNoFollow(client, client.desktop);
+		}
+	});
+	client.float = false;
 }
 
 // Removes the closed client from activeClients[]
@@ -185,23 +226,6 @@ function removeClientNoFollow(client) {
 	}
 }
 
-// Connects the signals of the new KWin:Client to the following functions
-function connectClient(client) {
-	client.clientStartUserMovedResized.connect(saveClientPos);
-	client.clientFinishUserMovedResized.connect(moveClient);
-	client.clientMinimized.connect(minimizeClient);
-	client.clientUnminimized.connect(unminimizeClient);
-	// desktopChanged function is declared here, because unlike other client signals,
-	// this one doesn't keep client as a parameter if calling a function
-	client.desktopChanged.connect(function() {
-		removeClientNoFollow(client);
-		if (activeClients[client.desktop].length < activeClients[client.desktop].max) {
-			addClientNoFollow(client, client.desktop);
-		}
-	});
-	client.float = false;
-}
-
 // Disconnects the signals from removed clients
 // So they will not trigger when a manually floated client is interacted with
 // Or when a client is removed & added between desktops
@@ -212,6 +236,133 @@ function disconnectClient(client) {
 	client.clientUnminimized.disconnect(unminimizeClient);
 	client.float = true;
 }
+
+// Calculates the geometries to maintain the layout
+// Note: All the geometries are currently calculated from the screen size
+// Calculating the geometries from the older geometries messes things up
+function tileClients(desktop) {
+	if (activeClients[desktop].length > 0) {
+		var rect = [];
+		for (var i = 0; i < activeClients[desktop].length; i++) {
+			rect[i] = {}; // Note: Need to clone the properties, can't just rect = screen!
+			rect[i].x = screen.x;
+			rect[i].y = screen.y;
+			rect[i].width = screen.width;
+			rect[i].height = screen.height;
+			if (i === 1) {
+				rect[0].width = rect[0].width * 0.5 - gap * 0.5;
+				rect[i].width = rect[0].width;
+				rect[i].x = rect[i].x + rect[i].width + gap;
+			}
+			if (i === 2) {
+				rect[1].height = rect[1].height * 0.5 - gap * 0.5;
+				rect[i].height = rect[1].height;
+				rect[i].y = rect[i].y + rect[i].height + gap;
+				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
+				rect[i].x = rect[i].x + rect[i].width + gap;
+			}
+			if (i === 3) {
+				rect[0].height = rect[0].height * 0.5 - gap * 0.5;
+				rect[i].height = rect[0].height;
+				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
+				rect[i].y = rect[i].y + rect[i].height + gap;
+			}
+		}
+		for (i = 0; i < activeClients[desktop].length; i++) {
+			activeClients[desktop][i].geometry = rect[i];
+		}
+	}
+}
+
+// Saves the pre-movement position when called
+function saveClientPos(client) {
+	oldPos = client.geometry;
+}
+
+// Moves clients and adjusts the layout
+function moveClient(client) {
+	// If the size equals the pre-movement size, user is trying to move the client, not resize it
+	if (client.geometry.width === oldPos.width && client.geometry.height === oldPos.height) {
+		var centerX = client.geometry.x + client.width / 2;
+		var centerY = client.geometry.y + client.height / 2;
+		var geometries = [];
+		geometries.push(oldPos);
+		// Adds all the existing clients to the geometries[]...
+		for (var i = 0; i < activeClients[currentDesktop].length; i++) {
+			// ...except for the client being moved
+			// (it's of the grid and needs to be snapped back to the oldPos variable)
+			if (activeClients[currentDesktop][i] != client) {
+				geometries.push(activeClients[currentDesktop][i].geometry);
+				// If more geometry comparison is to be done, geometries[i].frameId = client.frameId to easily compare with sameClient
+			}
+		}
+		// Sorts the geometries[] and finds the geometry closest to the moved client
+		geometries.sort(function(a, b) {
+			return Math.sqrt(Math.pow((centerX - (a.x + a.width / 2)), 2) + Math.pow((centerY - (a.y + a.height / 2)), 2)) - Math.sqrt(Math.pow((centerX - (b.x + b.width / 2)), 2) + Math.pow((centerY - (b.y + b.height / 2)), 2));
+		});
+		// If the closest geometry is not the client's old position, switches the geometries and indexes
+		if (geometries[0] != oldPos) {
+			var index = findClientIndex(client, currentDesktop);
+			for (i = 0; i < activeClients[currentDesktop].length; i++) {
+				if (sameClient(activeClients[currentDesktop][i], client) !== true) {
+					// Can't call sameClient() again because geometries[] doesn't save clients, only their geometries
+					if (activeClients[currentDesktop][i].geometry.x === geometries[0].x &&
+						activeClients[currentDesktop][i].geometry.y === geometries[0].y) {
+						client.geometry = activeClients[currentDesktop][i].geometry;
+						activeClients[currentDesktop][i].geometry = oldPos;
+						var temp = activeClients[currentDesktop][index];
+						activeClients[currentDesktop][index] = activeClients[currentDesktop][i];
+						activeClients[currentDesktop][i] = temp;
+					}
+				}
+			}
+			tileClients(currentDesktop);
+		} else {
+			client.geometry = oldPos;
+		}
+	} else client.geometry = oldPos;
+}
+
+
+function minimizeClient(client) {
+	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
+		if (sameClient(activeClients[currentDesktop][i], client))  {
+			activeClients[currentDesktop].splice(i, 1);
+			activeClients[currentDesktop].max -= 1;
+		}
+	}
+	tileClients(currentDesktop);
+}
+
+function unminimizeClient(client) {
+	activeClients[client.desktop].push(client);
+	activeClients[client.desktop].max += 1;
+	workspace.currentDesktop = client.desktop;
+	tileClients(currentDesktop);
+}
+
+/*--------------------- TODO -----------------------------------
+- Figure out what to do with maximized clients
+- Maximize stays on after closing
+- Maximized property does not exist
+- Knowing which clients are maximized is problematic
+- Currently the best solution: compare to the screen size
+- Problem: User has no gaps, first window would always be "maximized"
+
+function maximizeClient(client, h, v) {
+	if (h && v) {
+		removeClient(client);
+	} else {
+		addClient(client);
+	}
+}
+--------------------------------------------------------------*/
+
+
+
+/*-------------------
+	CLIENT CHECKS
+--------------------*/
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
@@ -281,7 +432,6 @@ function checkClient(client) {
 	}
 	return true;
 }
-
 // Compare two clients without unnecessary type conversion (see issue #1)
 function sameClient(client1, client2) {
 	if (typeof client1.frameId !== undefined && typeof client2.frameId !== undefined) {
@@ -291,132 +441,19 @@ function sameClient(client1, client2) {
 	}
 }
 
-// Calculates the geometries to maintain the layout
-// Note: All the geometries are currently calculated from the screen size
-// Calculating the geometries from the older geometries messes things up
-function tileClients(desktop) {
-	if (activeClients[desktop].length > 0) {
-		var rect = [];
-		for (var i = 0; i < activeClients[desktop].length; i++) {
-			rect[i] = {}; // Note: Need to clone the properties, can't just rect = screen!
-			rect[i].x = screen.x;
-			rect[i].y = screen.y;
-			rect[i].width = screen.width;
-			rect[i].height = screen.height;
-			if (i === 1) {
-				rect[0].width = rect[0].width * 0.5 - gap * 0.5;
-				rect[i].width = rect[0].width;
-				rect[i].x = rect[i].x + rect[i].width + gap;
-			}
-			if (i === 2) {
-				rect[1].height = rect[1].height * 0.5 - gap * 0.5;
-				rect[i].height = rect[1].height;
-				rect[i].y = rect[i].y + rect[i].height + gap;
-				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
-				rect[i].x = rect[i].x + rect[i].width + gap;
-			}
-			if (i === 3) {
-				rect[0].height = rect[0].height * 0.5 - gap * 0.5;
-				rect[i].height = rect[0].height;
-				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
-				rect[i].y = rect[i].y + rect[i].height + gap;
-			}
-		}
-		for (i = 0; i < activeClients[desktop].length; i++) {
-			activeClients[desktop][i].geometry = rect[i];
+function findClientIndex(client, desktop) {
+	for (i = 0; i < activeClients[desktop].length; i++) {
+		if (sameClient(activeClients[desktop][i], client)) {
+			return i;
 		}
 	}
 }
 
-// Saves the pre-movement position when called
-function saveClientPos(client) {
-	oldPos = client.geometry;
-}
-
-// Moves clients and adjusts the layout
-function moveClient(client) {
-	// If the size equals the pre-movement size, user is trying to move the client, not resize it
-	if (client.geometry.width === oldPos.width && client.geometry.height === oldPos.height) {
-		var centerX = client.geometry.x + client.width / 2;
-		var centerY = client.geometry.y + client.height / 2;
-		var geometries = [];
-		geometries.push(oldPos);
-		// Adds all the existing clients to the geometries[]...
-		for (var i = 0; i < activeClients[currentDesktop].length; i++) {
-			// ...except for the client being moved
-			// (it's of the grid and needs to be snapped back to the oldPos variable)
-			if (activeClients[currentDesktop][i] != client) {
-				geometries.push(activeClients[currentDesktop][i].geometry);
-				// If more geometry comparison is to be done, geometries[i].frameId = client.frameId to easily compare with sameClient
-			}
-		}
-		// Sorts the geometries[] and finds the geometry closest to the moved client
-		geometries.sort(function(a, b) {
-			return Math.sqrt(Math.pow((centerX - (a.x + a.width / 2)), 2) + Math.pow((centerY - (a.y + a.height / 2)), 2)) - Math.sqrt(Math.pow((centerX - (b.x + b.width / 2)), 2) + Math.pow((centerY - (b.y + b.height / 2)), 2));
-		});
-		// If the closest geometry is not the client's old position...
-		if (geometries[0] != oldPos) {
-			// ...switches the geometries...
-			var index;
-			for (i = 0; i < activeClients[currentDesktop].length; i++) {
-				if (sameClient(activeClients[currentDesktop][i], client)) {
-					index = i;
-				}
-			}
-			// ...and activeClients indexes
-			for (i = 0; i < activeClients[currentDesktop].length; i++) {
-				if (sameClient(activeClients[currentDesktop][i], client) !== true) {
-					// Can't call sameClient() again because geometries[] doesn't save clients, only their geometries
-					if (activeClients[currentDesktop][i].geometry.x === geometries[0].x &&
-						activeClients[currentDesktop][i].geometry.y === geometries[0].y) {
-						client.geometry = activeClients[currentDesktop][i].geometry;
-						activeClients[currentDesktop][i].geometry = oldPos;
-						var temp = activeClients[currentDesktop][index];
-						activeClients[currentDesktop][index] = activeClients[currentDesktop][i];
-						activeClients[currentDesktop][i] = temp;
-					}
-				}
-			}
-			tileClients(currentDesktop);
-		} else {
-			client.geometry = oldPos;
-		}
-	} else client.geometry = oldPos;
-}
 
 
-/* Todo: - Figure out what to do with maximized clients
-		 - Maximize stays on after closing
-		 - Maximized property does not exist
-	     - Knowing which clients are maximized is problematic
-	     - Currently the best solution: compare to the screen size
-	     - Problem: User has no gaps, first window would always be "maximized"
-
-function maximizeClient(client, h, v) {
-	if (h && v) {
-		removeClient(client);
-	} else {
-		addClient(client);
-	}
-}
-*/
-
-function minimizeClient(client) {
-	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
-		if (sameClient(activeClients[currentDesktop][i], client))  {
-			activeClients[currentDesktop].splice(i, 1);
-			activeClients[currentDesktop].max -= 1;
-		}
-	}
-	tileClients(currentDesktop);
-}
-
-function unminimizeClient(client) {
-	activeClients[client.desktop].push(client);
-	activeClients[client.desktop].max += 1;
-	workspace.currentDesktop = client.desktop;
-	tileClients(currentDesktop);
-}
+/*------------------------------
+	VIRTUAL DESKTOP FUNCTIONS
+------------------------------*/
 
 function changeDesktop() {
 	currentDesktop = workspace.currentDesktop;
@@ -442,5 +479,11 @@ function adjustDesktops(desktop) {
 		tileClients(currentDesktop);
 	}
 }
+
+
+
+/*------------------------------------------------------------------------------------
+	MAIN LOOP? (After which, the script keeps answering to the connected signals)
+------------------------------------------------------------------------------------*/
 
 init();
