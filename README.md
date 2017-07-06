@@ -5,7 +5,7 @@
 - Maintains the tiled layout when windows are interacted with
 - Automatically creates and switches virtual desktops
 - **Shortcut to exclude windows (Meta+F by default)**
-- ** To bind shortcuts go to settings -> shortcuts -> global shortcuts -> kwin and search for "Quarter" to find all the script specific shortcuts!**
+- **To bind shortcuts go to settings -> shortcuts -> global shortcuts -> kwin and search for "Quarter" to find all the script specific shortcuts!**
 
 
 ## Screenshots
@@ -16,9 +16,6 @@
 #### Movement keys:
 ![Keybindings](http://imgur.com/W3HzO5A.gif)
 
-#### Screenshot with three windows:
-![Screenshot](https://u.teknik.io/IZz6t.png)
-
 [Video demonstration (a gfycat link)](https://gfycat.com/TintedRepentantKawala)
 
 
@@ -26,7 +23,7 @@
 - Move or clone to ~/.local/share/kwin/scripts and enable the script via KWin Scripts
 
 ## Help
-- ** To bind shortcuts go to settings -> shortcuts -> global shortcuts -> kwin and search for "Quarter" to find all the script specific shortcuts!**
+- **To bind shortcuts go to settings -> shortcuts -> global shortcuts -> kwin and search for "Quarter" to find all the script specific shortcuts!**
 - In case of trouble, restart the script by disabling it and enabling it again via KWin Scripts
 - To adjust gapsize, edit /contents/code/main.js, find var gap and change the integer
 - To disable borders, edit /contents/code/main.js, find var noBorders and change the boolean
