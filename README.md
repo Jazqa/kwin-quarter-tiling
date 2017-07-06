@@ -10,6 +10,9 @@
 
 ## Screenshots
 
+#### Basic functionality: 
+![Functionality](http://i.imgur.com/3Cg4dN5.gif)
+
 #### Movement keys:
 ![Keybindings](http://imgur.com/W3HzO5A.gif)
 
@@ -23,7 +26,7 @@
 - Move or clone to ~/.local/share/kwin/scripts and enable the script via KWin Scripts
 
 ## Help
-- In case Meta+F is not working, go to settings -> shortcuts -> global shortcuts -> kwin and search for "Float", bind a shortcut for the action "Float On/Off"
+- ** To bind shortcuts go to settings -> shortcuts -> global shortcuts -> kwin and search for "Quarter" to find all the script specific shortcuts!**
 - In case of trouble, restart the script by disabling it and enabling it again via KWin Scripts
 - To adjust gapsize, edit /contents/code/main.js, find var gap and change the integer
 - To disable borders, edit /contents/code/main.js, find var noBorders and change the boolean
