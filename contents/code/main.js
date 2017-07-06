@@ -1,6 +1,6 @@
-/*-----------------
-	TODO-LIST
------------------*/
+  /*----------/
+ / TODO-LIST /
+/----------*/
 /*
 	- Configuration interface
 	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
@@ -13,14 +13,14 @@
 
 
 
-
-/*---------------------
-	GLOBAL VARIABLES
------------------------*/
+  /*-----------------/
+ / GLOBAL VARIABLES /
+/-----------------*/
 
 // Add programs that don't tile well
 // Names usually in lowercase with no spaces
 var ignoredClients = [
+	"albert",
 	"kate",
 	"kazam",
 	"krunner",
@@ -58,9 +58,9 @@ var largeClients = [
 // is used to skip the step looking for Plasma in the checkClient() function
 var plasmaNotFound = true;
 
-var gap = readConfig("gap", 14); // Gap size in pixels
+var gap = 24; // Gap size in pixels
 
-var noBorders = readConfig("noBorders", false); // Due to readConfig(), always if (noBorders === true) vs. if (noBorders)
+var noBorders = false;
 
 var screen = {
 	x: 0,
@@ -76,9 +76,9 @@ var activeClients = {};
 
 
 
-/*------------------
-	INIT FUNCTIONS
--------------------*/
+  /*---------------/
+ / INIT FUNCTIONS /
+/---------------*/
 
 function init() {
 	workspace.desktops = 1;
@@ -87,7 +87,6 @@ function init() {
 		activeClients[i].max = 4; // Maximum number of (tiled) clients on a virtual desktop
 	}
 	registerKeys();
-	// Todo: Shortcut for +/- gapsize?
 	addClients();
 	// Connects the KWin:Workspace signals to the following functions
 	workspace.clientAdded.connect(addClient);
@@ -98,6 +97,8 @@ function init() {
 }
 
 function registerKeys() {
+	// Todo: Shortcut for +/- gapsize?
+	// Todo: Shortcut for moving clients
 	registerShortcut(
 		"Float On/Off",
 		"Float On/Off",
@@ -109,19 +110,20 @@ function registerKeys() {
 				removeClient(workspace.activeClient);
 			}
 	});
-	// registerShortcut() for moving clients
 }
 
-/*---------------------------------------
-	CLIENT ADDING, MOVING & REMOVAL
----------------------------------------*/
+
+
+  /*--------------------------------/
+ / CLIENT ADDING, MOVING & REMOVAL /
+/--------------------------------*/
 
 // Runs an ignore-check and if it passes, adds a client to activeClients[]
 function addClient(client) {
 	if (checkClient(client)) {
-		if (noBorders === true) {
+		if (noBorders) {
 			client.noBorder = true;
-		}
+		} else client.noBorder = false;
 		// If activeClients.length exceeds the maximum amount, creates a new virtual desktop
 		if (activeClients[currentDesktop].length === activeClients[currentDesktop].max ||
 			activeClients[currentDesktop].length === 4) {
@@ -147,9 +149,9 @@ function addClient(client) {
 // Unlike addClient(), takes target desktop as a parameter and does not follow or connect the client
 function addClientNoFollow(client, desktop) {
 	if (checkClient(client)) {
-		if (noBorders === true) {
+		if (noBorders) {
 			client.noBorder = true;
-		}
+		} else client.noBorder = false;
 		client.desktop = desktop;
 		activeClients[desktop].push(client);
 		// If the client is minimized, triggers the minimization signal after it's added
@@ -290,7 +292,7 @@ function moveClient(client) {
 		// Adds all the existing clients to the geometries[]...
 		for (var i = 0; i < activeClients[currentDesktop].length; i++) {
 			// ...except for the client being moved
-			// (it's of the grid and needs to be snapped back to the oldPos variable)
+			// (it's off the grid and needs to be snapped back to the oldPos variable)
 			if (activeClients[currentDesktop][i] != client) {
 				geometries.push(activeClients[currentDesktop][i].geometry);
 				// If more geometry comparison is to be done, geometries[i].frameId = client.frameId to easily compare with sameClient
@@ -303,19 +305,12 @@ function moveClient(client) {
 		// If the closest geometry is not the client's old position, switches the geometries and indexes
 		if (geometries[0] != oldPos) {
 			var index = findClientIndex(client, currentDesktop);
-			for (i = 0; i < activeClients[currentDesktop].length; i++) {
-				if (sameClient(activeClients[currentDesktop][i], client) !== true) {
-					// Can't call sameClient() again because geometries[] doesn't save clients, only their geometries
-					if (activeClients[currentDesktop][i].geometry.x === geometries[0].x &&
-						activeClients[currentDesktop][i].geometry.y === geometries[0].y) {
-						client.geometry = activeClients[currentDesktop][i].geometry;
-						activeClients[currentDesktop][i].geometry = oldPos;
-						var temp = activeClients[currentDesktop][index];
-						activeClients[currentDesktop][index] = activeClients[currentDesktop][i];
-						activeClients[currentDesktop][i] = temp;
-					}
-				}
-			}
+			var index2 = findGeometryIndex(geometries[0], currentDesktop); 
+			client.geometry = activeClients[currentDesktop][index2].geometry;
+			activeClients[currentDesktop][index2].geometry = oldPos;
+			var temp = activeClients[currentDesktop][index];
+			activeClients[currentDesktop][index] = activeClients[currentDesktop][index2];
+			activeClients[currentDesktop][index2] = temp;
 			tileClients(currentDesktop);
 		} else {
 			client.geometry = oldPos;
@@ -360,9 +355,9 @@ function maximizeClient(client, h, v) {
 
 
 
-/*-------------------
-	CLIENT CHECKS
---------------------*/
+  /*--------------/
+ / CLIENT CHECKS /
+/--------------*/
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
@@ -432,15 +427,24 @@ function checkClient(client) {
 	}
 	return true;
 }
+
+// Todo: Unify clients & geometries for readability, optimization and coherence
+
 // Compare two clients without unnecessary type conversion (see issue #1)
 function sameClient(client1, client2) {
-	if (typeof client1.frameId !== undefined && typeof client2.frameId !== undefined) {
-		if (client1.frameId === client2.frameId) {
-			return true;
-		} else return false;
-	}
+	if (client1.frameId === client2.frameId) {
+		return true;
+	} else return false;
 }
 
+// Compare two geometries without unnecessary type conversion
+function sameGeometry(geo1, geo2) {
+	if (geo1.x === geo2.x && geo1.y === geo2.y) {
+		return true;
+	} else return false;
+}
+
+// Finds activeClients[desktop] index of a client
 function findClientIndex(client, desktop) {
 	for (i = 0; i < activeClients[desktop].length; i++) {
 		if (sameClient(activeClients[desktop][i], client)) {
@@ -449,11 +453,28 @@ function findClientIndex(client, desktop) {
 	}
 }
 
+// Finds activeClients[desktop] index by geometry
+function findGeometryIndex(geo, desktop) {
+	for (i = 0; i < activeClients[desktop].length; i++) {
+		if (sameGeometry(activeClients[desktop][i], geo)) {
+			return i;
+		}
+	}
+}
+
+function swapClients(client1, client2, desktop) {
+	var i1 = findClientIndex(client1);
+	var i2 = findClientIndex(client2);
+	var temp = client1;
+	activeClients[desktop][i1] = client2;
+	activeClients[desktop][i2] = temp;
+}
 
 
-/*------------------------------
-	VIRTUAL DESKTOP FUNCTIONS
-------------------------------*/
+
+  /*--------------------------/
+ / VIRTUAL DESKTOP FUNCTIONS /
+/--------------------------*/
 
 function changeDesktop() {
 	currentDesktop = workspace.currentDesktop;
@@ -482,8 +503,8 @@ function adjustDesktops(desktop) {
 
 
 
-/*------------------------------------------------------------------------------------
-	MAIN LOOP? (After which, the script keeps answering to the connected signals)
-------------------------------------------------------------------------------------*/
+  /*-----/
+ / MAIN /
+/-----*/
 
 init();
