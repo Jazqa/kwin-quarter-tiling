@@ -258,8 +258,9 @@
   				activeClients[currentDesktop] = [];
   				activeClients[currentDesktop].max = 4;
   				if (currentDesktop != 1) {
+  					client.desktop = 1; // Hack: Throws the removed client to first desktop to avoid plasma crash when removing a desktop
   					workspace.currentDesktop -= 1;
-  					// workspace.desktops -= 1; Despite crashing plasma, this works as its supposed to (plasma bug?)
+  					workspace.desktops -= 1;
   				}
   			}
   		}
@@ -361,7 +362,7 @@
   		});
   		// If the closest geometry is not the client's old position, switches the geometries and indexes
   		if (geometries[0] != oldPos) {
-  			var i = findClientIndex(client, currentDesktop);
+  			i = findClientIndex(client, currentDesktop);
   			var j = findGeometryIndex(geometries[0], currentDesktop);
   			swapClients(i, j, currentDesktop);
   			tileClients(currentDesktop);
@@ -550,7 +551,6 @@
   		tileClients(currentDesktop);
   	}
   }
-
 
 
   /*-----/
