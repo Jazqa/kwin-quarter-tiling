@@ -27,6 +27,7 @@ After the installation, you might want to configure your keybindings. To do so, 
 
 ## Help
 - In case of trouble, restart the script by disabling it and enabling it again via KWin Scripts
+- After changing the configuration, restart the script by disabling it and enabling it again.
 
 ## Note
 - If you remove a virtual desktop, all of the tiled clients on the desktop will also be closed (it's a feature)
