@@ -22,7 +22,8 @@
     git clone https://github.com/Jazqa/kwin-quarter-tiling.git
     cd kwin-quarter-tiling
     plasmapkg2 --type kwinscript -i .
-    cp metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
+    mkdir -p ~/.local/share/kservices5
+    cp ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
 After the installation, you might want to configure your keybindings. To do so, go to Settings » Shortcuts » Global Shortcuts » KWin and search for "Quarter" to find all the script specific shortcuts. Bind the ones you wish to use. "Float On/Off" is recommended for an easy way to tile and untile the active window.
 
 ## Help
@@ -33,7 +34,7 @@ After the installation, you might want to configure your keybindings. To do so, 
 ![Keybindings](http://i.imgur.com/K3cHAUG.png)
 
 #### Configuring the script:
-![Configuration](http://i.imgur.com/T3qN6Hg.png)
+![Configuration](http://i.imgur.com/UfTBwCS.png)
 
 
 ## Note
