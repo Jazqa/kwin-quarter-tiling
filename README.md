@@ -33,7 +33,7 @@ After the installation, you might want to configure your keybindings. To do so, 
 ![Keybindings](http://i.imgur.com/K3cHAUG.png)
 
 #### Configuring the script:
-![Configuration](http://i.imgur.com/T3qN6Hg.png)
+![Configuration](http://i.imgur.com/UfTBwCS.png)
 
 
 ## Note
