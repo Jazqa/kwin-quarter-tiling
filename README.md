@@ -21,7 +21,9 @@
 
 
 ## Installation
-- Move or clone to ~/.local/share/kwin/scripts and enable the script via KWin Scripts
+  git clone https://github.com/Jazqa/kwin-quarter-tiling.git
+  cd kwin-quarter-tiling
+  plasmapkg2 --type kwinscript -i .
 
 ## Help
 - **To bind shortcuts go to settings --> shortcuts --> global shortcuts --> kwin and search for "Quarter" to find all the script specific shortcuts!**
