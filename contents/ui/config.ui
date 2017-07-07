@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>261</width>
+    <width>264</width>
     <height>282</height>
    </rect>
   </property>
@@ -37,7 +37,7 @@
      <item>
       <widget class="QLabel" name="gapLabel">
        <property name="text">
-        <string>Gap Size</string>
+        <string>Gap Size:</string>
        </property>
       </widget>
      </item>
@@ -172,7 +172,7 @@
    <item>
     <widget class="QLabel" name="largeProgramsLabel">
      <property name="text">
-      <string>Large Programs:</string>
+      <string>Large Programs: (Not implemented yet)</string>
      </property>
     </widget>
    </item>
