@@ -6,95 +6,188 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>411</width>
-    <height>223</height>
+    <width>261</width>
+    <height>282</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Quarter Tiling</string>
   </property>
-  <layout class="QFormLayout" name="formLayout">
-   <item row="0" column="1">
-    <widget class="QLineEdit" name="kcfg_gap">
-     <property name="text">
-      <string>10</string>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <property name="spacing">
+    <number>6</number>
+   </property>
+   <property name="leftMargin">
+    <number>6</number>
+   </property>
+   <property name="topMargin">
+    <number>6</number>
+   </property>
+   <property name="rightMargin">
+    <number>6</number>
+   </property>
+   <property name="bottomMargin">
+    <number>6</number>
+   </property>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
+     <property name="topMargin">
+      <number>0</number>
      </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="gapLabel">
-     <property name="text">
-      <string>Gap Size:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="noBordersLabel">
-     <property name="text">
-      <string>No Borders:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QComboBox" name="kcfg_noBorders">
      <item>
-      <property name="text">
-       <string>True</string>
-      </property>
+      <widget class="QLabel" name="gapLabel">
+       <property name="text">
+        <string>Gap Size</string>
+       </property>
+      </widget>
      </item>
      <item>
-      <property name="text">
-       <string>False</string>
-      </property>
+      <widget class="QLineEdit" name="kcfg_gap">
+       <property name="minimumSize">
+        <size>
+         <width>32</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>32</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>10</string>
+       </property>
+      </widget>
      </item>
-    </widget>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="noBordersLabel">
+       <property name="text">
+        <string>Borders:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="kcfg_noBorders">
+       <item>
+        <property name="text">
+         <string>true</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>false</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
    </item>
-   <item row="7" column="1">
-    <widget class="QLineEdit" name="kcfg_ignoredClients">
-     <property name="text">
-      <string>spotify</string>
+   <item>
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
      </property>
-     <property name="placeholderText">
-      <string>Comma separated list of window classes</string>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>10</height>
+      </size>
      </property>
-    </widget>
+    </spacer>
    </item>
-   <item row="7" column="0">
+   <item>
     <widget class="QLabel" name="ignoredProgramsLabel">
      <property name="text">
       <string>Ignored Programs:</string>
      </property>
     </widget>
    </item>
-   <item row="8" column="1">
-    <widget class="QLineEdit" name="kcfg_ignoredCaptions">
+   <item>
+    <widget class="QLineEdit" name="kcfg_ignoredClients">
      <property name="text">
-      <string>move to trash</string>
+      <string/>
+     </property>
+     <property name="placeholderText">
+      <string>wine, steam, kate</string>
      </property>
     </widget>
    </item>
-   <item row="8" column="0">
+   <item>
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>10</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
     <widget class="QLabel" name="ignoredCaptionsLabel">
      <property name="text">
-      <string>Ignored Captions:</string>
+      <string>Ignored Window Captions:</string>
      </property>
     </widget>
    </item>
-   <item row="9" column="1">
-    <widget class="QLineEdit" name="kcfg_largePrograms">
+   <item>
+    <widget class="QLineEdit" name="kcfg_ignoredCaptions">
      <property name="text">
-      <string>gimp</string>
+      <string/>
+     </property>
+     <property name="placeholderText">
+      <string>File Upload, Move to Trash</string>
      </property>
     </widget>
    </item>
-   <item row="9" column="0">
+   <item>
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>10</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
     <widget class="QLabel" name="largeProgramsLabel">
      <property name="text">
       <string>Large Programs:</string>
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QLineEdit" name="kcfg_largePrograms">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="placeholderText">
+      <string>gimp, inkscape, krita</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>
+ <connections/>
 </ui>
