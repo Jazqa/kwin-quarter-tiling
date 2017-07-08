@@ -169,6 +169,14 @@ function registerKeys() {
 			} else return;
 			tileClients();
 		});
+	registerShortcut(
+		"Quarter: Reset Layout",
+		"Quarter: Reset Layout",
+		"Meta+R",
+		function() {
+			activeClients[currentDesktop].layout = newLayout();
+			tileClients();
+		});
 }
 
 
@@ -386,7 +394,7 @@ function saveClientGeo(client) {
 	oldGeo = client.geometry;
 }
 
-// Moves clients and adjusts the layout
+// Decides if a client is moved or resized
 function adjustClient(client) {
 	// If the size equals the pre-movement size, user is trying to move the client, not resize it
 	if (client.geometry.width === oldGeo.width && client.geometry.height === oldGeo.height) {
@@ -395,6 +403,7 @@ function adjustClient(client) {
 		resizeClient(client);
 }
 
+// Moves clients (switches places within the layout)
 function moveClient(client) {
 	var centerX = client.geometry.x + client.width / 2;
 	var centerY = client.geometry.y + client.height / 2;
@@ -424,6 +433,7 @@ function moveClient(client) {
 	}
 }
 
+// Resizes all the clients
 function resizeClient(client) {
 	var difX = client.geometry.x - oldGeo.x;
 	var difY = client.geometry.y - oldGeo.y;
