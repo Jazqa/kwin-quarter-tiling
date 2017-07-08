@@ -15,6 +15,9 @@
 #### Movement keys:
 ![Keybindings](http://imgur.com/W3HzO5A.gif)
 
+#### Resizing:
+![Resizing](http://i.imgur.com/O9aoQPk.gif)
+
 [Video demonstration (a gfycat link)](https://gfycat.com/TintedRepentantKawala)
 
 
