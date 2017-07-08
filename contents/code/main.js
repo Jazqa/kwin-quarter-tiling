@@ -56,7 +56,13 @@ largeClients = largeClients.concat(readConfig("largeClients", "gimp").toString()
 // Hack: The way Plasma panel is found also finds multiple other Plasma-related clients
 // Plasma panel is the first client to be found, so after it has been found, a global variable
 // is used to skip the step looking for Plasma in the checkClient() function
-var plasmaNotFound = true;
+var plasma = {
+	x: 0,
+	y: 0,
+	height: 0,
+	width: 0,
+	notFound: true,
+};
 
 var gap = readConfig("gap", 10); // Gap size in pixels
 
@@ -69,12 +75,10 @@ var screen = {
 	height: workspace.displayHeight,
 };
 
-var oldPos; // Hack: Saves the pre-movement position as a global variable
+var oldGeo; // Hack: Saves the pre-movement position as a global variable
 
 var currentDesktop = workspace.currentDesktop;
 var activeClients = {};
-
-
 
 /*---------------/
 / INIT FUNCTIONS /
@@ -82,10 +86,7 @@ var activeClients = {};
 
 function init() {
 	workspace.desktops = 1;
-	for (i = 1; i <= 20; i++) {
-		activeClients[i] = []; // Initializes 20 empty arrays for virtual desktops to avoid crashes caused by undefined objects
-		activeClients[i].max = 4; // Maximum number of (tiled) clients on a virtual desktop
-	}
+	createDesktop(1);
 	registerKeys();
 	addClients();
 	// Connects the KWin:Workspace signals to the following functions
@@ -122,7 +123,7 @@ function registerKeys() {
 			} else if (i === 3) {
 				swapClients(i, 0, currentDesktop);
 			} else return;
-			tileClients(currentDesktop);
+			tileClients();
 		});
 	registerShortcut(
 		"Quarter: Move Down",
@@ -136,7 +137,7 @@ function registerKeys() {
 			} else if (i === 1 && activeClients[currentDesktop].length >= 3) {
 				swapClients(i, 2, currentDesktop);
 			} else return;
-			tileClients(currentDesktop);
+			tileClients();
 		});
 	registerShortcut(
 		"Quarter: Move Left",
@@ -152,7 +153,7 @@ function registerKeys() {
 			} else if (i === 2) {
 				swapClients(i, 0, currentDesktop);
 			} else return;
-			tileClients(currentDesktop);
+			tileClients();
 		});
 	registerShortcut(
 		"Quarter: Move Right",
@@ -166,10 +167,9 @@ function registerKeys() {
 			} else if (i === 3) {
 				swapClients(i, 2, currentDesktop);
 			} else return;
-			tileClients(currentDesktop);
+			tileClients();
 		});
 }
-
 
 
 /*--------------------------------/
@@ -194,7 +194,7 @@ function addClient(client) {
 		}
 		client.desktop = currentDesktop;
 		activeClients[currentDesktop].push(client);
-		tileClients(currentDesktop);
+		tileClients();	
 		connectClient(client);
 		// If the client is minimized, triggers the minimization signal after it's added
 		if (client.minimized) {
@@ -212,9 +212,9 @@ function addClientNoFollow(client, desktop) {
 		} else client.noBorder = false;
 		client.desktop = desktop;
 		activeClients[desktop].push(client);
-		// If the client is minimized, triggers the minimization signal after it's added
-		tileClients(currentDesktop);
+		tileClients();
 		connectClient(client);
+		// If the client is minimized, triggers the minimization signal after it's added
 		if (client.minimized) {
 			minimizeClient(client);
 		}
@@ -230,8 +230,8 @@ function addClients() {
 
 // Connects the signals of the new KWin:Client to the following functions
 function connectClient(client) {
-	client.clientStartUserMovedResized.connect(saveClientPos);
-	client.clientFinishUserMovedResized.connect(moveClient);
+	client.clientStartUserMovedResized.connect(saveClientGeo);
+	client.clientFinishUserMovedResized.connect(adjustClient);
 	client.clientMinimized.connect(minimizeClient);
 	client.clientUnminimized.connect(unminimizeClient);
 	// desktopChanged function is declared here, because unlike other client signals,
@@ -254,10 +254,8 @@ function removeClient(client) {
 			disconnectClient(client);
 			// If there are still tiles after the removal, calculates the geometries
 			if (activeClients[currentDesktop].length > 0) {
-				tileClients(currentDesktop);
+				tileClients();
 			} else if (activeClients[currentDesktop].length === 0) {
-				activeClients[currentDesktop] = [];
-				activeClients[currentDesktop].max = 4;
 				if (workspace.currentDesktop > 1) {
 					// client.desktop = null;
 					workspace.currentDesktop -= 1;
@@ -279,7 +277,7 @@ function removeClientNoFollow(client) {
 			disconnectClient(client);
 			// If there are still tiles after the removal, calculates the geometries
 			if (activeClients[currentDesktop].length > 0) {
-				tileClients(currentDesktop);
+				tileClients();
 			} else if (activeClients[currentDesktop].length === 0) {
 				activeClients[currentDesktop] = [];
 				activeClients[currentDesktop].max = 4;
@@ -292,86 +290,202 @@ function removeClientNoFollow(client) {
 // So they will not trigger when a manually floated client is interacted with
 // Or when a client is removed & added between desktops
 function disconnectClient(client) {
-	client.clientStartUserMovedResized.disconnect(saveClientPos);
-	client.clientFinishUserMovedResized.disconnect(moveClient);
+	client.clientStartUserMovedResized.disconnect(saveClientGeo);
+	client.clientFinishUserMovedResized.disconnect(adjustClient);
 	client.clientMinimized.disconnect(minimizeClient);
 	client.clientUnminimized.disconnect(unminimizeClient);
 	client.float = true;
 }
 
 // Calculates the geometries to maintain the layout
-// Note: All the geometries are currently calculated from the screen size
-// Calculating the geometries from the older geometries messes things up
-function tileClients(desktop) {
-	if (activeClients[desktop].length > 0) {
-		var rect = [];
-		for (var i = 0; i < activeClients[desktop].length; i++) {
-			rect[i] = {}; // Note: Need to clone the properties, can't just rect = screen!
-			rect[i].x = screen.x;
-			rect[i].y = screen.y;
-			rect[i].width = screen.width;
-			rect[i].height = screen.height;
-			if (i === 1) {
-				rect[0].width = rect[0].width * 0.5 - gap * 0.5;
-				rect[i].width = rect[0].width;
-				rect[i].x = rect[i].x + rect[i].width + gap;
-			}
-			if (i === 2) {
-				rect[1].height = rect[1].height * 0.5 - gap * 0.5;
-				rect[i].height = rect[1].height;
-				rect[i].y = rect[i].y + rect[i].height + gap;
-				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
-				rect[i].x = rect[i].x + rect[i].width + gap;
-			}
-			if (i === 3) {
-				rect[0].height = rect[0].height * 0.5 - gap * 0.5;
-				rect[i].height = rect[0].height;
-				rect[i].width = rect[i].width * 0.5 - gap * 0.5;
-				rect[i].y = rect[i].y + rect[i].height + gap;
-			}
-		}
-		for (i = 0; i < activeClients[desktop].length; i++) {
-			activeClients[desktop][i].geometry = rect[i];
-		}
+// Geometry calculation is a mess and pre-existing client geometries should NEVER be used
+// Layout is always the fullscreen - no plasma and no gaps layout
+// Plasma is impossible to calculate on init() so it has to be calculated repeatedly
+function tileClients() {
+	// Let's just pretend this doesn't exist, okay?
+	// Calculating the gaps and plasma each time something moves is the best and least buggy approach
+	// Believe me, I've tried EVERYTHING
+	// Since it's just four, switch is also the easiest approach
+	// Todo: Clean this up, big time
+	var adjusted = [];
+	switch(activeClients[currentDesktop].length) {
+		case 0:
+			break;
+		case 1:
+			adjusted[0] = {};
+			adjusted[0].x = activeClients[currentDesktop].layout[0].x + plasma.x + gap;
+			adjusted[0].y = activeClients[currentDesktop].layout[0].y + plasma.y + gap;
+			adjusted[0].width = activeClients[currentDesktop].layout[0].width + activeClients[currentDesktop].layout[1].width - plasma.width - gap * 2;
+			adjusted[0].height = activeClients[currentDesktop].layout[0].height + activeClients[currentDesktop].layout[3].height - plasma.height - gap * 2;
+			break;
+		case 2:
+			adjusted[0] = {};
+			adjusted[0].x = activeClients[currentDesktop].layout[0].x + plasma.x + gap;
+			adjusted[0].y = activeClients[currentDesktop].layout[0].y + plasma.y + gap;
+			adjusted[0].width = activeClients[currentDesktop].layout[0].width - plasma.width * 0.5 - gap * 1.5;
+			adjusted[0].height = activeClients[currentDesktop].layout[0].height + activeClients[currentDesktop].layout[3].height - plasma.height - gap * 2;
+
+			adjusted[1] = {};
+			adjusted[1].x = activeClients[currentDesktop].layout[1].x + plasma.x * 0.5 + gap * 0.5;
+			adjusted[1].y = activeClients[currentDesktop].layout[1].y + plasma.y + gap;
+			adjusted[1].width = activeClients[currentDesktop].layout[1].width - plasma.width * 0.5 - gap * 1.5;
+			adjusted[1].height = activeClients[currentDesktop].layout[1].height + activeClients[currentDesktop].layout[2].height - plasma.height - gap * 2;
+			break;
+		case 3:
+			adjusted[0] = {};
+			adjusted[0].x = activeClients[currentDesktop].layout[0].x + plasma.x + gap;
+			adjusted[0].y = activeClients[currentDesktop].layout[0].y + plasma.y + gap;
+			adjusted[0].width = activeClients[currentDesktop].layout[0].width - plasma.width * 0.5 - gap * 1.5;
+			adjusted[0].height = activeClients[currentDesktop].layout[0].height + activeClients[currentDesktop].layout[3].height - plasma.height - gap * 2;
+
+			adjusted[1] = {};
+			adjusted[1].x = activeClients[currentDesktop].layout[1].x + plasma.x * 0.5 + gap * 0.5;
+			adjusted[1].y = activeClients[currentDesktop].layout[1].y + plasma.y + gap;
+			adjusted[1].width = activeClients[currentDesktop].layout[1].width - plasma.width * 0.5 - gap * 1.5;
+			adjusted[1].height = activeClients[currentDesktop].layout[1].height - plasma.height * 0.5 - gap * 1.5;
+
+			adjusted[2] = {};
+			adjusted[2].x = activeClients[currentDesktop].layout[2].x + plasma.x * 0.5 + gap * 0.5;
+			adjusted[2].y = activeClients[currentDesktop].layout[2].y + plasma.y * 0.5 + gap * 0.5;
+			adjusted[2].width = activeClients[currentDesktop].layout[2].width - plasma.width * 0.5 - gap * 1.5;
+			adjusted[2].height = activeClients[currentDesktop].layout[2].height - plasma.height * 0.5 - gap * 1.5;
+			break;
+		case 4:
+			adjusted[0] = {};
+			adjusted[0].x = activeClients[currentDesktop].layout[0].x + plasma.x + gap;
+			adjusted[0].y = activeClients[currentDesktop].layout[0].y + plasma.y + gap;
+			adjusted[0].width = activeClients[currentDesktop].layout[0].width - plasma.width * 0.5 - gap * 1.5;
+			adjusted[0].height = activeClients[currentDesktop].layout[0].height - plasma.height * 0.5 - gap * 1.5;
+
+			adjusted[1] = {};
+			adjusted[1].x = activeClients[currentDesktop].layout[1].x + plasma.x * 0.5 + gap * 0.5;
+			adjusted[1].y = activeClients[currentDesktop].layout[1].y + plasma.y + gap;
+			adjusted[1].width = activeClients[currentDesktop].layout[1].width - plasma.width * 0.5 - gap * 1.5;
+			adjusted[1].height = activeClients[currentDesktop].layout[1].height - plasma.height * 0.5 - gap * 1.5;
+
+			adjusted[2] = {};
+			adjusted[2].x = activeClients[currentDesktop].layout[2].x + plasma.x * 0.5 + gap * 0.5;
+			adjusted[2].y = activeClients[currentDesktop].layout[2].y + plasma.y * 0.5 + gap * 0.5;
+			adjusted[2].width = activeClients[currentDesktop].layout[2].width - plasma.width * 0.5 - gap * 1.5;
+			adjusted[2].height = activeClients[currentDesktop].layout[2].height - plasma.height * 0.5 - gap * 1.5;
+
+			adjusted[3] = {};
+			adjusted[3].x = activeClients[currentDesktop].layout[3].x + plasma.x + gap;
+			adjusted[3].y = activeClients[currentDesktop].layout[3].y + plasma.y * 0.5 + gap * 0.5;
+			adjusted[3].width = activeClients[currentDesktop].layout[3].width - plasma.width * 0.5 - gap * 1.5;
+			adjusted[3].height = activeClients[currentDesktop].layout[3].height - plasma.height * 0.5 - gap * 1.5;
+			break; 
+	}
+	for (var j = 0; j < adjusted.length; j++) {
+		activeClients[currentDesktop][j].geometry = adjusted[j];
 	}
 }
 
 // Saves the pre-movement position when called
-function saveClientPos(client) {
-	oldPos = client.geometry;
+function saveClientGeo(client) {
+	oldGeo = client.geometry;
 }
 
 // Moves clients and adjusts the layout
-function moveClient(client) {
+function adjustClient(client) {
 	// If the size equals the pre-movement size, user is trying to move the client, not resize it
-	if (client.geometry.width === oldPos.width && client.geometry.height === oldPos.height) {
-		var centerX = client.geometry.x + client.width / 2;
-		var centerY = client.geometry.y + client.height / 2;
-		var geometries = [];
-		geometries.push(oldPos);
-		// Adds all the existing clients to the geometries[]...
-		for (var i = 0; i < activeClients[currentDesktop].length; i++) {
-			// ...except for the client being moved
-			// (it's off the grid and needs to be snapped back to the oldPos variable)
-			if (activeClients[currentDesktop][i] != client) {
-				geometries.push(activeClients[currentDesktop][i].geometry);
-				// If more geometry comparison is to be done, geometries[i].frameId = client.frameId to easily compare with sameClient
-			}
-		}
-		// Sorts the geometries[] and finds the geometry closest to the moved client
-		geometries.sort(function(a, b) {
-			return Math.sqrt(Math.pow((centerX - (a.x + a.width / 2)), 2) + Math.pow((centerY - (a.y + a.height / 2)), 2)) - Math.sqrt(Math.pow((centerX - (b.x + b.width / 2)), 2) + Math.pow((centerY - (b.y + b.height / 2)), 2));
-		});
-		// If the closest geometry is not the client's old position, switches the geometries and indexes
-		if (geometries[0] != oldPos) {
-			i = findClientIndex(client, currentDesktop);
-			var j = findGeometryIndex(geometries[0], currentDesktop);
-			swapClients(i, j, currentDesktop);
-			tileClients(currentDesktop);
-		} else client.geometry = oldPos;
-	} else client.geometry = oldPos;
+	if (client.geometry.width === oldGeo.width && client.geometry.height === oldGeo.height) {
+		moveClient(client);
+	} else {
+		resizeClient(client);
 }
 
+function moveClient(client) {
+	var centerX = client.geometry.x + client.width / 2;
+	var centerY = client.geometry.y + client.height / 2;
+	var geometries = [];
+	geometries.push(oldGeo);
+	// Adds all the existing clients to the geometries[]...
+	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
+		// ...except for the client being moved
+		// (it's off the grid and needs to be snapped back to the oldGeo variable)
+		if (activeClients[currentDesktop][i] != client) {
+			geometries.push(activeClients[currentDesktop][i].geometry);
+			// If more geometry comparison is to be done, geometries[i].frameId = client.frameId to easily compare with sameClient
+		}
+	}
+	// Sorts the geometries[] and finds the geometry closest to the moved client
+	geometries.sort(function(a, b) {
+		return Math.sqrt(Math.pow((centerX - (a.x + a.width / 2)), 2) + Math.pow((centerY - (a.y + a.height / 2)), 2)) - Math.sqrt(Math.pow((centerX - (b.x + b.width / 2)), 2) + Math.pow((centerY - (b.y + b.height / 2)), 2));
+	});
+	// If the closest geometry is not the client's old position, switches the geometries and indexes
+	if (geometries[0] != oldGeo) {
+		i = findClientIndex(client, currentDesktop);
+		var j = findGeometryIndex(geometries[0], currentDesktop);
+		swapClients(i, j, currentDesktop);
+		tileClients();
+	} else {
+		client.geometry = oldGeo;
+	}
+}
+
+function resizeClient(client) {
+	var difX = client.geometry.x - oldGeo.x;
+	var difY = client.geometry.y - oldGeo.y;
+	var difW = client.geometry.width - oldGeo.width;
+	var difH = client.geometry.height - oldGeo.height;
+	switch (findClientIndex(client, currentDesktop)) {
+		case 0:
+			if (difX === 0) {				
+				activeClients[currentDesktop].layout[0].width += difW;
+				activeClients[currentDesktop].layout[1].x += difW;
+				activeClients[currentDesktop].layout[1].width -= difW;
+				activeClients[currentDesktop].layout[2].x += difW;
+				activeClients[currentDesktop].layout[2].width -= difW;
+				activeClients[currentDesktop].layout[3].width += difW;
+				if (activeClients[currentDesktop].length === 4) {
+					activeClients[currentDesktop].layout[0].height += difH;
+					activeClients[currentDesktop].layout[3].height -= difH;
+					activeClients[currentDesktop].layout[3].y += difH;
+				}
+			}
+			break;
+		case 1:
+			activeClients[currentDesktop].layout[0].width += difX;
+			activeClients[currentDesktop].layout[1].x += difX;
+			activeClients[currentDesktop].layout[1].width -= difX;
+			activeClients[currentDesktop].layout[2].x += difX;
+			activeClients[currentDesktop].layout[2].width -= difX;
+			activeClients[currentDesktop].layout[3].width += difX;
+			if (difY === 0) {
+				activeClients[currentDesktop].layout[1].height += difH;
+				activeClients[currentDesktop].layout[2].y += difH;
+				activeClients[currentDesktop].layout[2].height -= difH;
+			}
+			break;
+		case 2:
+			activeClients[currentDesktop].layout[0].width += difX;
+			activeClients[currentDesktop].layout[1].x += difX;
+			activeClients[currentDesktop].layout[1].width -= difX;
+			activeClients[currentDesktop].layout[1].height += difY;
+			activeClients[currentDesktop].layout[2].x += difX;
+			activeClients[currentDesktop].layout[2].y += difY;
+			activeClients[currentDesktop].layout[2].width -= difX;
+			activeClients[currentDesktop].layout[2].height -= difY;
+			activeClients[currentDesktop].layout[3].width += difX;
+			break;
+		case 3:
+			if (difX === 0) {				
+				activeClients[currentDesktop].layout[0].width += difW;
+				activeClients[currentDesktop].layout[0].height += difY;
+				activeClients[currentDesktop].layout[1].x += difW;
+				activeClients[currentDesktop].layout[1].width -= difW;
+				activeClients[currentDesktop].layout[2].x += difW;
+				activeClients[currentDesktop].layout[2].width -= difW;
+				activeClients[currentDesktop].layout[3].y += difY;
+				activeClients[currentDesktop].layout[3].width += difW;
+				activeClients[currentDesktop].layout[3].height -= difY;
+			}
+			break;
+		}
+	}
+	tileClients();
+}
 
 function minimizeClient(client) {
 	for (var i = 0; i < activeClients[currentDesktop].length; i++) {
@@ -380,14 +494,14 @@ function minimizeClient(client) {
 			activeClients[currentDesktop].max -= 1;
 		}
 	}
-	tileClients(currentDesktop);
+	tileClients();
 }
 
 function unminimizeClient(client) {
 	activeClients[client.desktop].push(client);
 	activeClients[client.desktop].max += 1;
 	workspace.currentDesktop = client.desktop;
-	tileClients(currentDesktop);
+	tileClients();
 }
 
 /*--------------------- TODO -----------------------------------
@@ -415,9 +529,9 @@ function maximizeClient(client, h, v) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
-	// Hack: Global variable to skip this step once plasma panel has been found
+	// Hack: Global variable to skip this step once plasma panel has been found, script starts before Plasma so it can't be found on init()
 	// If the plasma panel has not been found yet, it's most likely the first client with resourceClass: "plasmashell" and caption: "Plasma"
-	if (plasmaNotFound) {
+	if (plasma.notFound) {
 		var panel = {
 			resourceClass: "plasmashell",
 			caption: "Plasma",
@@ -426,38 +540,38 @@ function checkClient(client) {
 			panel.caption.indexOf(client.caption.toString()) > -1) {
 			if (client.geometry.width > client.geometry.height) {
 				if (client.geometry.y < workspace.displayHeight / 2) {
-					screen = {
-						x: gap,
-						y: client.geometry.height + gap,
-						width: workspace.displayWidth - gap * 2,
-						height: workspace.displayHeight - client.geometry.height - gap * 2,
+					plasma = {
+						x: 0,
+						y: client.geometry.height,
+						width: 0,
+						height: client.geometry.height,
 					};
 				} else {
-					screen = {
-						x: gap,
-						y: gap,
-						width: workspace.displayWidth - gap * 2,
-						height: workspace.displayHeight - client.geometry.height - gap * 2,
+					plasma = {
+						x: 0,
+						y: 0,
+						width: 0,
+						height: client.geometry.height,
 					};
 				}
 			} else {
 				if (client.geometry.x < workspace.displayWidth / 2) {
-					screen = {
-						x: client.geometry.width + gap,
-						y: gap,
-						width: workspace.displayWidth - client.geometry.width - gap * 2,
-						height: workspace.displayHeight - gap * 2,
+					plasma = {
+						x: client.geometry.width,
+						y: 0,
+						width: client.geometry.width,
+						height: 0,
 					};
 				} else {
-					screen = {
-						x: gap,
-						y: gap,
-						width: workspace.displayWidth - client.geometry.width - gap * 2,
-						height: workspace.displayHeight - gap * 2,
+					plasma = {
+						x: 0,
+						y: 0,
+						width: 0,
+						height: client.geometry.height,
 					};
 				}
 			}
-			plasmaNotFound = false;
+			plasma.notFound = false;
 			return false;
 		}
 	}
@@ -524,36 +638,74 @@ function swapClients(i, j, desktop) {
 }
 
 
-
 /*--------------------------/
 / VIRTUAL DESKTOP FUNCTIONS /
 /--------------------------*/
 
 function changeDesktop() {
 	currentDesktop = workspace.currentDesktop;
-	tileClients(currentDesktop);
+	tileClients();
 }
 
 function adjustDesktops(desktop) {
 	// Checks if a workspace is removed
 	if (workspace.desktops < desktop) {
-		// Because the API returns desktops as an integer, they can not be recognized
-		// which is why the latest workspace is always the one removed
-		if (activeClients[desktop].length > 0) {
-			for (i = 0; i < activeClients[desktop].length; i++) {
-				activeClients[desktop][i].closeWindow();
-			}
-		}
-		activeClients[desktop]  = [];
-		tileClients(currentDesktop);
+		removeDesktop(desktop);
 	}
 	// Checks if a workspace is added 
 	else if (workspace.desktops > desktop) {
-		activeClients[workspace.desktops].max = 4;
-		tileClients(currentDesktop);
+		createDesktop(desktop);
 	}
 }
 
+function createDesktop(desktop) {
+		activeClients[workspace.desktops] = [];
+		activeClients[workspace.desktops].max = 4;
+		activeClients[workspace.desktops].layout = newLayout();
+		tileClients();
+}
+
+function removeDesktop(desktop) {
+	// Because the API returns desktops as an integer, they can not be recognized
+	// which is why the latest workspace is always the one removed
+	// Todo: recognize desktops by comparing activeClients[] and switching desktops before removal
+	if (activeClients[desktop].length > 0) {
+		for (i = 0; i < activeClients[desktop].length; i++) {
+			activeClients[desktop][i].closeWindow();
+		}
+	}
+	tileClients();
+}
+
+function newLayout() {
+	var layout = [];
+	for (var i = 0; i < 4; i++) {
+		layout[i] = {}; // Note: Need to clone the properties, can't just layout = screen!
+		layout[i].x = screen.x;
+		layout[i].y = screen.y;
+		layout[i].width = screen.width;
+		layout[i].height = screen.height;
+		if (i === 1) {
+			layout[0].width = layout[0].width * 0.5;
+			layout[i].width = layout[0].width;
+			layout[i].x = layout[i].x + layout[i].width;
+		}
+		if (i === 2) {
+			layout[1].height = layout[1].height * 0.5 ;
+			layout[i].height = layout[1].height;
+			layout[i].y = layout[i].y + layout[i].height;
+			layout[i].width = layout[i].width * 0.5;
+			layout[i].x = layout[i].x + layout[i].width;
+		}
+		if (i === 3) {
+			layout[0].height = layout[0].height * 0.5;
+			layout[i].height = layout[0].height;
+			layout[i].width = layout[i].width * 0.5;
+			layout[i].y = layout[i].y + layout[i].height;
+		}
+	}
+	return layout;
+}
 
 /*-----/
 / MAIN /
