@@ -303,6 +303,7 @@ function removeClientNoFollow(client, desktop) {
 		}
 	}
 }
+
 // Disconnects the signals from removed clients
 // So they will not trigger when a manually floated client is interacted with
 // Or when a client is removed & added between desktops
@@ -506,10 +507,10 @@ function resizeClient(client) {
 }
 
 function minimizeClient(client) {
-	for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].length; i++) {
-		if (sameClient(tiles[ws.currentDesktop][ws.activeScreen][i], client))  {
-			tiles[ws.currentDesktop][ws.activeScreen].splice(i, 1);
-			tiles[ws.currentDesktop][ws.activeScreen].max -= 1;
+	for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
+		if (sameClient(tiles[client.desktop][client.screen][i], client))  {
+			tiles[client.desktop][client.screen].splice(i, 1);
+			tiles[client.desktop][client.screen].max -= 1;
 		}
 	}
 	tileClients();
