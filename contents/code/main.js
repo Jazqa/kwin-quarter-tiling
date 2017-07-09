@@ -2,13 +2,11 @@
 / TODO-LIST /
 /----------*/
 /*
-	- Configuration interface
 	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
 	- Windows will fill desktops with space, instead of creating new ones
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
-	- Resizing the layout
 */
 
 
@@ -58,31 +56,20 @@ var gap = readConfig("gap", 10); // Gap size in pixels
 
 var noBorders = readConfig("noBorders", false);
 
-
 var ws = workspace;
 
 var tiles = []; // included clients incClis[desktop][screen][client]
 var screens = [];
 
 var oldGeo; // Hack: Saves the pre-movement position as a global variable
-// Hack: The way Plasma panel is found also finds multiple other Plasma-related clients
-// Plasma panel is the first client to be found, so after it has been found, a global variable
-// is used to skip the step looking for Plasma in the checkClient() function
-var plasma = {
-	x: 0,
-	y: 0,
-	height: 0,
-	width: 0,
-	notFound: true,
-};
 
 /*---------------/
 / INIT FUNCTIONS /
 /---------------*/
 
-function init() {
+function init(i) {
 	registerKeys();
-	detectScreens();
+	detectScreens(i);
 	ws.desktops = 1;
 	createDesktop(1);
 	addClients();
@@ -171,9 +158,9 @@ function registerKeys() {
 		});
 }
 
-function detectScreens() {
+function detectScreens(j) {
 	for (var i = 0; i < ws.numScreens; i++) {
-		screens[i] = ws.clientArea(0, i, 1);
+		screens[i] = ws.clientArea(j, i, 0);
 	}
 }
 
@@ -337,64 +324,64 @@ function tileClients() {
 		var adjusted = [];
 		if (tiles[ws.currentDesktop][i].length === 1) {
 			adjusted[0] = {};
-			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + plasma.x + gap;
-			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + plasma.y + gap;
-			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width + tiles[ws.currentDesktop][i].layout[1].width - plasma.width - gap * 2;
-			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - plasma.height - gap * 2;
+			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
+			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
+			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width + tiles[ws.currentDesktop][i].layout[1].width - gap * 2;
+			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - gap * 2;
 		} else if (tiles[ws.currentDesktop][i].length === 2) {
 			adjusted[0] = {};
-			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + plasma.x + gap;
-			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + plasma.y + gap;
-			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - plasma.width * 0.5 - gap * 1.5;
-			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - plasma.height - gap * 2;
+			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
+			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
+			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - gap * 1.5;
+			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - gap * 2;
 
 			adjusted[1] = {};
-			adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + plasma.x * 0.5 + gap * 0.5;
-			adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + plasma.y + gap;
-			adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - plasma.width * 0.5 - gap * 1.5;
-			adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height + tiles[ws.currentDesktop][i].layout[2].height - plasma.height - gap * 2;
+			adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + gap * 0.5;
+			adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + gap;
+			adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - gap * 1.5;
+			adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height + tiles[ws.currentDesktop][i].layout[2].height - gap * 2;
 		} else if (tiles[ws.currentDesktop][i].length === 3) {
 			adjusted[0] = {};
-			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + plasma.x + gap;
-			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + plasma.y + gap;
-			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - plasma.width * 0.5 - gap * 1.5;
-			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - plasma.height - gap * 2;
+			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
+			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
+			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - gap * 1.5;
+			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - gap * 2;
 
 			adjusted[1] = {};
-			adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + plasma.x * 0.5 + gap * 0.5;
-			adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + plasma.y + gap;
-			adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - plasma.width * 0.5 - gap * 1.5;
-			adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height - plasma.height * 0.5 - gap * 1.5;
+			adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + gap * 0.5;
+			adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + gap;
+			adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - gap * 1.5;
+			adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height - gap * 1.5;
 
 			adjusted[2] = {};
-			adjusted[2].x = tiles[ws.currentDesktop][i].layout[2].x + plasma.x * 0.5 + gap * 0.5;
-			adjusted[2].y = tiles[ws.currentDesktop][i].layout[2].y + plasma.y * 0.5 + gap * 0.5;
-			adjusted[2].width = tiles[ws.currentDesktop][i].layout[2].width - plasma.width * 0.5 - gap * 1.5;
-			adjusted[2].height = tiles[ws.currentDesktop][i].layout[2].height - plasma.height * 0.5 - gap * 1.5;	
+			adjusted[2].x = tiles[ws.currentDesktop][i].layout[2].x + gap * 0.5;
+			adjusted[2].y = tiles[ws.currentDesktop][i].layout[2].y + gap * 0.5;
+			adjusted[2].width = tiles[ws.currentDesktop][i].layout[2].width - gap * 1.5;
+			adjusted[2].height = tiles[ws.currentDesktop][i].layout[2].height - gap * 1.5;	
 		} else if (tiles[ws.currentDesktop][i].length === 4) {
 			adjusted[0] = {};
-			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + plasma.x + gap;
-			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + plasma.y + gap;
-			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - plasma.width * 0.5 - gap * 1.5;
-			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height - plasma.height * 0.5 - gap * 1.5;
+			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
+			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
+			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - gap * 1.5;
+			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height - gap * 1.5;
 
 			adjusted[1] = {};
-			adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + plasma.x * 0.5 + gap * 0.5;
-			adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + plasma.y + gap;
-			adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - plasma.width * 0.5 - gap * 1.5;
-			adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height - plasma.height * 0.5 - gap * 1.5;
+			adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + gap * 0.5;
+			adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + gap;
+			adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - gap * 1.5;
+			adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height - gap * 1.5;
 
 			adjusted[2] = {};
-			adjusted[2].x = tiles[ws.currentDesktop][i].layout[2].x + plasma.x * 0.5 + gap * 0.5;
-			adjusted[2].y = tiles[ws.currentDesktop][i].layout[2].y + plasma.y * 0.5 + gap * 0.5;
-			adjusted[2].width = tiles[ws.currentDesktop][i].layout[2].width - plasma.width * 0.5 - gap * 1.5;
-			adjusted[2].height = tiles[ws.currentDesktop][i].layout[2].height - plasma.height * 0.5 - gap * 1.5;
+			adjusted[2].x = tiles[ws.currentDesktop][i].layout[2].x + gap * 0.5;
+			adjusted[2].y = tiles[ws.currentDesktop][i].layout[2].y + gap * 0.5;
+			adjusted[2].width = tiles[ws.currentDesktop][i].layout[2].width - gap * 1.5;
+			adjusted[2].height = tiles[ws.currentDesktop][i].layout[2].height - gap * 1.5;
 
 			adjusted[3] = {};
-			adjusted[3].x = tiles[ws.currentDesktop][i].layout[3].x + plasma.x + gap;
-			adjusted[3].y = tiles[ws.currentDesktop][i].layout[3].y + plasma.y * 0.5 + gap * 0.5;
-			adjusted[3].width = tiles[ws.currentDesktop][i].layout[3].width - plasma.width * 0.5 - gap * 1.5;
-			adjusted[3].height = tiles[ws.currentDesktop][i].layout[3].height - plasma.height * 0.5 - gap * 1.5;
+			adjusted[3].x = tiles[ws.currentDesktop][i].layout[3].x + gap;
+			adjusted[3].y = tiles[ws.currentDesktop][i].layout[3].y + gap * 0.5;
+			adjusted[3].width = tiles[ws.currentDesktop][i].layout[3].width - gap * 1.5;
+			adjusted[3].height = tiles[ws.currentDesktop][i].layout[3].height - gap * 1.5;
 		}
 		for (var j = 0; j < adjusted.length; j++) {
 			tiles[ws.currentDesktop][i][j].geometry = adjusted[j];
@@ -405,6 +392,7 @@ function tileClients() {
 // Saves the pre-movement position when called
 function saveClientGeo(client) {
 	oldGeo = client.geometry;
+	oldGeo.screen = client.screen;
 }
 
 // Decides if a client is moved or resized
@@ -454,7 +442,7 @@ function resizeClient(client) {
 	var difH = client.geometry.height - oldGeo.height;
 	switch (findClientIndex(client, ws.currentDesktop)) {
 		case 0:
-			if (difX === 0) {				
+			if (difX === 0 && difY == 0) {				
 				tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += difW;
 				tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += difW;
 				tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= difW;
@@ -551,52 +539,6 @@ function maximizeClient(client, h, v) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
-	// Hack: Global variable to skip this step once plasma panel has been found, script starts before Plasma so it can't be found on init()
-	// If the plasma panel has not been found yet, it's most likely the first client with resourceClass: "plasmashell" and caption: "Plasma"
-	if (plasma.notFound) {
-		var panel = {
-			resourceClass: "plasmashell",
-			caption: "Plasma",
-		};
-		if (panel.resourceClass.indexOf(client.resourceClass.toString()) > -1 &&
-			panel.caption.indexOf(client.caption.toString()) > -1) {
-			if (client.geometry.width > client.geometry.height) {
-				if (client.geometry.y < workspace.displayHeight / 2) {
-					plasma = {
-						x: 0,
-						y: client.geometry.height,
-						width: 0,
-						height: client.geometry.height,
-					};
-				} else {
-					plasma = {
-						x: 0,
-						y: 0,
-						width: 0,
-						height: client.geometry.height,
-					};
-				}
-			} else {
-				if (client.geometry.x < workspace.displayWidth / 2) {
-					plasma = {
-						x: client.geometry.width,
-						y: 0,
-						width: client.geometry.width,
-						height: 0,
-					};
-				} else {
-					plasma = {
-						x: 0,
-						y: 0,
-						width: 0,
-						height: client.geometry.height,
-					};
-				}
-			}
-			plasma.notFound = false;
-			return false;
-		}
-	}
 	if (client.comboBox ||
 		client.desktopWindow ||
 		client.dndIcon ||
@@ -614,8 +556,7 @@ function checkClient(client) {
 		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
 		ignoredCaptions.indexOf(client.caption.toString()) > -1) {
 		return false;
-	}
-	return true;
+	} else return true;
 }
 
 // Todo: Unify clients & geometries for readability, optimization and coherence
@@ -738,4 +679,23 @@ function newLayout(scr) {
 / MAIN /
 /-----*/
 
-init();
+workspace.clientAdded.connect(wait);
+// Scans through the clients and initializes the script with the client after plasma
+// Todo: Figure out why the first client is not added to the script (Hint: it's not because of the init(i+1))
+function wait() {
+	var clients = workspace.clientList();
+	var plasma = {
+		resourceClass: "plasmashell",
+		caption: "Plasma",
+	};
+	for (var i = 0; i < clients.length; i++) {
+		if (plasma.resourceClass.indexOf(clients[i].resourceClass.toString()) > -1 &&
+			plasma.caption.indexOf(clients[i].caption.toString()) > -1) {
+			workspace.clientAdded.disconnect(wait);
+			init(i+1);
+			return;
+		}
+	}
+}
+
+wait();
