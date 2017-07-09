@@ -7,6 +7,7 @@
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
+	- Work next: Multi-screen desktop switching
 */
 
 
@@ -209,16 +210,32 @@ function addClient(client) {
 
 // Runs an ignore-check and if it passes, adds a client to tiles[]
 // Unlike addClient(), takes target desktop as a parameter and does not follow or connect the client
+// Runs an ignore-check and if it passes, adds a client to tiles[]
 function addClientNoFollow(client, desktop) {
 	if (checkClient(client)) {
 		if (noBorders == true) {
 			client.noBorder = true;
 		} else client.noBorder = false;
+		var scr = client.screen;
+		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
+		if (tiles[desktop][scr].length === tiles[desktop][scr].max ||
+			tiles[desktop][scr].length === 4) {
+			// Fixes a bug that makes the maximum go over 4 when removing virtual desktops
+			if (tiles[desktop][scr].length === 4) {
+				tiles[desktop][scr].max = 4;
+			}
+			for (var i = 0; i < ws.numScreens; i++) {
+				if (tiles[desktop][i].length < tiles[desktop][i].max) {
+					scr = i;
+					break;
+				}
+			}
+		}
 		client.desktop = desktop;
-		tiles[desktop][ws.activeScreen].push(client);
+		tiles[client.desktop][scr].push(client);
 		tileClients();
 		connectClient(client);
-		// If the client is minimized, triggers the minimization signal after it's added
+		// If the client is minimized, trigger the minimize function
 		if (client.minimized) {
 			minimizeClient(client);
 		}
@@ -241,7 +258,7 @@ function connectClient(client) {
 	// desktopChanged function is declared here, because unlike other client signals,
 	// this one doesn't keep client as a parameter if calling a function
 	client.desktopChanged.connect(function() {
-		removeClientNoFollow(client);
+		removeClientNoFollow(client, ws.currentDesktop);
 		if (tiles[client.desktop][client.screen].length < tiles[client.desktop][client.screen].max) {
 			addClientNoFollow(client, client.desktop);
 		}
@@ -257,8 +274,9 @@ function removeClient(client) {
 			tiles[client.desktop][client.screen].splice(i, 1);
 			disconnectClient(client);
 			// If there are still tiles after the removal, calculates the geometries
-			tileClients();
-			if (tiles[client.desktop][client.screen].length === 0) {
+			if (tiles[client.desktop][client.screen].length > 0) {
+				tileClients();
+			} else if (tiles[client.desktop][client.screen].length === 0) {
 				if (ws.currentDesktop > 1) {
 					// client.desktop = null;
 					ws.currentDesktop -= 1;
@@ -272,23 +290,19 @@ function removeClient(client) {
 
 // Removes the closed client from tiles[]
 // Unlike removeClient(), does not follow the client
-function removeClientNoFollow(client) {
+function removeClientNoFollow(client, desktop) {
 	// First for- and if-loops find the closed client 
-	for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].length; i++) {
-		if (sameClient(tiles[ws.currentDesktop][ws.activeScreen][i], client)) {
-			tiles[ws.currentDesktop][ws.activeScreen].splice(i, 1);
+	for (var i = 0; i < tiles[desktop][client.screen].length; i++) {
+		if (sameClient(tiles[desktop][client.screen][i], client)) {
+			tiles[desktop][client.screen].splice(i, 1);
 			disconnectClient(client);
 			// If there are still tiles after the removal, calculates the geometries
-			if (tiles[ws.currentDesktop][ws.activeScreen].length > 0) {
+			if (tiles[desktop][client.screen].length > 0) {
 				tileClients();
-			} else if (tiles[ws.currentDesktop][ws.activeScreen].length === 0) {
-				tiles[ws.currentDesktop][ws.activeScreen] = [];
-				tiles[ws.currentDesktop][ws.activeScreen].max = 4;
 			}
 		}
 	}
 }
-
 // Disconnects the signals from removed clients
 // So they will not trigger when a manually floated client is interacted with
 // Or when a client is removed & added between desktops
@@ -599,8 +613,10 @@ function swapClients(i, j, desktop) {
 /--------------------------*/
 
 function changeDesktop(desktop) {
-	if (tiles[desktop][ws.activeScreen].length === 0) {
-		createDesktop(desktop);
+	for (var i = 0; i < ws.numScreens; i++) {	
+		if (tiles[desktop][i].length === 0) {
+			createDesktop(desktop, i);
+		}
 	}
 	tileClients();
 }
@@ -625,11 +641,18 @@ function createDesktop(desktop) {
 	}
 }
 
+function createScreen(desktop, scr) {
+	tiles[desktop] = [];
+	tiles[desktop][scr] = [];
+	tiles[desktop][scr].max = 4;
+	tiles[desktop][scr].layout = newLayout(i);
+}
+
 function removeDesktop(desktop) {
 	// Because the API returns desktops as an integer, they can not be recognized
 	// which is why the latest workspace is always the one removed
 	// Todo: recognize desktops by comparing tiles[] and switching desktops before removal
-	for (var i = 0; i < ws.numScreens; i++) {	
+	for (var i = 0; i < tiles[desktop].length; i++) {	
 		for (var j = 0; j < tiles[desktop][i].length; j++) {
 			tiles[desktop][i][j].closeWindow();
 		}
