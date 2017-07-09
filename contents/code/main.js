@@ -58,8 +58,7 @@ var noBorders = readConfig("noBorders", false);
 
 var ws = workspace;
 
-var tiles = []; // included clients incClis[desktop][screen][client]
-var screens = [];
+var tiles = []; // tiles[desktop][screen][client]
 
 var oldGeo; // Hack: Saves the pre-movement position as a global variable
 
@@ -67,9 +66,8 @@ var oldGeo; // Hack: Saves the pre-movement position as a global variable
 / INIT FUNCTIONS /
 /---------------*/
 
-function init(i) {
+function init() {
 	registerKeys();
-	detectScreens(i);
 	ws.desktops = 1;
 	createDesktop(1);
 	addClients();
@@ -153,15 +151,9 @@ function registerKeys() {
 		"Quarter: Reset Layout",
 		"Meta+R",
 		function() {
-			tiles[ws.currentDesktop][ws.activeScreen].layout = newLayout();
+			tiles[ws.currentDesktop][ws.activeScreen].layout = newLayout(ws.activeScreen);
 			tileClients();
 		});
-}
-
-function detectScreens(j) {
-	for (var i = 0; i < ws.numScreens; i++) {
-		screens[i] = ws.clientArea(j, i, 0);
-	}
 }
 
 // Connects the KWin:Workspace signals to the following functions
@@ -200,8 +192,8 @@ function addClient(client) {
 			}
 			// If client isn't thrown to another screen, it's thrown into an other desktop
 			if (scr === ws.activeScreen) {		
-			ws.desktops += 1;
-			ws.currentDesktop += 1;
+				ws.desktops += 1;
+				ws.currentDesktop += 1;
 			}
 		}
 		client.desktop = ws.currentDesktop;
@@ -272,8 +264,6 @@ function removeClient(client) {
 					ws.currentDesktop -= 1;
 					// ws.activeClient = tiles[ws.currentDesktop][ws.activeScreen][0];
 					// ws.desktops -= 1;
-				} else {
-					tiles[client.desktop][client.screen].layout = newLayout(client.screen);
 				}
 			}
 		}
@@ -321,6 +311,9 @@ function tileClients() {
 	// Since it's just four, switch is also the easiest approach
 	// Todo: Clean this up, big time
 	for (var i = 0; i < ws.numScreens; i++) {
+		if (tiles[ws.currentDesktop][i].length <= 1) {
+			tiles[ws.currentDesktop][i].layout = newLayout(i);
+		}
 		var adjusted = [];
 		if (tiles[ws.currentDesktop][i].length === 1) {
 			adjusted[0] = {};
@@ -630,7 +623,6 @@ function createDesktop(desktop) {
 		tiles[desktop][i].max = 4;
 		tiles[desktop][i].layout = newLayout(i);
 	}
-	tileClients();
 }
 
 function removeDesktop(desktop) {
@@ -645,14 +637,15 @@ function removeDesktop(desktop) {
 	tileClients();
 }
 
-function newLayout(scr) {
+function newLayout(screen) {
+	var area = ws.clientArea(0, screen, 0);
 	var layout = [];
 	for (var i = 0; i < 4; i++) {
 		layout[i] = {}; // Note: Need to clone the properties!
-		layout[i].x = screens[scr].x;
-		layout[i].y = screens[scr].y;
-		layout[i].width = screens[scr].width;
-		layout[i].height = screens[scr].height;
+		layout[i].x = area.x;
+		layout[i].y = area.y;
+		layout[i].width = area.width;
+		layout[i].height = area.height;
 		if (i === 1) {
 			layout[0].width = layout[0].width * 0.5;
 			layout[i].width = layout[0].width;
@@ -679,23 +672,4 @@ function newLayout(scr) {
 / MAIN /
 /-----*/
 
-workspace.clientAdded.connect(wait);
-// Scans through the clients and initializes the script with the client after plasma
-// Todo: Figure out why the first client is not added to the script (Hint: it's not because of the init(i+1))
-function wait() {
-	var clients = workspace.clientList();
-	var plasma = {
-		resourceClass: "plasmashell",
-		caption: "Plasma",
-	};
-	for (var i = 0; i < clients.length; i++) {
-		if (plasma.resourceClass.indexOf(clients[i].resourceClass.toString()) > -1 &&
-			plasma.caption.indexOf(clients[i].caption.toString()) > -1) {
-			workspace.clientAdded.disconnect(wait);
-			init(i+1);
-			return;
-		}
-	}
-}
-
-wait();
+init();
