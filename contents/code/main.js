@@ -66,10 +66,12 @@ var oldGeo; // Hack: Saves the pre-movement position as a global variable
 / INIT FUNCTIONS /
 /---------------*/
 
-function init() {
+function init(client) {
 	registerKeys();
 	ws.desktops = 1;
+	ws.currentDesktop = 1;
 	createDesktop(1);
+	addClient(client);
 	addClients();
 	connectWorkspace();
 }
@@ -278,6 +280,9 @@ function removeClient(client) {
 		if (sameClient(tiles[client.desktop][client.screen][i], client)) {
 			tiles[client.desktop][client.screen].splice(i, 1);
 			disconnectClient(client);
+			if (client.minimized) {
+				tiles[client.desktop][client.screen].max += 1;
+			}
 			print(client.caption + " removed");
 			// If there are still tiles after the removal, calculates the geometries
 			if (tiles[client.desktop][client.screen].length > 0) {
@@ -472,6 +477,14 @@ function resizeClient(client) {
 					tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= difH;
 					tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += difH;
 				}
+			} // Allows resizing even if Y is dragged above the screen, doesn't alter height
+			else if (difX === 0) {
+				tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += difW;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += difW;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= difW;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += difW;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= difW;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += difW;
 			}
 			break;
 		case 1:
@@ -521,15 +534,22 @@ function minimizeClient(client) {
 		if (sameClient(tiles[client.desktop][client.screen][i], client))  {
 			tiles[client.desktop][client.screen].splice(i, 1);
 			tiles[client.desktop][client.screen].max -= 1;
+			client.minimized = true;
+			if (tiles[client.desktop][client.screen].length == 0) {
+				ws.currentDesktop -= 1;
+			}
 		}
 	}
+	print(client.caption + " minimized");
 	tileClients();
 }
 
 function unminimizeClient(client) {
-	tiles[client.desktop][client.screen].push(client);
-	tiles[client.desktop][client.screen].max += 1;
 	ws.currentDesktop = client.desktop;
+	tiles[client.desktop][client.screen].max += 1;
+	tiles[client.desktop][client.screen].push(client);
+	client.minimized = false;
+	print(client.caption + " unminimized");
 	tileClients();
 }
 
@@ -707,4 +727,12 @@ function newLayout(screen) {
 / MAIN /
 /-----*/
 
-init();
+ws.clientAdded.connect(wait);
+// Hack: Waits for a valid client to initiate the script 
+// The most reliable way to start the script thus far
+function wait(client) {
+	if (checkClient(client)) {
+		ws.clientAdded.disconnect(wait);
+		init(client);
+	}
+}
