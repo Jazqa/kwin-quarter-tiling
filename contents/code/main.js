@@ -7,7 +7,6 @@
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
-	- Work next: Multi-screen desktop switching
 */
 
 
@@ -198,7 +197,12 @@ function addClient(client) {
 			}
 		}
 		client.desktop = ws.currentDesktop;
+		// Not needed per se, only important when activating the script with more than four clients active
+		if (typeof tiles[client.desktop] == "undefined") {
+			createDesktop(client.desktop);
+		}
 		tiles[client.desktop][scr].push(client);
+		print(client.caption + " added");
 		tileClients();
 		connectClient(client);
 		// If the client is minimized, trigger the minimize function
@@ -233,6 +237,7 @@ function addClientNoFollow(client, desktop) {
 		}
 		client.desktop = desktop;
 		tiles[client.desktop][scr].push(client);
+		print(client.caption + " added (no follow)");
 		tileClients();
 		connectClient(client);
 		// If the client is minimized, trigger the minimize function
@@ -273,6 +278,7 @@ function removeClient(client) {
 		if (sameClient(tiles[client.desktop][client.screen][i], client)) {
 			tiles[client.desktop][client.screen].splice(i, 1);
 			disconnectClient(client);
+			print(client.caption + " removed");
 			// If there are still tiles after the removal, calculates the geometries
 			if (tiles[client.desktop][client.screen].length > 0) {
 				tileClients();
@@ -296,6 +302,7 @@ function removeClientNoFollow(client, desktop) {
 		if (sameClient(tiles[desktop][client.screen][i], client)) {
 			tiles[desktop][client.screen].splice(i, 1);
 			disconnectClient(client);
+			print(client.caption + " removed (no follow)");
 			// If there are still tiles after the removal, calculates the geometries
 			if (tiles[desktop][client.screen].length > 0) {
 				tileClients();
@@ -314,7 +321,6 @@ function disconnectClient(client) {
 	client.clientUnminimized.disconnect(unminimizeClient);
 	client.float = true;
 }
-
 // Calculates the geometries to maintain the layout
 // Geometry calculation is a mess and pre-existing client geometries should NEVER be used
 // Layout is always the fullscreen - no plasma and no gaps layout
@@ -326,6 +332,9 @@ function tileClients() {
 	// Since it's just four, switch is also the easiest approach
 	// Todo: Clean this up, big time
 	for (var i = 0; i < ws.numScreens; i++) {
+		// Creates new layouts whenever a desktop is empty or contains only a single client
+		// Ideally, this should be done in createDesktop(), but currently, it causes an insane amount of bugs
+		// Todo: Move to createDesktop()
 		if (tiles[ws.currentDesktop][i].length <= 1) {
 			tiles[ws.currentDesktop][i].layout = newLayout(i);
 		}
@@ -394,6 +403,7 @@ function tileClients() {
 		for (var j = 0; j < adjusted.length; j++) {
 			tiles[ws.currentDesktop][i][j].geometry = adjusted[j];
 		}
+		print("desktop " + ws.currentDesktop + " screen " + i + " tiled");
 	}
 }
 
@@ -450,7 +460,7 @@ function resizeClient(client) {
 	var difH = client.geometry.height - oldGeo.height;
 	switch (findClientIndex(client, ws.currentDesktop)) {
 		case 0:
-			if (difX === 0 && difY == 0) {				
+			if (difX === 0 && difY == 0) {
 				tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += difW;
 				tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += difW;
 				tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= difW;
@@ -638,8 +648,9 @@ function createDesktop(desktop) {
 	for (var i = 0; i < ws.numScreens; i++) {	
 		tiles[desktop][i] = [];
 		tiles[desktop][i].max = 4;
-		tiles[desktop][i].layout = newLayout(i);
 	}
+	print("desktop " + desktop + " created");
+	tileClients();
 }
 
 function createScreen(desktop, scr) {
