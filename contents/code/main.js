@@ -7,6 +7,7 @@
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
+	- Minimizing (when a minimized client is closed and when the desktop of a minimized client is removed)
 */
 
 
@@ -66,12 +67,11 @@ var oldGeo; // Hack: Saves the pre-movement position as a global variable
 / INIT FUNCTIONS /
 /---------------*/
 
-function init(client) {
+function init() {
 	registerKeys();
-	ws.desktops = 1;
-	ws.currentDesktop = 1;
-	createDesktop(1);
-	addClient(client);
+	for (var i = 1; i <= ws.desktops; i++) {	
+		createDesktop(i);
+	}
 	addClients();
 	connectWorkspace();
 }
@@ -280,9 +280,6 @@ function removeClient(client) {
 		if (sameClient(tiles[client.desktop][client.screen][i], client)) {
 			tiles[client.desktop][client.screen].splice(i, 1);
 			disconnectClient(client);
-			if (client.minimized) {
-				tiles[client.desktop][client.screen].max += 1;
-			}
 			print(client.caption + " removed");
 			// If there are still tiles after the removal, calculates the geometries
 			if (tiles[client.desktop][client.screen].length > 0) {
@@ -526,6 +523,7 @@ function resizeClient(client) {
 			break;
 		}
 	}
+	print("clients resized successfully (resize initiated by: " + client.caption + ")")
 	tileClients();
 }
 
@@ -534,7 +532,6 @@ function minimizeClient(client) {
 		if (sameClient(tiles[client.desktop][client.screen][i], client))  {
 			tiles[client.desktop][client.screen].splice(i, 1);
 			tiles[client.desktop][client.screen].max -= 1;
-			client.minimized = true;
 			if (tiles[client.desktop][client.screen].length == 0) {
 				ws.currentDesktop -= 1;
 			}
@@ -548,7 +545,6 @@ function unminimizeClient(client) {
 	ws.currentDesktop = client.desktop;
 	tiles[client.desktop][client.screen].max += 1;
 	tiles[client.desktop][client.screen].push(client);
-	client.minimized = false;
 	print(client.caption + " unminimized");
 	tileClients();
 }
@@ -649,6 +645,7 @@ function changeDesktop(desktop) {
 			createDesktop(desktop, i);
 		}
 	}
+	print("desktop switched to " + desktop);
 	tileClients();
 }
 
@@ -689,6 +686,7 @@ function removeDesktop(desktop) {
 			tiles[desktop][i][j].closeWindow();
 		}
 	}
+	print("desktop " + desktop + " removed");
 	tileClients();
 }
 
@@ -727,12 +725,20 @@ function newLayout(screen) {
 / MAIN /
 /-----*/
 
-ws.clientAdded.connect(wait);
+ws.clientAdded.connect(stand);
 // Hack: Waits for a valid client to initiate the script 
 // The most reliable way to start the script thus far
+function stand(client) {
+	client.windowShown.connect(wait);
+}
+
 function wait(client) {
 	if (checkClient(client)) {
-		ws.clientAdded.disconnect(wait);
-		init(client);
+		ws.clientAdded.disconnect(stand);
+		client.windowShown.disconnect(wait);
+		print("script initiated with " + client.caption);
+		init();
+		return;
 	}
+	client.windowShown.disconnect(wait);
 }
