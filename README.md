@@ -41,6 +41,7 @@ After the installation, you might want to configure your keybindings. To do so, 
 
 
 ## Note
+- If you have multiple clients open from earlier session, the script might not start succesfully and you'll have to restart it (I'm working on this).
 - If you remove a virtual desktop, all of the tiled clients on the desktop will also be closed (it's a feature)
 - Some programs, like Spotify, do not play nice with tiling and can not be recognized and/or automatically excluded. If you use such programs, use the "Float On/Off" shortcut to disable them.
 
