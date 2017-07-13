@@ -77,7 +77,7 @@ function init() {
 
 function registerKeys() {
 	// Todo: Shortcut for +/- gapsize?
-	// Todo: Shortcut for moving clients
+	// Todo: Shorcut for resizing clients
 	registerShortcut(
 		"Quarter: Float On/Off",
 		"Quarter: Float On/Off",
@@ -277,20 +277,23 @@ function connectClient(client) {
 // Removes the closed client from tiles[]
 function removeClient(client) {
 	print("attempting to remove " + client.caption);
-	for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
-		if (sameClient(tiles[client.desktop][client.screen][i], client)) {
-			tiles[client.desktop][client.screen].splice(i, 1);
-			disconnectClient(client);
-			print(client.caption + " removed");
-			// If there are still tiles after the removal, calculates the geometries
-			if (tiles[client.desktop][client.screen].length > 0) {
-				tileClients();
-			} else if (tiles[client.desktop][client.screen].length === 0) {
-				if (ws.currentDesktop > 1) {
-					// client.desktop = null;
-					ws.currentDesktop -= 1;
-					// ws.activeClient = tiles[ws.currentDesktop][ws.activeScreen][0];
-					// ws.desktops -= 1;
+	// Avoid crashes
+	if (typeof tiles[client.desktop] != "undefined") {	
+		for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
+			if (sameClient(tiles[client.desktop][client.screen][i], client)) {
+				tiles[client.desktop][client.screen].splice(i, 1);
+				disconnectClient(client);
+				print(client.caption + " removed");
+				// If there are still tiles after the removal, calculates the geometries
+				if (tiles[client.desktop][client.screen].length > 0) {
+					tileClients();
+				} else if (tiles[client.desktop][client.screen].length === 0) {
+					if (ws.currentDesktop > 1) {
+						// client.desktop = null;
+						ws.currentDesktop -= 1;
+						// ws.activeClient = tiles[ws.currentDesktop][ws.activeScreen][0];
+						// ws.desktops -= 1;
+					}
 				}
 			}
 		}
@@ -745,16 +748,16 @@ ws.clientAdded.connect(wait);
 // The most reliable way to start the script thus far
 // Todo: Find a better and more reliable way to start the script
 function wait(client) {
-	client.windowShown.connect(attempt);
+	client.windowShown.connect(check);
 }
 
-function attempt(client) {
+function check(client) {
 	if (checkClient(client)) {
 		ws.clientAdded.disconnect(wait);
-		client.windowShown.disconnect(attempt);
+		client.windowShown.disconnect(check);
 		init();
 		print("script initiated with " + client.caption);
 	} else {
-		client.windowShown.disconnect(attempt);
+		client.windowShown.disconnect(check);
 	}
 }
