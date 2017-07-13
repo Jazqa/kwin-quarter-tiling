@@ -276,14 +276,9 @@ function connectClient(client) {
 	client.clientStartUserMovedResized.connect(saveClientGeo);
 	client.clientFinishUserMovedResized.connect(adjustClient);
 	client.clientMinimized.connect(minimizeClient);
-	client.clientUnminimized.connect(unminimizeClient);
-	// desktopChanged function is declared here, because unlike other client signals,
-	// this one doesn't keep client as a parameter if calling a function
+	// Unlike other client signals, stupid .desktopChanged signal doesn't carry client as a parameter
 	client.desktopChanged.connect(function() {
-		removeClientNoFollow(client, ws.currentDesktop);
-		if (tiles[client.desktop][client.screen].length < tiles[client.desktop][client.screen].max) {
-			addClientNoFollow(client, client.desktop);
-		}
+		changeClientDesktop(client);
 	});
 	client.float = false;
 }
@@ -291,6 +286,13 @@ function connectClient(client) {
 // Removes the closed client from tiles[]
 function removeClient(client) {
 	print("attempting to remove " + client.caption);
+	if (client.minimized) {
+		client.clientUnminimized.disconnect(unminimizeClient);
+		// Hack: connect to override earlier connect, so the client can be properly disconnected
+		client.desktopChanged.connect(closeWindow);
+		client.desktopChanged.disconnect(closeWindow);
+		tiles[client.desktop][client.screen].max += 1;
+	}
 	// Avoid crashes
 	if (typeof tiles[client.desktop] != "undefined") {	
 		for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
@@ -339,7 +341,9 @@ function disconnectClient(client) {
 	client.clientStartUserMovedResized.disconnect(saveClientGeo);
 	client.clientFinishUserMovedResized.disconnect(adjustClient);
 	client.clientMinimized.disconnect(minimizeClient);
-	client.clientUnminimized.disconnect(unminimizeClient);
+	// Hack: connect to override earlier connect, so the client can be properly disconnected
+	client.desktopChanged.connect(changeClientDesktop);
+	client.desktopChanged.disconnect(changeClientDesktop);
 	client.float = true;
 }
 // Calculates the geometries to maintain the layout
@@ -668,11 +672,16 @@ function minimizeClient(client) {
 	for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
 		if (sameClient(tiles[client.desktop][client.screen][i], client)) {
 			tiles[client.desktop][client.screen].splice(i, 1);
-			tiles[client.desktop][client.screen].max -= 1;
-			if (tiles[client.desktop][client.screen].length == 0) {
-				ws.currentDesktop -= 1;
-			}
 		}
+	}
+	tiles[client.desktop][client.screen].max -= 1;
+	disconnectClient(client);
+	client.clientUnminimized.connect(unminimizeClient);
+	client.desktopChanged.connect(function() {
+		closeWindow(client);
+	});
+	if (tiles[client.desktop][client.screen].length == 0) {
+		ws.currentDesktop -= 1;
 	}
 	print(client.caption + " minimized");
 	tileClients();
@@ -680,9 +689,14 @@ function minimizeClient(client) {
 
 function unminimizeClient(client) {
 	print("attempting to unminimize " + client.caption);
+	client.clientUnminimized.disconnect(unminimizeClient);
+	// Hack: connect to override earlier connect, so the client can be properly disconnected
+	client.desktopChanged.connect(closeWindow);
+	client.desktopChanged.disconnect(closeWindow);
 	ws.currentDesktop = client.desktop;
 	tiles[client.desktop][client.screen].max += 1;
 	tiles[client.desktop][client.screen].push(client);
+	connectClient(client);
 	print(client.caption + " unminimized");
 	tileClients();
 }
@@ -772,6 +786,16 @@ function swapClients(i, j, desktop) {
 	tiles[desktop][ws.activeScreen][j] = temp;
 }
 
+function closeWindow(client) {
+	client.closeWindow();
+}
+
+function changeClientDesktop(client) {
+	removeClientNoFollow(client, ws.currentDesktop);
+	if (tiles[client.desktop][client.screen].length < tiles[client.desktop][client.screen].max) {
+		addClientNoFollow(client, client.desktop);
+	}
+}
 
 /*--------------------------/
 / VIRTUAL DESKTOP FUNCTIONS /
