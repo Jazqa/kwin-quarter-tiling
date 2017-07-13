@@ -152,122 +152,14 @@ function registerKeys() {
 		"Quarter: + Window Size",
 		"Meta++",
 		function() {
-			// Block resizing if a window is getting too small
-			// Todo: Adjust values
-			for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].layout.length; i++) {
-				if (tiles[ws.currentDesktop][ws.activeScreen].layout[i].width < 200 ||
-					tiles[ws.currentDesktop][ws.activeScreen].layout[i].height < 200) {
-					return;
-				}
-			}
-			switch (findClientIndex(ws.activeClient, ws.currentDesktop)) {
-				case 0:
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].height += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= 20;
-					break;
-				case 1:
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].height += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].y += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].height -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
-					break;
-				case 2:
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].height -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].y -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].height += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
-					break;
-				case 3:
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].height -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].y -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].height += 20;
-					break;
-			}
-			tileClients();
+			increaseClientSize();
 		});
 		registerShortcut(
 		"Quarter: - Window Size",
 		"Quarter: - Window Size",
 		"Meta+-",
 		function() {
-			// Block resizing if a window is getting too small
-			// Todo: Adjust values
-			for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].layout.length; i++) {
-				if (tiles[ws.currentDesktop][ws.activeScreen].layout[i].width < 200 ||
-					tiles[ws.currentDesktop][ws.activeScreen].layout[i].height < 200) {
-					return;
-				}
-			}
-			switch (findClientIndex(ws.activeClient, ws.currentDesktop)) {
-				case 0:
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].height -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].y -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].height += 20;
-					break;
-				case 1:
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].height -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].y -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].height += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
-					break;
-				case 2:
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].height += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].y += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].height -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
-					break;
-				case 3:
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[0].height += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
-					tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= 20;
-					break;
-			}
-			tileClients();
+			decreaseClientSize();
 		});
 	registerShortcut(
 		"Quarter: Reset Layout",
@@ -654,6 +546,120 @@ function adjustClient(client) {
 		}
 	}
 	print("clients resized successfully (resize initiated by: " + client.caption + ")");
+	tileClients();
+}
+
+function increaseClientSize() {
+	switch (findClientIndex(ws.activeClient, ws.currentDesktop)) {
+		case 0:
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].height += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= 20;
+			break;
+		case 1:
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].height += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].y += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].height -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
+			break;
+		case 2:
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].height -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].y -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].height += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
+			break;
+		case 3:
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].height -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].y -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].height += 20;
+			break;
+	}
+	// Block resizing if a window is getting too small
+	for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].layout.length; i++) {
+		if (tiles[ws.currentDesktop][ws.activeScreen].layout[i].width < 200 ||
+			tiles[ws.currentDesktop][ws.activeScreen].layout[i].height < 200) {
+			decreaseClientSize();
+		}
+	}
+	tileClients();
+}
+
+function decreaseClientSize() {
+	switch (findClientIndex(ws.activeClient, ws.currentDesktop)) {
+		case 0:
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].height -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].y -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].height += 20;
+			break;
+		case 1:
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].height -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].y -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].height += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+			break;
+		case 2:
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].height += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].y += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].height -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+			break;
+		case 3:
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[0].height += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
+			tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= 20;
+			break;
+	}
+	// Block resizing if a window is getting too small
+	for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].layout.length; i++) {
+		if (tiles[ws.currentDesktop][ws.activeScreen].layout[i].width < 200 ||
+			tiles[ws.currentDesktop][ws.activeScreen].layout[i].height < 200) {
+			increaseClientSize();
+		}
+	}
 	tileClients();
 }
 
