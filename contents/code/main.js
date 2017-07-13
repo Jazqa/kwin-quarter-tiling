@@ -148,6 +148,112 @@ function registerKeys() {
 			tileClients();
 		});
 	registerShortcut(
+		"Quarter: + Window Size",
+		"Quarter: + Window Size",
+		"Meta++",
+		function() {
+			switch (findClientIndex(ws.activeClient, ws.currentDesktop)) {
+				case 0:
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].height += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= 20;
+					break;
+				case 1:
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].height += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].y += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].height -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
+					break;
+				case 2:
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].height -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].y -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].height += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
+					break;
+				case 3:
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].height -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].y -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].height += 20;
+					break;
+			}
+			tileClients();
+		});
+		registerShortcut(
+		"Quarter: - Window Size",
+		"Quarter: - Window Size",
+		"Meta+-",
+		function() {
+			switch (findClientIndex(ws.activeClient, ws.currentDesktop)) {
+				case 0:
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].height -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].y -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].height += 20;
+					break;
+				case 1:
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].height -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].y -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].height += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+					break;
+				case 2:
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].height += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].y += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].height -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+					break;
+				case 3:
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[0].height += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
+					tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= 20;
+					break;
+			}
+			tileClients();
+		});
+	registerShortcut(
 		"Quarter: Reset Layout",
 		"Quarter: Reset Layout",
 		"Meta+R",
@@ -470,7 +576,7 @@ function adjustClient(client) {
 		var difH = client.geometry.height - oldGeo.height;
 		switch (findClientIndex(client, ws.currentDesktop)) {
 			case 0:
-				if (difX === 0 && difY == 0) {
+				if (difX === 0 && difY === 0) {
 					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += difW;
 					tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += difW;
 					tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= difW;
