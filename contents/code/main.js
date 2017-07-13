@@ -152,6 +152,14 @@ function registerKeys() {
 		"Quarter: + Window Size",
 		"Meta++",
 		function() {
+			// Block resizing if a window is getting too small
+			// Todo: Adjust values
+			for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].layout.length; i++) {
+				if (tiles[ws.currentDesktop][ws.activeScreen].layout[i].width < 200 ||
+					tiles[ws.currentDesktop][ws.activeScreen].layout[i].height < 200) {
+					return;
+				}
+			}
 			switch (findClientIndex(ws.activeClient, ws.currentDesktop)) {
 				case 0:
 					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
@@ -205,6 +213,14 @@ function registerKeys() {
 		"Quarter: - Window Size",
 		"Meta+-",
 		function() {
+			// Block resizing if a window is getting too small
+			// Todo: Adjust values
+			for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].layout.length; i++) {
+				if (tiles[ws.currentDesktop][ws.activeScreen].layout[i].width < 200 ||
+					tiles[ws.currentDesktop][ws.activeScreen].layout[i].height < 200) {
+					return;
+				}
+			}
 			switch (findClientIndex(ws.activeClient, ws.currentDesktop)) {
 				case 0:
 					tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
