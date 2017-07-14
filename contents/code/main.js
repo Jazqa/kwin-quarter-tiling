@@ -51,7 +51,8 @@ var largeClients = [];
 
 largeClients = largeClients.concat(readConfig("largeClients", "gimp").toString().split(','));
 
-
+// Virtual desktops that will be completely ignored
+var ignoredDesktops = [-1];
 
 var gap = readConfig("gap", 10); // Gap size in pixels
 
@@ -792,7 +793,9 @@ function closeWindow(client) {
 
 function changeClientDesktop(client) {
 	removeClientNoFollow(client, ws.currentDesktop);
-	if (tiles[client.desktop][client.screen].length < tiles[client.desktop][client.screen].max) {
+	if (client.desktop == -1) {
+		return;
+	} else if (tiles[client.desktop][client.screen].length < tiles[client.desktop][client.screen].max) {
 		addClientNoFollow(client, client.desktop);
 	}
 }
