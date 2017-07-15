@@ -4,7 +4,7 @@
 - Tiles windows
 - Maintains the tiled layout when windows are interacted with
 - Automatically creates and moves between virtual desktops
-- Provides keybindings for moving the windows inside the layouts
+- Provides keybindings for moving and resizing the windows inside the layouts
 
 
 ## Screenshots
@@ -46,5 +46,4 @@ After the installation, you might want to configure your keybindings. To do so, 
 - Some programs, like Spotify, do not play nice with tiling and can not be recognized and/or automatically excluded. If you use such programs, use the "Float On/Off" shortcut to disable them.
 
 ## Upcoming features
-- Support for chosen programs to always occupy at least half of the screen
 - Improved support for multi-screen environments
