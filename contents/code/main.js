@@ -234,7 +234,7 @@ function addClient(client) {
 // Runs an ignore-check and if it passes, adds a client to tiles[]
 function addClientNoFollow(client, desk, screen) {
 	if (checkClient(client)) {
-		print("attempting to add " + client.caption + " (no follow)");
+		print("attempting to add " + client.caption + " (no follow) to desktop " + desk + " screen " + scr);
 		if (noBorders == true) {
 			client.noBorder = true;
 		} else client.noBorder = false;
@@ -255,7 +255,7 @@ function addClientNoFollow(client, desk, screen) {
 		}
 		client.desktop = desk;
 		tiles[client.desktop][scr].push(client);
-		print(client.caption + " added (no follow)");
+		print(client.caption + " added (no follow) to desktop " + desk + " screen " + scr);
 		tileClients();
 		connectClient(client);
 		// If the client is minimized, trigger the minimize function
@@ -320,16 +320,25 @@ function removeClient(client) {
 // Removes the closed client from tiles[]
 // Unlike removeClient(), does not follow the client
 function removeClientNoFollow(client, desk, scr) {
-	print("attempting to remove " + client.caption + " (no follow)");
-	// First for- and if-loops find the closed client 
-	for (var i = 0; i < tiles[desk][scr].length; i++) {
-		if (sameClient(tiles[desk][scr][i], client)) {
-			tiles[desk][scr].splice(i, 1);
-			disconnectClient(client);
-			print(client.caption + " removed (no follow)");
-			// If there are still tiles after the removal, calculates the geometries
-			if (tiles[desk][scr].length > 0) {
-				tileClients();
+	print("attempting to remove " + client.caption + " (no follow) from desktop  " + desk + " screen " + scr);
+	if (client.minimized) {
+		client.clientUnminimized.disconnect(unminimizeClient);
+		// Hack: connect to override earlier connect, so the client can be properly disconnected
+		client.desktopChanged.connect(closeWindow);
+		client.desktopChanged.disconnect(closeWindow);
+		tiles[client.desktop][client.screen].max += 1;
+	}
+	// Avoid crashes
+	if (typeof tiles[client.desktop] != "undefined") {	
+		for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
+			if (sameClient(tiles[client.desktop][client.screen][i], client)) {
+				tiles[client.desktop][client.screen].splice(i, 1);
+				disconnectClient(client);
+				print(client.caption + " removed (no follow) from desktop  " + desk + " screen " + scr);
+				// If there are still tiles after the removal, calculates the geometries
+				if (tiles[client.desktop][client.screen].length > 0) {
+					tileClients();
+				}
 			}
 		}
 	}
@@ -446,12 +455,15 @@ function adjustClient(client) {
 	// If the size equals the pre-movement size, user is trying to move the client, not resize it
 	if (client.geometry.width === oldGeo.width && client.geometry.height === oldGeo.height) {
 		if (oldGeo.screen != client.screen) {
-			var rect = client.geometry;
-			if (moveClient(client) == false) {
-				removeClient(client);
+			if (tiles[ws.currentDesktop][client.screen].length < tiles[ws.currentDesktop][client.screen].max) {
+				print("attempting to push " + client.caption + " to screen" + client.screen);
+				var rect = client.geometry;
+				client.geometry = oldGeo;
+				removeClientNoFollow(client, client.desktop, client.screen);
 				client.geometry = rect;
-				addClient(client);
-			}
+				addClientNoFollow(client, client.desktop, client.screen);
+				print("pushed client " + client.caption + " to screen" + client.screen);
+			} else moveClient(client);
 		} else moveClient(client);
 	} else {
 		resizeClient(client);
@@ -821,14 +833,15 @@ function closeWindow(client) {
 }
 
 function changeClientDesktop(client) {
-	print("attempting to change the desktop of " + client.caption);
-	removeClientNoFollow(client, ws.currentDesktop, client.screen);
+	var scr = client.screen;
+	print("attempting to change the desktop of " + client.caption + " to desktop " + client.desktop);
+	removeClientNoFollow(client, ws.currentDesktop, scr);
 	if (client.desktop == -1) {
 		print(client.caption + " pinned to all desktops");
 		return;
-	} else if (tiles[client.desktop][client.screen].length < tiles[client.desktop][client.screen].max) {
-		addClientNoFollow(client, client.desktop, client.screen);
-		print("succesfully changed the desktop of " + client.caption);
+	} else if (tiles[client.desktop][scr].length < tiles[client.desktop][scr].max) {
+		addClientNoFollow(client, client.desktop, scr);
+		print("succesfully changed the desktop of " + client.caption + " to desktop " + client.dreesktop);
 	}
 }
 
@@ -859,11 +872,12 @@ function adjustDesktops(desktop) {
 }
 
 function createDesktop(desktop) {
-	print("attempting to create desktop" + desktop);
+	print("attempting to create desktop " + desktop);
 	tiles[desktop] = [];
 	for (var i = 0; i < ws.numScreens; i++) {
 		tiles[desktop][i] = [];
 		tiles[desktop][i].max = 4;
+		tiles[ws.currentDesktop][i].layout = newLayout(i);
 	}
 	print("desktop " + desktop + " created");
 	tileClients();
@@ -873,7 +887,6 @@ function createScreen(desktop, scr) {
 	tiles[desktop] = [];
 	tiles[desktop][scr] = [];
 	tiles[desktop][scr].max = 4;
-	tiles[desktop][scr].layout = newLayout(i);
 }
 
 function removeDesktop(desktop) {
@@ -885,11 +898,11 @@ function removeDesktop(desktop) {
 	if (typeof tiles[desktop] != "undefined") {
 		for (var i = 0; i < tiles[desktop].length; i++) {
 			for (var j = 0; j < tiles[desktop][i].length; j++) {
-				tiles[desktop][i][j].closeWindow();
+				closeWindow(tiles[desktop][i][j]);
 			}
+			print("desktop " + desktop + " screen " + i + " removed");
 		}
 	}
-	print("desktop " + desktop + " removed");
 	tileClients();
 }
 
