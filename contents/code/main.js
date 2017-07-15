@@ -7,7 +7,7 @@
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
-	- Minimizing (when a minimized client is closed and when the desktop of a minimized client is removed)
+	- Next: changeClientDesktop(client)
 */
 
 
@@ -232,28 +232,28 @@ function addClient(client) {
 // Runs an ignore-check and if it passes, adds a client to tiles[]
 // Unlike addClient(), takes target desktop as a parameter and does not follow or connect the client
 // Runs an ignore-check and if it passes, adds a client to tiles[]
-function addClientNoFollow(client, desktop) {
+function addClientNoFollow(client, desk, screen) {
 	if (checkClient(client)) {
 		print("attempting to add " + client.caption + " (no follow)");
 		if (noBorders == true) {
 			client.noBorder = true;
 		} else client.noBorder = false;
-		var scr = client.screen;
+		var scr = screen;
 		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
-		if (tiles[desktop][scr].length === tiles[desktop][scr].max ||
-			tiles[desktop][scr].length === 4) {
+		if (tiles[desk][scr].length === tiles[desk][scr].max ||
+			tiles[desk][scr].length === 4) {
 			// Fixes a bug that makes the maximum go over 4 when removing virtual desktops
-			if (tiles[desktop][scr].length === 4) {
-				tiles[desktop][scr].max = 4;
+			if (tiles[desk][scr].length === 4) {
+				tiles[desk][scr].max = 4;
 			}
 			for (var i = 0; i < ws.numScreens; i++) {
-				if (tiles[desktop][i].length < tiles[desktop][i].max) {
+				if (tiles[desk][i].length < tiles[desk][i].max) {
 					scr = i;
 					break;
 				}
 			}
 		}
-		client.desktop = desktop;
+		client.desktop = desk;
 		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added (no follow)");
 		tileClients();
@@ -319,16 +319,16 @@ function removeClient(client) {
 
 // Removes the closed client from tiles[]
 // Unlike removeClient(), does not follow the client
-function removeClientNoFollow(client, desktop) {
+function removeClientNoFollow(client, desk, scr) {
 	print("attempting to remove " + client.caption + " (no follow)");
 	// First for- and if-loops find the closed client 
-	for (var i = 0; i < tiles[desktop][client.screen].length; i++) {
-		if (sameClient(tiles[desktop][client.screen][i], client)) {
-			tiles[desktop][client.screen].splice(i, 1);
+	for (var i = 0; i < tiles[desk][scr].length; i++) {
+		if (sameClient(tiles[desk][scr][i], client)) {
+			tiles[desk][scr].splice(i, 1);
 			disconnectClient(client);
 			print(client.caption + " removed (no follow)");
 			// If there are still tiles after the removal, calculates the geometries
-			if (tiles[desktop][client.screen].length > 0) {
+			if (tiles[desk][scr].length > 0) {
 				tileClients();
 			}
 		}
@@ -347,6 +347,7 @@ function disconnectClient(client) {
 	client.desktopChanged.disconnect(changeClientDesktop);
 	client.float = true;
 }
+
 // Calculates the geometries to maintain the layout
 // Geometry calculation is a mess and pre-existing client geometries should NEVER be used
 // Layout is always the fullscreen - no plasma and no gaps layout
@@ -444,10 +445,18 @@ function saveClientGeo(client) {
 function adjustClient(client) {
 	// If the size equals the pre-movement size, user is trying to move the client, not resize it
 	if (client.geometry.width === oldGeo.width && client.geometry.height === oldGeo.height) {
-		moveClient(client);
+		if (oldGeo.screen != client.screen) {
+			var rect = client.geometry;
+			if (moveClient(client) == false) {
+				removeClient(client);
+				client.geometry = rect;
+				addClient(client);
+			}
+		} else moveClient(client);
 	} else {
 		resizeClient(client);
 	}
+}
 
 // Moves clients (switches places within the layout)
 function moveClient(client) {
@@ -475,12 +484,14 @@ function moveClient(client) {
 		var j = findGeometryIndex(geometries[0], ws.currentDesktop, client.screen);
 		swapClients(i, j, oldGeo.screen, client.screen);
 		tileClients();
+		return true;
 	} else {
 		client.geometry = oldGeo;
+		return false;
 	}
 }
 
-	// Resizes all the clients
+// Resizes all the clients
 function resizeClient(client) {
 	print("attempting to resize " + client.caption);
 	var difX = client.geometry.x - oldGeo.x;
@@ -549,7 +560,6 @@ function resizeClient(client) {
 			}
 			break;
 		}
-	}
 	print("clients resized successfully (resize initiated by: " + client.caption + ")");
 	tileClients();
 }
@@ -762,10 +772,23 @@ function sameGeometry(geo1, geo2) {
 	} else return false;
 }
 
+// Find a client wherever it is, slow, don't use unless absolutely necessary
+function findClient(client) {
+	for (var i = 0; i < tiles.length; i++) {
+		for (var j = 0; j < tiles[i].length; i++) {
+			for (var k = 0; k < tiles[i][j].length; k++) {
+				if (tiles[i][j][k] == client) {
+					return [i, j];
+				}
+			}
+		}
+	}
+}
+
 // Finds tiles[desktop][ws.activeScreen] index of a client
 function findClientIndex(client, desk, scr) {
 	print("attempting to find " + client.caption + " index on desktop " + desk + " screen " + scr);
-	for (i = 0; i < tiles[desk][scr].length; i++) {
+	for (var i = 0; i < tiles[desk][scr].length; i++) {
 		if (sameClient(tiles[desk][scr][i], client)) {
 			print("found " + client.caption + " index on desktop " + desk + " screen " + scr);
 			return i;
@@ -798,11 +821,14 @@ function closeWindow(client) {
 }
 
 function changeClientDesktop(client) {
-	removeClientNoFollow(client, ws.currentDesktop);
+	print("attempting to change the desktop of " + client.caption);
+	removeClientNoFollow(client, ws.currentDesktop, client.screen);
 	if (client.desktop == -1) {
+		print(client.caption + " pinned to all desktops");
 		return;
 	} else if (tiles[client.desktop][client.screen].length < tiles[client.desktop][client.screen].max) {
-		addClientNoFollow(client, client.desktop);
+		addClientNoFollow(client, client.desktop, client.screen);
+		print("succesfully changed the desktop of " + client.caption);
 	}
 }
 
