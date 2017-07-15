@@ -64,6 +64,8 @@ var tiles = []; // tiles[desktop][screen][client]
 
 var oldGeo; // Hack: Saves the pre-movement position as a global variable
 
+
+
 /*---------------/
 / INIT FUNCTIONS /
 /---------------*/
@@ -168,6 +170,22 @@ function registerKeys() {
 		"Meta+R",
 		function() {
 			tiles[ws.currentDesktop][ws.activeScreen].layout = newLayout(ws.activeScreen);
+			tileClients();
+		});
+	registerShortcut(
+		"Quarter: + Gap Size",
+		"Quarter: + Gap Size",
+		"Meta+O",
+		function() {
+			gap += 2;
+			tileClients();
+		});
+	registerShortcut(
+		"Quarter: - Gap Size",
+		"Quarter: - Gap Size",
+		"Meta+L",
+		function() {
+			gap -= 2;
 			tileClients();
 		});
 }
