@@ -326,17 +326,17 @@ function removeClientNoFollow(client, desk, scr) {
 		// Hack: connect to override earlier connect, so the client can be properly disconnected
 		client.desktopChanged.connect(closeWindow);
 		client.desktopChanged.disconnect(closeWindow);
-		tiles[client.desktop][client.screen].max += 1;
+		tiles[desk][scr].max += 1;
 	}
 	// Avoid crashes
-	if (typeof tiles[client.desktop] != "undefined") {	
-		for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
-			if (sameClient(tiles[client.desktop][client.screen][i], client)) {
-				tiles[client.desktop][client.screen].splice(i, 1);
+	if (typeof tiles[desk] != "undefined") {	
+		for (var i = 0; i < tiles[desk][scr].length; i++) {
+			if (sameClient(tiles[desk][scr][i], client)) {
+				tiles[desk][scr].splice(i, 1);
 				disconnectClient(client);
 				print(client.caption + " removed (no follow) from desktop  " + desk + " screen " + scr);
 				// If there are still tiles after the removal, calculates the geometries
-				if (tiles[client.desktop][client.screen].length > 0) {
+				if (tiles[ws.currentDesktop][ws.activeScreen].length > 0) {
 					tileClients();
 				}
 			}
@@ -877,7 +877,7 @@ function createDesktop(desktop) {
 	for (var i = 0; i < ws.numScreens; i++) {
 		tiles[desktop][i] = [];
 		tiles[desktop][i].max = 4;
-		tiles[ws.currentDesktop][i].layout = newLayout(i);
+		tiles[desktop][i].layout = newLayout(i);
 	}
 	print("desktop " + desktop + " created");
 	tileClients();
