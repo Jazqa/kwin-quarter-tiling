@@ -7,7 +7,10 @@
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
-	- Next: changeClientDesktop(client)
+		- Locked on the largest tile (not necessary, in theory, freedom to move them however the user wants is better)
+	- Respect minimum and maximum sizes set by programs (not imporant, user has a brain and can resize windows as they see fit, can also be an advantage)
+	- No restart required after modifying the configuration or adjusting the number of screens
+
 */
 
 
@@ -54,6 +57,8 @@ largeClients = largeClients.concat(readConfig("largeClients", "gimp").toString()
 // Virtual desktops that will be completely ignored
 var ignoredDesktops = [-1];
 
+// Todo: Add an configuration option for ignored desktops
+
 var gap = readConfig("gap", 10); // Gap size in pixels
 
 var noBorders = readConfig("noBorders", false);
@@ -79,8 +84,29 @@ function init() {
 }
 
 function registerKeys() {
-	// Todo: Shortcut for +/- gapsize?
-	// Todo: Shorcut for resizing clients
+	registerShortcut(
+		"Quarter: Float/Tile Desktop",
+		"Quarter: Float/Tile Desktop",
+		"Meta+Esc",
+		function() {
+			var clients = ws.clientList();
+			var desk = ignoredDesktops.indexOf(ws.currentDesktop);
+			if (desk > -1) {
+				ignoredDesktops.splice(desk, 1);
+				for (var k = 0; k < clients.length; k++) {
+					if (clients[k].desktop === ws.currentDesktop) {
+						addClient(clients[k]);
+					}
+				} 
+			} else {			
+				ignoredDesktops.push(ws.currentDesktop);
+				for (var i = 0; i < clients.length; i++) {
+					if (clients[i].desktop === ws.currentDesktop) {
+						removeClientNoFollow(clients[i], clients[i].desktop, clients[i].screen);
+					}
+				}
+			}
+		});
 	registerShortcut(
 		"Quarter: Float On/Off",
 		"Quarter: Float On/Off",
@@ -250,13 +276,12 @@ function addClient(client) {
 // Runs an ignore-check and if it passes, adds a client to tiles[]
 // Unlike addClient(), takes target desktop as a parameter and does not follow or connect the client
 // Runs an ignore-check and if it passes, adds a client to tiles[]
-function addClientNoFollow(client, desk, screen) {
+function addClientNoFollow(client, desk, scr) {
 	if (checkClient(client)) {
 		print("attempting to add " + client.caption + " (no follow) to desktop " + desk + " screen " + scr);
 		if (noBorders == true) {
 			client.noBorder = true;
 		} else client.noBorder = false;
-		var scr = screen;
 		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
 		if (tiles[desk][scr].length === tiles[desk][scr].max ||
 			tiles[desk][scr].length === 4) {
@@ -291,14 +316,11 @@ function addClients() {
 }
 
 // Connects the signals of the new KWin:Client to the following functions
-function connectClient(client) {
+function connectClient(client) { 
 	client.clientStartUserMovedResized.connect(saveClientGeo);
 	client.clientFinishUserMovedResized.connect(adjustClient);
 	client.clientMinimized.connect(minimizeClient);
-	// Unlike other client signals, stupid .desktopChanged signal doesn't carry client as a parameter
-	client.desktopChanged.connect(function() {
-		changeClientDesktop(client);
-	});
+	client.desktopChanged.connect(client, changeClientDesktop);
 	client.float = false;
 }
 
@@ -366,12 +388,14 @@ function removeClientNoFollow(client, desk, scr) {
 // So they will not trigger when a manually floated client is interacted with
 // Or when a client is removed & added between desktops
 function disconnectClient(client) {
-	client.clientStartUserMovedResized.disconnect(saveClientGeo);
-	client.clientFinishUserMovedResized.disconnect(adjustClient);
-	client.clientMinimized.disconnect(minimizeClient);
-	// Hack: connect to override earlier connect, so the client can be properly disconnected
-	client.desktopChanged.connect(changeClientDesktop);
-	client.desktopChanged.disconnect(changeClientDesktop);
+	try {		
+		client.clientStartUserMovedResized.disconnect(saveClientGeo);
+		client.clientFinishUserMovedResized.disconnect(adjustClient);
+		client.clientMinimized.disconnect(minimizeClient);
+		client.desktopChanged.disconnect(client, changeClientDesktop);
+	} catch (err) {
+		print (err);
+	}
 	client.float = true;
 }
 
@@ -517,6 +541,7 @@ function moveClient(client) {
 		return true;
 	} else {
 		client.geometry = oldGeo;
+		tileClients();
 		return false;
 	}
 }
@@ -718,9 +743,7 @@ function minimizeClient(client) {
 	tiles[client.desktop][client.screen].max -= 1;
 	disconnectClient(client);
 	client.clientUnminimized.connect(unminimizeClient);
-	client.desktopChanged.connect(function() {
-		closeWindow(client);
-	});
+	client.desktopChanged.connect(client, closeWindow);
 	if (tiles[client.desktop][client.screen].length == 0) {
 		ws.currentDesktop -= 1;
 	}
@@ -731,9 +754,7 @@ function minimizeClient(client) {
 function unminimizeClient(client) {
 	print("attempting to unminimize " + client.caption);
 	client.clientUnminimized.disconnect(unminimizeClient);
-	// Hack: connect to override earlier connect, so the client can be properly disconnected
-	client.desktopChanged.connect(closeWindow);
-	client.desktopChanged.disconnect(closeWindow);
+	client.desktopChanged.disconnect(client, closeWindow);
 	ws.currentDesktop = client.desktop;
 	tiles[client.desktop][client.screen].max += 1;
 	tiles[client.desktop][client.screen].push(client);
@@ -766,7 +787,8 @@ function maximizeClient(client, h, v) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
-	if (client.comboBox ||
+	if (ignoredDesktops.indexOf(client.desktop) > -1 ||
+		client.comboBox ||
 		client.desktopWindow ||
 		client.dndIcon ||
 		client.dock ||
@@ -847,21 +869,24 @@ function swapClients(i, j, scrI, scrJ) {
 }
 
 function closeWindow(client) {
-	client.closeWindow();
-}
-
-function changeClientDesktop(client) {
-	var scr = client.screen;
-	print("attempting to change the desktop of " + client.caption + " to desktop " + client.desktop);
-	removeClientNoFollow(client, ws.currentDesktop, scr);
-	if (client.desktop == -1) {
-		print(client.caption + " pinned to all desktops");
-		return;
-	} else if (tiles[client.desktop][scr].length < tiles[client.desktop][scr].max) {
-		addClientNoFollow(client, client.desktop, scr);
-		print("succesfully changed the desktop of " + client.caption + " to desktop " + client.dreesktop);
+	if (client) {
+		client.closeWindow();
+	} else {
+		this.closeWindow();
 	}
 }
+
+var changeClientDesktop = function() {
+	print("attempting to change the desktop of " + this.caption + " to desktop " + this.desktop);
+	removeClientNoFollow(this, ws.currentDesktop, this.screen);
+	if (ignoredDesktops.indexOf(this.desktop) > -1) {
+		print(this.caption + " on ignored desktop");
+		return;
+	} else if (tiles[this.desktop][this.screen].length < tiles[this.desktop][this.screen].max) {
+		addClientNoFollow(this, this.desktop, this.screen);
+		print("successfully changed the desktop of " + this.caption + " to desktop " + this.desktop);
+	}
+};
 
 /*--------------------------/
 / VIRTUAL DESKTOP FUNCTIONS /
