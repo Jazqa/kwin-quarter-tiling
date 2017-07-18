@@ -3,14 +3,12 @@
 /----------*/
 /*
 	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
-	- Windows will fill desktops with space, instead of creating new ones
 	- Support for large programs (Gimp, Krita, Kate)
 		- Automatically occupies the largest tile
 		- Max clients (default: 4) -= 1 per large program
 		- Locked on the largest tile (not necessary, in theory, freedom to move them however the user wants is better)
 	- Respect minimum and maximum sizes set by programs (not imporant, user has a brain and can resize windows as they see fit, can also be an advantage)
 	- No restart required after modifying the configuration or adjusting the number of screens
-
 */
 
 
@@ -44,6 +42,8 @@ ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine,steam,
 var ignoredCaptions = [
 	"File Upload",
 	"Move to Trash",
+	"Quit GIMP",
+	"Create a New Image",
 ];
 
 ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(','));
@@ -218,18 +218,12 @@ function registerKeys() {
 
 // Connects the KWin:Workspace signals to the following functions
 function connectWorkspace() {
-	ws.numberScreensChanged.connect(function() {
-		var clients = ws.clientList();
-		for(var i = 0; i < clients.length; i++) {
-			removeClientNoFollow(clients[i], clients[i].desktop, clients[i].screen);
-		}
-		ws.desktops = 1;
-		createDesktop(1);
-		addClients();
+	ws.numberScreensChanged.connect(function(scr) {
+		// Todo
 	});
 	ws.clientAdded.connect(addClient);
 	ws.clientRemoved.connect(removeClient);
-	// workspace.clientMaximizeSet.connect(maximizeClient);
+	ws.clientMaximizeSet.connect(maximizeClient); //...of course this is on workspace basis while minimize is on a client basis
 	ws.currentDesktopChanged.connect(changeDesktop);
 	ws.numberDesktopsChanged.connect(adjustDesktops);
 }
@@ -362,9 +356,6 @@ function removeClient(client) {
 	print("attempting to remove " + client.caption);
 	if (client.minimized) {
 		client.clientUnminimized.disconnect(unminimizeClient);
-		// Hack: connect to override earlier connect, so the client can be properly disconnected
-		client.desktopChanged.connect(closeWindow);
-		client.desktopChanged.disconnect(closeWindow);
 		tiles[client.desktop][client.screen].max += 1;
 	}
 	// Avoid crashes
@@ -396,9 +387,6 @@ function removeClientNoFollow(client, desk, scr) {
 	print("attempting to remove " + client.caption + " (no follow) from desktop  " + desk + " screen " + scr);
 	if (client.minimized) {
 		client.clientUnminimized.disconnect(unminimizeClient);
-		// Hack: connect to override earlier connect, so the client can be properly disconnected
-		client.desktopChanged.connect(closeWindow);
-		client.desktopChanged.disconnect(closeWindow);
 		tiles[desk][scr].max += 1;
 	}
 	// Avoid crashes
@@ -412,6 +400,16 @@ function removeClientNoFollow(client, desk, scr) {
 				if (tiles[ws.currentDesktop][ws.activeScreen].length > 0) {
 					tileClients();
 				}
+			}
+		}
+	}
+}
+
+function removeClients() {
+	for (var i = 1; i < tiles.length; i++) {
+		for (var j = 0; j < tiles[i].length; j++) {
+			for (var k = 0; k < tiles[i][j].length; k++) {
+				removeClientNoFollow(tiles[i][j][k], i, j);
 			}
 		}
 	}
@@ -789,22 +787,15 @@ function unminimizeClient(client) {
 	tileClients();
 }
 
-/*--------------------- TODO -----------------------------------
-- Figure out what to do with maximized clients
-- Maximize stays on after closing
-- Maximized property does not exist
-- Knowing which clients are maximized is problematic
-- Currently the best solution: compare to the screen size
-- Problem: User has no gaps, first window would always be "maximized"
-function maximizeClient(client, h, v) {
+function maximizeClient(client, h, v) {	
 	if (h && v) {
-		removeClient(client);
+		// Todo: Maximized client saves the spot
+		// client.maximized = findClientIndex(client, client.desktop, client.screen);
+		removeClientNoFollow(client, client.desktop, client.screen);
 	} else {
 		addClient(client);
 	}
 }
---------------------------------------------------------------*/
-
 
 
 /*--------------/
@@ -813,8 +804,7 @@ function maximizeClient(client, h, v) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
-	if (ignoredDesktops.indexOf(client.desktop) > -1 ||
-		client.comboBox ||
+	if (client.comboBox ||
 		client.desktopWindow ||
 		client.dndIcon ||
 		client.dock ||
@@ -828,8 +818,10 @@ function checkClient(client) {
 		client.tooltip ||
 		client.utility ||
 		client.transient ||
+		client.shadeable === false || // Hack: To recognize a maximized client, it's either this or comparing client to the size of the screen
 		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
-		ignoredCaptions.indexOf(client.caption.toString()) > -1) {
+		ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
+		ignoredDesktops.indexOf(client.desktop) > -1) {
 		return false;
 	} else return true;
 }
@@ -972,11 +964,15 @@ function removeDesktop(desktop) {
 	tileClients();
 }
 
-function createScreen(desktop, scr) {
-	tiles[desktop] = [];
-	tiles[desktop][scr] = [];
-	tiles[desktop][scr].max = 4;
+/* Todo
+function createScreen(scr) {
+	for (var i = 1; i <= tiles.length; i++) {	
+		tiles[i][scr] = [];
+		tiles[i][scr].max = 4;
+		tiles[i][scr].layout = newLayout(scr);
+	}
 }
+*/
 
 function findSpace() {
 	print("attempting to find space on existing desktops");
