@@ -234,7 +234,7 @@ function connectWorkspace() {
 /--------------------------------*/
 
 // Runs an ignore-check and if it passes, adds a client to tiles[]
-function addClient(client) {
+function addClient(client, unshift) {
 	if (checkClient(client)) {
 		print("attempting to add " + client.caption);
 		if (noBorders == true) {
@@ -271,7 +271,10 @@ function addClient(client) {
 		if (typeof tiles[client.desktop] == "undefined") {
 			createDesktop(client.desktop);
 		}
-		tiles[client.desktop][scr].push(client);
+		// If unshift parameter is given, client is pushed to the beginning of the array
+		if (unshift) {
+			tiles[client.desktop][scr].unshift(client);
+		} else tiles[client.desktop][scr].push(client);
 		print(client.caption + " added");
 		/* Todo: Think about respecting minSizes: Addings & Resizing
 		var index  = tiles[client.desktop][scr].length - 1;
@@ -436,79 +439,81 @@ function tileClients() {
 	// Since it's just four, switch is also the easiest approach
 	// Todo: Clean this up, big time
 	for (var i = 0; i < ws.numScreens; i++) {
-		print("attempting to tile desktop " + ws.currentDesktop + " screen " + i);
-		// Creates new layouts whenever a desktop is empty or contains only a single client
-		// Ideally, this should be done in createDesktop(), but currently, it causes an insane amount of bugs
-		// Todo: Move to createDesktop()
-		if (tiles[ws.currentDesktop][i].length <= 1) {
-			tiles[ws.currentDesktop][i].layout = newLayout(i);
+		if (typeof tiles[ws.currentDesktop][i] != "undefined") {
+			print("attempting to tile desktop " + ws.currentDesktop + " screen " + i);
+			// Creates new layouts whenever a desktop is empty or contains only a single client
+			// Ideally, this should be done in createDesktop(), but currently, it causes an insane amount of bugs
+			// Todo: Move to createDesktop()
+			if (tiles[ws.currentDesktop][i].length <= 1) {
+				tiles[ws.currentDesktop][i].layout = newLayout(i);
+			}
+			var adjusted = [];
+			if (tiles[ws.currentDesktop][i].length === 1) {
+				adjusted[0] = {};
+				adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
+				adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
+				adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width + tiles[ws.currentDesktop][i].layout[1].width - gap * 2;
+				adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - gap * 2;
+			} else if (tiles[ws.currentDesktop][i].length === 2) {
+				adjusted[0] = {};
+				adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
+				adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
+				adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - gap * 1.5;
+				adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - gap * 2;
+
+				adjusted[1] = {};
+				adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + gap * 0.5;
+				adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + gap;
+				adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - gap * 1.5;
+				adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height + tiles[ws.currentDesktop][i].layout[2].height - gap * 2;
+			} else if (tiles[ws.currentDesktop][i].length === 3) {
+				adjusted[0] = {};
+				adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
+				adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
+				adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - gap * 1.5;
+				adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - gap * 2;
+
+				adjusted[1] = {};
+				adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + gap * 0.5;
+				adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + gap;
+				adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - gap * 1.5;
+				adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height - gap * 1.5;
+
+				adjusted[2] = {};
+				adjusted[2].x = tiles[ws.currentDesktop][i].layout[2].x + gap * 0.5;
+				adjusted[2].y = tiles[ws.currentDesktop][i].layout[2].y + gap * 0.5;
+				adjusted[2].width = tiles[ws.currentDesktop][i].layout[2].width - gap * 1.5;
+				adjusted[2].height = tiles[ws.currentDesktop][i].layout[2].height - gap * 1.5;
+			} else if (tiles[ws.currentDesktop][i].length === 4) {
+				adjusted[0] = {};
+				adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
+				adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
+				adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - gap * 1.5;
+				adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height - gap * 1.5;
+
+				adjusted[1] = {};
+				adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + gap * 0.5;
+				adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + gap;
+				adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - gap * 1.5;
+				adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height - gap * 1.5;
+
+				adjusted[2] = {};
+				adjusted[2].x = tiles[ws.currentDesktop][i].layout[2].x + gap * 0.5;
+				adjusted[2].y = tiles[ws.currentDesktop][i].layout[2].y + gap * 0.5;
+				adjusted[2].width = tiles[ws.currentDesktop][i].layout[2].width - gap * 1.5;
+				adjusted[2].height = tiles[ws.currentDesktop][i].layout[2].height - gap * 1.5;
+
+				adjusted[3] = {};
+				adjusted[3].x = tiles[ws.currentDesktop][i].layout[3].x + gap;
+				adjusted[3].y = tiles[ws.currentDesktop][i].layout[3].y + gap * 0.5;
+				adjusted[3].width = tiles[ws.currentDesktop][i].layout[3].width - gap * 1.5;
+				adjusted[3].height = tiles[ws.currentDesktop][i].layout[3].height - gap * 1.5;
+			}
+			for (var j = 0; j < adjusted.length; j++) {
+				tiles[ws.currentDesktop][i][j].geometry = adjusted[j];
+			}
+			print("desktop " + ws.currentDesktop + " screen " + i + " tiled");
 		}
-		var adjusted = [];
-		if (tiles[ws.currentDesktop][i].length === 1) {
-			adjusted[0] = {};
-			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
-			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
-			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width + tiles[ws.currentDesktop][i].layout[1].width - gap * 2;
-			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - gap * 2;
-		} else if (tiles[ws.currentDesktop][i].length === 2) {
-			adjusted[0] = {};
-			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
-			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
-			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - gap * 1.5;
-			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - gap * 2;
-
-			adjusted[1] = {};
-			adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + gap * 0.5;
-			adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + gap;
-			adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - gap * 1.5;
-			adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height + tiles[ws.currentDesktop][i].layout[2].height - gap * 2;
-		} else if (tiles[ws.currentDesktop][i].length === 3) {
-			adjusted[0] = {};
-			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
-			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
-			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - gap * 1.5;
-			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height + tiles[ws.currentDesktop][i].layout[3].height - gap * 2;
-
-			adjusted[1] = {};
-			adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + gap * 0.5;
-			adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + gap;
-			adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - gap * 1.5;
-			adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height - gap * 1.5;
-
-			adjusted[2] = {};
-			adjusted[2].x = tiles[ws.currentDesktop][i].layout[2].x + gap * 0.5;
-			adjusted[2].y = tiles[ws.currentDesktop][i].layout[2].y + gap * 0.5;
-			adjusted[2].width = tiles[ws.currentDesktop][i].layout[2].width - gap * 1.5;
-			adjusted[2].height = tiles[ws.currentDesktop][i].layout[2].height - gap * 1.5;
-		} else if (tiles[ws.currentDesktop][i].length === 4) {
-			adjusted[0] = {};
-			adjusted[0].x = tiles[ws.currentDesktop][i].layout[0].x + gap;
-			adjusted[0].y = tiles[ws.currentDesktop][i].layout[0].y + gap;
-			adjusted[0].width = tiles[ws.currentDesktop][i].layout[0].width - gap * 1.5;
-			adjusted[0].height = tiles[ws.currentDesktop][i].layout[0].height - gap * 1.5;
-
-			adjusted[1] = {};
-			adjusted[1].x = tiles[ws.currentDesktop][i].layout[1].x + gap * 0.5;
-			adjusted[1].y = tiles[ws.currentDesktop][i].layout[1].y + gap;
-			adjusted[1].width = tiles[ws.currentDesktop][i].layout[1].width - gap * 1.5;
-			adjusted[1].height = tiles[ws.currentDesktop][i].layout[1].height - gap * 1.5;
-
-			adjusted[2] = {};
-			adjusted[2].x = tiles[ws.currentDesktop][i].layout[2].x + gap * 0.5;
-			adjusted[2].y = tiles[ws.currentDesktop][i].layout[2].y + gap * 0.5;
-			adjusted[2].width = tiles[ws.currentDesktop][i].layout[2].width - gap * 1.5;
-			adjusted[2].height = tiles[ws.currentDesktop][i].layout[2].height - gap * 1.5;
-
-			adjusted[3] = {};
-			adjusted[3].x = tiles[ws.currentDesktop][i].layout[3].x + gap;
-			adjusted[3].y = tiles[ws.currentDesktop][i].layout[3].y + gap * 0.5;
-			adjusted[3].width = tiles[ws.currentDesktop][i].layout[3].width - gap * 1.5;
-			adjusted[3].height = tiles[ws.currentDesktop][i].layout[3].height - gap * 1.5;
-		}
-		for (var j = 0; j < adjusted.length; j++) {
-			tiles[ws.currentDesktop][i][j].geometry = adjusted[j];
-		}
-		print("desktop " + ws.currentDesktop + " screen " + i + " tiled");
 	}
 }
 
@@ -789,9 +794,15 @@ function unminimizeClient(client) {
 
 function maximizeClient(client, h, v) {	
 	if (h && v) {
+		tiles[client.desktop][client.screen].max -= 1;
 		removeClientNoFollow(client, client.desktop, client.screen);
 	} else {
-		addClient(client);
+		// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
+		// (Unminimized clients are pushed to the end of the window array)
+		if (client.float === true || client.float === false) {		
+			tiles[client.desktop][client.screen].max += 1;
+		}
+		addClient(client, true);
 	}
 }
 
