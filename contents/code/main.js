@@ -361,6 +361,11 @@ function removeClient(client) {
 		client.clientUnminimized.disconnect(unminimizeClient);
 		tiles[client.desktop][client.screen].max += 1;
 	}
+	if (client.float === true || client.float === false) {
+		if (client.shadeable === false) {
+			tiles[client.desktop][client.screen].max += 1;
+		}
+	}
 	// Avoid crashes
 	if (typeof tiles[client.desktop] != "undefined") {	
 		for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
@@ -391,6 +396,11 @@ function removeClientNoFollow(client, desk, scr) {
 	if (client.minimized) {
 		client.clientUnminimized.disconnect(unminimizeClient);
 		tiles[desk][scr].max += 1;
+	}
+	if (client.float === true || client.float === false) {
+		if (client.shadeable === false) {
+			tiles[client.desktop][client.screen].max += 1;
+		}
 	}
 	// Avoid crashes
 	if (typeof tiles[desk] != "undefined") {	
@@ -794,15 +804,18 @@ function unminimizeClient(client) {
 
 function maximizeClient(client, h, v) {	
 	if (h && v) {
-		tiles[client.desktop][client.screen].max -= 1;
+		// Hack: removeClientNoFollow adds +1 to the .max because it detects a maximized client
+		tiles[client.desktop][client.screen].max -= 2;
 		removeClientNoFollow(client, client.desktop, client.screen);
 	} else {
-		// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
-		// (Unminimized clients are pushed to the end of the window array)
+		// Checks if the client has already existed (to avoid the dumb changeClientDesktop shenanigans)
 		if (client.float === true || client.float === false) {		
 			tiles[client.desktop][client.screen].max += 1;
-		}
-		addClient(client, true);
+			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
+			// (Unminimized clients are pushed to the end of the window array)
+			addClient(client, true);
+		// New clients left maximized go to the end of the array because logic
+		} else addClient(client);
 	}
 }
 
