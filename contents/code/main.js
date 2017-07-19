@@ -789,11 +789,12 @@ function unminimizeClient(client) {
 
 function maximizeClient(client, h, v) {	
 	if (h && v) {
-		// Todo: Maximized client saves the spot
-		// client.maximized = findClientIndex(client, client.desktop, client.screen);
+		client.maximized = findClientIndex(client, client.desktop, client.screen);
 		removeClientNoFollow(client, client.desktop, client.screen);
 	} else {
-		addClient(client);
+		if (client.maximized) {
+			
+		} else addClient(client);
 	}
 }
 
@@ -1029,16 +1030,31 @@ ws.clientAdded.connect(wait);
 // The most reliable way to start the script thus far
 // Todo: Find a better and more reliable way to start the script
 function wait(client) {
-	client.windowShown.connect(check);
+	if (options.useCompositing) {
+		client.windowShown.connect(check);
+	} else {
+		ws.clientAdded.disconnect(wait);
+		ws.clientActivated.connect(check);
+	}
 }
 
 function check(client) {
-	if (checkClient(client)) {
-		ws.clientAdded.disconnect(wait);
-		client.windowShown.disconnect(check);
-		init();
-		print("script initiated with " + client.caption);
+	if(options.useCompositing) {		
+		if (checkClient(client)) {
+			ws.clientAdded.disconnect(wait);
+			client.windowShown.disconnect(check);
+			init();
+			print("script initiated with " + client.caption);
+		} else {
+			client.windowShown.disconnect(check);
+		}
 	} else {
-		client.windowShown.disconnect(check);
+		if(client != null) {		
+			if (checkClient(client)) {
+				ws.clientActivated.disconnect(check);
+				init();
+				print("script initiated with " + client.caption);
+			}
+		}
 	}
 }
