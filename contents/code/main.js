@@ -789,12 +789,9 @@ function unminimizeClient(client) {
 
 function maximizeClient(client, h, v) {	
 	if (h && v) {
-		client.maximized = findClientIndex(client, client.desktop, client.screen);
 		removeClientNoFollow(client, client.desktop, client.screen);
 	} else {
-		if (client.maximized) {
-			
-		} else addClient(client);
+		addClient(client);
 	}
 }
 
