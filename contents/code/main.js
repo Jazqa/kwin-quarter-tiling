@@ -97,8 +97,8 @@ function registerKeys() {
 					if (clients[k].desktop === ws.currentDesktop) {
 						addClient(clients[k]);
 					}
-				} 
-			} else {			
+				}
+			} else {
 				ignoredDesktops.push(ws.currentDesktop);
 				for (var i = 0; i < clients.length; i++) {
 					if (clients[i].desktop === ws.currentDesktop) {
@@ -260,7 +260,7 @@ function addClient(client, unshift) {
 				if (freeTile) {
 					ws.currentDesktop = freeTile[0];
 					scr = freeTile[1];
-				} else {		
+				} else {
 					ws.desktops += 1;
 					ws.currentDesktop = ws.desktops;
 				}
@@ -342,7 +342,7 @@ function addClients() {
 }
 
 // Connects the signals of the new KWin:Client to the following functions
-function connectClient(client) { 
+function connectClient(client) {
 	client.clientStartUserMovedResized.connect(saveClientGeo);
 	client.clientFinishUserMovedResized.connect(adjustClient);
 	client.clientMinimized.connect(minimizeClient);
@@ -367,7 +367,7 @@ function removeClient(client) {
 		}
 	}
 	// Avoid crashes
-	if (typeof tiles[client.desktop] != "undefined") {	
+	if (typeof tiles[client.desktop] != "undefined") {
 		for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
 			if (sameClient(tiles[client.desktop][client.screen][i], client)) {
 				tiles[client.desktop][client.screen].splice(i, 1);
@@ -403,7 +403,7 @@ function removeClientNoFollow(client, desk, scr) {
 		}
 	}
 	// Avoid crashes
-	if (typeof tiles[desk] != "undefined") {	
+	if (typeof tiles[desk] != "undefined") {
 		for (var i = 0; i < tiles[desk][scr].length; i++) {
 			if (sameClient(tiles[desk][scr][i], client)) {
 				tiles[desk][scr].splice(i, 1);
@@ -802,15 +802,15 @@ function unminimizeClient(client) {
 	tileClients();
 }
 
-function maximizeClient(client, h, v) {	
+function maximizeClient(client, h, v) {
 	if (h && v) {
 		// Hack: removeClientNoFollow adds +1 to the .max because it detects a maximized client
 		tiles[client.desktop][client.screen].max -= 2;
 		removeClientNoFollow(client, client.desktop, client.screen);
 	} else {
 		// Checks if the client has already existed (to avoid the dumb changeClientDesktop shenanigans)
-		if (client.float === true || client.float === false) {		
-			tiles[client.desktop][client.screen].max += 1;
+		if (client.float === true || client.float === false) {
+			tiles[client.desktop][client.screen].max += 2; // Hack: see above
 			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
 			// (Unminimized clients are pushed to the end of the window array)
 			addClient(client, true);
@@ -918,7 +918,7 @@ function closeWindow(client) {
 function changeClientDesktop() {
 	if (this.minimized) {
 		this.closeWindow();
-	} else {	
+	} else {
 		print("attempting to change the desktop of " + this.caption + " to desktop " + this.desktop);
 		removeClientNoFollow(this, ws.currentDesktop, this.screen);
 		if (ignoredDesktops.indexOf(this.desktop) > -1) {
@@ -951,7 +951,7 @@ function adjustDesktops(desktop) {
 	if (ws.desktops < desktop) {
 		removeDesktop(desktop);
 	}
-	// Checks if a workspace is added 
+	// Checks if a workspace is added
 	else if (ws.desktops > desktop) {
 		createDesktop(ws.desktops);
 	}
@@ -988,7 +988,7 @@ function removeDesktop(desktop) {
 
 /* Todo
 function createScreen(scr) {
-	for (var i = 1; i <= tiles.length; i++) {	
+	for (var i = 1; i <= tiles.length; i++) {
 		tiles[i][scr] = [];
 		tiles[i][scr].max = 4;
 		tiles[i][scr].layout = newLayout(scr);
@@ -1060,7 +1060,7 @@ function wait(client) {
 }
 
 function check(client) {
-	if(options.useCompositing) {		
+	if (options.useCompositing) {
 		if (checkClient(client)) {
 			ws.clientAdded.disconnect(wait);
 			client.windowShown.disconnect(check);
@@ -1070,7 +1070,7 @@ function check(client) {
 			client.windowShown.disconnect(check);
 		}
 	} else {
-		if(client != null) {		
+		if (client != null) {
 			if (checkClient(client)) {
 				ws.clientActivated.disconnect(check);
 				init();
