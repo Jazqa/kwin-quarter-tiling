@@ -803,6 +803,7 @@ function unminimizeClient(client) {
 }
 
 function maximizeClient(client, h, v) {
+	ws.activeClient = client;
 	if (h && v) {
 		// Hack: removeClientNoFollow adds +1 to the .max because it detects a maximized client
 		tiles[client.desktop][client.screen].max -= 2;
@@ -864,19 +865,6 @@ function sameGeometry(geo1, geo2) {
 	} else return false;
 }
 
-// Find a client wherever it is, slow, don't use unless absolutely necessary
-function findClient(client) {
-	for (var i = 0; i < tiles.length; i++) {
-		for (var j = 0; j < tiles[i].length; i++) {
-			for (var k = 0; k < tiles[i][j].length; k++) {
-				if (tiles[i][j][k] == client) {
-					return [i, j];
-				}
-			}
-		}
-	}
-}
-
 // Finds tiles[desktop][ws.activeScreen] index of a client
 function findClientIndex(client, desk, scr) {
 	print("attempting to find " + client.caption + " index on desktop " + desk + " screen " + scr);
@@ -930,6 +918,7 @@ function changeClientDesktop() {
 		}
 	}
 }
+
 
 /*--------------------------/
 / VIRTUAL DESKTOP FUNCTIONS /
@@ -1018,6 +1007,7 @@ function newLayout(screen) {
 		layout[i].y = area.y;
 		layout[i].width = area.width;
 		layout[i].height = area.height;
+		// Todo: Horizontal layout
 		if (i === 1) {
 			layout[0].width = layout[0].width * 0.5;
 			layout[i].width = layout[0].width;
