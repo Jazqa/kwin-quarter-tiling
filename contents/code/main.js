@@ -61,6 +61,10 @@ var ignoredDesktops = [-1];
 // Todo: Add an configuration option for ignored desktops
 
 var gap = readConfig("gap", 10); // Gap size in pixels
+// Maximized windows are distinguished via size so a zero gap window is "maximized"
+if (gap === 0) {
+	gap = 2;
+}
 
 var noBorders = readConfig("noBorders", false);
 
@@ -212,8 +216,10 @@ function registerKeys() {
 		"Quarter: - Gap Size",
 		"Meta+L",
 		function() {
-			gap -= 2;
-			tileClients();
+			if (gap > 2) {
+				gap -= 2;
+				tileClients();
+			}
 		});
 }
 
@@ -363,7 +369,7 @@ function removeClient(client) {
 		tiles[client.desktop][client.screen].max += 1;
 	}
 	if (client.float === true || client.float === false) {
-		if (isMaxed(client)) {
+		if (client.maxed) {
 			tiles[client.desktop][client.screen].max += 1;
 		}
 	}
@@ -399,7 +405,7 @@ function removeClientNoFollow(client, desk, scr) {
 		tiles[desk][scr].max += 1;
 	}
 	if (client.float === true || client.float === false) {
-		if (isMaxed(client)) {
+		if (client.maxed) {
 			tiles[client.desktop][client.screen].max += 1;
 		}
 	}
@@ -806,17 +812,23 @@ function unminimizeClient(client) {
 function maximizeClient(client, h, v) {
 	ws.activeClient = client;
 	if (h && v) {
-		tiles[client.desktop][client.screen].max -= 2;
+		print("attempting to maximize client " + client.caption);
 		removeClientNoFollow(client, client.desktop, client.screen);
+		tiles[client.desktop][client.screen].max -= 1;
+		client.maxed = true;
+		print(client.caption + " maximized");
 	} else {
+		print("attempting to unmaximize client " + client.caption);
 		// Checks if the client has already existed (to avoid the dumb changeClientDesktop shenanigans)
 		if (client.float === true || client.float === false) {
-			tiles[client.desktop][client.screen].max += 2;
+			tiles[client.desktop][client.screen].max += 1;
+			client.maxed = false;
 			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
 			// (Unminimized clients are pushed to the end of the window array)
 			addClient(client, true);
 		// New clients left maximized go to the end of the array because logic
 		} else addClient(client);
+		print(client.caption + " unmaximized");
 	}
 }
 
@@ -841,10 +853,10 @@ function checkClient(client) {
 		client.tooltip ||
 		client.utility ||
 		client.transient ||
-		isMaxed(client) ||
 		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
 		ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
-		ignoredDesktops.indexOf(client.desktop) > -1) {
+		ignoredDesktops.indexOf(client.desktop) > -1 ||
+		isMaxed(client)) {
 		return false;
 	} else return true;
 }
@@ -922,8 +934,12 @@ function changeClientDesktop() {
 function isMaxed(client) {
 	var area = ws.clientArea(0, client.screen, 0);
 	if (client.geometry.height == area.height && client.geometry.width == area.width) {
+		client.maxed = true;
 		return true;
-	} else return false;
+	} else {
+		client.maxed = false;
+		return false;
+	}
 }
 
 
