@@ -9,6 +9,7 @@
 		- Locked on the largest tile (not necessary, in theory, freedom to move them however the user wants is better)
 	- Respect minimum and maximum sizes set by programs (not imporant, user has a brain and can resize windows as they see fit, can also be an advantage)
 	- No restart required after modifying the configuration or adjusting the number of screens
+	- Shadeable check does not work if maximized clients have a title bar
 */
 
 
@@ -362,7 +363,7 @@ function removeClient(client) {
 		tiles[client.desktop][client.screen].max += 1;
 	}
 	if (client.float === true || client.float === false) {
-		if (client.shadeable === false) {
+		if (isMaxed(client)) {
 			tiles[client.desktop][client.screen].max += 1;
 		}
 	}
@@ -398,7 +399,7 @@ function removeClientNoFollow(client, desk, scr) {
 		tiles[desk][scr].max += 1;
 	}
 	if (client.float === true || client.float === false) {
-		if (client.shadeable === false) {
+		if (isMaxed(client)) {
 			tiles[client.desktop][client.screen].max += 1;
 		}
 	}
@@ -805,13 +806,12 @@ function unminimizeClient(client) {
 function maximizeClient(client, h, v) {
 	ws.activeClient = client;
 	if (h && v) {
-		// Hack: removeClientNoFollow adds +1 to the .max because it detects a maximized client
 		tiles[client.desktop][client.screen].max -= 2;
 		removeClientNoFollow(client, client.desktop, client.screen);
 	} else {
 		// Checks if the client has already existed (to avoid the dumb changeClientDesktop shenanigans)
 		if (client.float === true || client.float === false) {
-			tiles[client.desktop][client.screen].max += 2; // Hack: see above
+			tiles[client.desktop][client.screen].max += 2;
 			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
 			// (Unminimized clients are pushed to the end of the window array)
 			addClient(client, true);
@@ -841,7 +841,7 @@ function checkClient(client) {
 		client.tooltip ||
 		client.utility ||
 		client.transient ||
-		client.shadeable === false || // Hack: To recognize a maximized client, it's either this or comparing client to the size of the screen
+		isMaxed(client) ||
 		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
 		ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
 		ignoredDesktops.indexOf(client.desktop) > -1) {
@@ -917,6 +917,13 @@ function changeClientDesktop() {
 			print("successfully changed the desktop of " + this.caption + " to desktop " + this.desktop);
 		}
 	}
+}
+
+function isMaxed(client) {
+	var area = ws.clientArea(0, client.screen, 0);
+	if (client.geometry.height == area.height && client.geometry.width == area.width) {
+		return true;
+	} else return false;
 }
 
 
