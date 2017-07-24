@@ -9,7 +9,7 @@
 		- Locked on the largest tile (not necessary, in theory, freedom to move them however the user wants is better)
 	- Respect minimum and maximum sizes set by programs (not imporant, user has a brain and can resize windows as they see fit, can also be an advantage)
 	- No restart required after modifying the configuration or adjusting the number of screens
-	- Shadeable check does not work if maximized clients have a title bar
+	- Figure out a way to include multiple files, this one is getting huge
 */
 
 
@@ -230,7 +230,7 @@ function connectWorkspace() {
 	});
 	ws.clientAdded.connect(addClient);
 	ws.clientRemoved.connect(removeClient);
-	ws.clientMaximizeSet.connect(maximizeClient); //...of course this is on workspace basis while minimize is on a client basis
+	ws.clientMaximizeSet.connect(maximizeClient); // Maximize (workspace), Minimize (client)...
 	ws.currentDesktopChanged.connect(changeDesktop);
 	ws.numberDesktopsChanged.connect(adjustDesktops);
 }
@@ -433,6 +433,29 @@ function removeClients() {
 			}
 		}
 	}
+}
+
+// "Removes" a client, reserving a spot for it by decreasing the maximum amount of clients on its desktop
+function reserveClient(client) {
+	for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
+		if (sameClient(tiles[client.desktop][client.screen][i], client)) {
+			tiles[client.desktop][client.screen].splice(i, 1);
+		}
+	}
+	tiles[client.desktop][client.screen].max -= 1;
+	tileClients();
+}
+
+// "Adds" a client back to the desktop
+function unreserveClient(client, unshift) {
+	ws.currentDesktop = client.desktop;
+	tiles[client.desktop][client.screen].max += 1;
+	if(unshift) {
+		tiles[client.desktop][client.screen].unshift(client);
+	} else {
+		tiles[client.desktop][client.screen].push(client);
+	}
+	tileClients();
 }
 
 // Disconnects the signals from removed clients
@@ -785,47 +808,42 @@ function decreaseClientSize() {
 // Minimize and Unminimize-functions are a mess because client.desktopChanged signal does not return a client
 function minimizeClient(client) {
 	print("attempting to minimize " + client.caption);
-	for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
-		if (sameClient(tiles[client.desktop][client.screen][i], client)) {
-			tiles[client.desktop][client.screen].splice(i, 1);
-		}
+	if (client.maxed) {
+		print(client.caption + " is maximized, no need to reserve spot anymore");
+		return;
 	}
-	tiles[client.desktop][client.screen].max -= 1;
+	reserveClient(client);
 	client.clientUnminimized.connect(unminimizeClient);
 	if (tiles[client.desktop][client.screen].length == 0) {
 		ws.currentDesktop -= 1;
 	}
 	print(client.caption + " minimized");
-	tileClients();
 }
 
 function unminimizeClient(client) {
 	print("attempting to unminimize " + client.caption);
 	client.clientUnminimized.disconnect(unminimizeClient);
-	ws.currentDesktop = client.desktop;
-	tiles[client.desktop][client.screen].max += 1;
-	tiles[client.desktop][client.screen].push(client);
+	unreserveClient(client);
 	print(client.caption + " unminimized");
-	tileClients();
 }
 
 function maximizeClient(client, h, v) {
 	ws.activeClient = client;
 	if (h && v) {
 		print("attempting to maximize client " + client.caption);
-		removeClientNoFollow(client, client.desktop, client.screen);
-		tiles[client.desktop][client.screen].max -= 1;
+		reserveClient(client);
 		client.maxed = true;
 		print(client.caption + " maximized");
 	} else {
 		print("attempting to unmaximize client " + client.caption);
 		// Checks if the client has already existed (to avoid the dumb changeClientDesktop shenanigans)
-		if (client.float === true || client.float === false) {
-			tiles[client.desktop][client.screen].max += 1;
+		if (client.float === true) {
+			return;
+		} else if (client.float === false) {
 			client.maxed = false;
 			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
 			// (Unminimized clients are pushed to the end of the window array)
-			addClient(client, true);
+			unreserveClient(client, true);
 		// New clients left maximized go to the end of the array because logic
 		} else addClient(client);
 		print(client.caption + " unmaximized");
@@ -931,6 +949,8 @@ function changeClientDesktop() {
 	}
 }
 
+// The client.maxed property has to be given before the client is added
+// That's why this function gives the property and returns a boolean for checkClient()
 function isMaxed(client) {
 	var area = ws.clientArea(0, client.screen, 0);
 	if (client.geometry.height == area.height && client.geometry.width == area.width) {
@@ -1031,6 +1051,8 @@ function newLayout(screen) {
 		layout[i].width = area.width;
 		layout[i].height = area.height;
 		// Todo: Horizontal layout
+		// Layouts = "Objects"
+		// Layout.newLayout(); Layout.tileClients(); Layout.resizeClients(); etc.
 		if (i === 1) {
 			layout[0].width = layout[0].width * 0.5;
 			layout[i].width = layout[0].width;
