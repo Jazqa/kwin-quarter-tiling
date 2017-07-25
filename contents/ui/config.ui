@@ -112,7 +112,7 @@
    <item>
     <widget class="QLabel" name="marginsLabel">
      <property name="text">
-      <string>Margins:</string>
+      <string>Margins (Top, Bottom, Left, Right):</string>
      </property>
     </widget>
    </item>
@@ -223,7 +223,7 @@
      <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>R</string>
+        <string>R:</string>
        </property>
       </widget>
      </item>

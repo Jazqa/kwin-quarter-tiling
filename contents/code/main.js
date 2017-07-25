@@ -51,7 +51,6 @@ var ignoredDesktops = [-1];
 // Todo: Add an configuration option for ignored desktops
 
 var gap = readConfig("gap", 10); // Gap size in pixels
-// Maximized windows are distinguished via size so a zero gap window is "maximized"
 if (gap === 0) {
 	gap = 2;
 }
@@ -354,6 +353,7 @@ function connectClient(client) {
 		client.desktopChanged.connect(client, changeClientDesktop);
 	}
 	client.float = false;
+	client.oldDesk = -1;
 }
 
 // Removes the closed client from tiles[]
@@ -438,6 +438,7 @@ function reserveClient(client) {
 		}
 	}
 	tiles[client.desktop][client.screen].max -= 1;
+	client.oldDesk = client.desktop;
 	tileClients();
 }
 
@@ -930,7 +931,13 @@ function closeWindow(client) {
 
 function changeClientDesktop() {
 	if (this.minimized) {
-		this.closeWindow();
+		if (this.oldDesk > ws.desktops) {
+			closeWindow(this);
+		} else {
+			tiles[this.oldDesk][this.screen].max += 1;
+		}
+	} else if (this.maxed) {
+		tiles[this.oldDesk][this.screen].max += 1;
 	} else {
 		print("attempting to change the desktop of " + this.caption + " to desktop " + this.desktop);
 		removeClientNoFollow(this, ws.currentDesktop, this.screen);
