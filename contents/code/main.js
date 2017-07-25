@@ -3,10 +3,6 @@
 /----------*/
 /*
 	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
-	- Support for large programs (Gimp, Krita, Kate)
-		- Automatically occupies the largest tile
-		- Max clients (default: 4) -= 1 per large program
-		- Locked on the largest tile (not necessary, in theory, freedom to move them however the user wants is better)
 	- Respect minimum and maximum sizes set by programs (not imporant, user has a brain and can resize windows as they see fit, can also be an advantage)
 	- No restart required after modifying the configuration or adjusting the number of screens
 	- Figure out a way to include multiple files, this one is getting huge
@@ -49,12 +45,6 @@ var ignoredCaptions = [
 
 ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(','));
 
-// Clients that don't play well when reduced to a quarter
-// Todo: Recognize these and reduce tiles[].max by one
-var largeClients = [];
-
-largeClients = largeClients.concat(readConfig("largeClients", "gimp").toString().split(','));
-
 // Virtual desktops that will be completely ignored
 var ignoredDesktops = [-1];
 
@@ -65,6 +55,13 @@ var gap = readConfig("gap", 10); // Gap size in pixels
 if (gap === 0) {
 	gap = 2;
 }
+
+// top, right, bottom, left (clockwise)
+var margins = [];
+margins[0] = readConfig("mt", 0);
+margins[1] = readConfig("mr", 0);
+margins[2] = readConfig("mb", 0);
+margins[3] = readConfig("ml", 0);
 
 var noBorders = readConfig("noBorders", false);
 
@@ -241,7 +238,7 @@ function connectWorkspace() {
 /--------------------------------*/
 
 // Runs an ignore-check and if it passes, adds a client to tiles[]
-function addClient(client, unshift) {
+function addClient(client) {
 	if (checkClient(client)) {
 		print("attempting to add " + client.caption);
 		if (noBorders == true) {
@@ -279,9 +276,7 @@ function addClient(client, unshift) {
 			createDesktop(client.desktop);
 		}
 		// If unshift parameter is given, client is pushed to the beginning of the array
-		if (unshift) {
-			tiles[client.desktop][scr].unshift(client);
-		} else tiles[client.desktop][scr].push(client);
+		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added");
 		/* Todo: Think about respecting minSizes: Addings & Resizing
 		var index  = tiles[client.desktop][scr].length - 1;
@@ -1043,6 +1038,10 @@ function findSpace() {
 
 function newLayout(screen) {
 	var area = ws.clientArea(0, screen, 0);
+	area.x += margins[1];
+	area.y += margins[0];
+	area.width -= margins[1] + margins[3];
+	area.height -= margins[0] + margins[2];
 	var layout = [];
 	for (var i = 0; i < 4; i++) {
 		layout[i] = {}; // Note: Need to clone the properties!

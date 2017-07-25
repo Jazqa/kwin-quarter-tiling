@@ -13,17 +13,29 @@
 		  <label>If set to true, removes the window borders and title bars</label>
 		  <default>false</default>
 		</entry>
-        <entry name="ignoredClients" type="string">
-		  <label>Programs that should be ignored by the script (f.ex. "kate", "steam")</label>
-		  <default>wine, steam, kate</default>
+    <entry name="mt" type="int">
+      <label>Top margin</label>
+      <default>0</default>
+    </entry>
+    <entry name="mb" type="int">
+      <label>Bottom margin</label>
+      <default>0</default>
+    </entry>
+    <entry name="ml" type="int">
+      <label>Left margin</label>
+      <default>0</default>
+    </entry>
+    <entry name="mr" type="int">
+      <label>Right margin</label>
+      <default>0</default>
+    </entry>
+    <entry name="ignoredClients" type="string">
+  	  <label>Programs that should be ignored by the script (f.ex. "kate", "steam")</label>
+  	  <default>wine, steam, kate</default>
         </entry>
          <entry name="ignoredCaptions" type="string">
-		  <label>(Parts of) Window captions that should be ignored by the script (f.ex "move to trash"</label>
-		  <default></default>
-        </entry>
-         <entry name="largeClients" type="string">
-		  <label>Clients that should always occupy at least half of the screen<label>
-		  <default>gimp</default>
-        </entry>
+  	  <label>(Parts of) Window captions that should be ignored by the script (f.ex "move to trash"</label>
+  	  <default></default>
+    </entry>
    	</group>
 </kcfg>
