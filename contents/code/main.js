@@ -227,6 +227,7 @@ function connectWorkspace() {
 	ws.clientAdded.connect(addClient);
 	ws.clientRemoved.connect(removeClient);
 	ws.clientMaximizeSet.connect(maximizeClient); // Maximize (workspace), Minimize (client)...
+	ws.clientFullScreenSet.connect(fullScreenClient);
 	ws.currentDesktopChanged.connect(changeDesktop);
 	ws.numberDesktopsChanged.connect(adjustDesktops);
 }
@@ -843,6 +844,30 @@ function maximizeClient(client, h, v) {
 		// New clients left maximized go to the end of the array because logic
 		} else addClient(client);
 		print(client.caption + " unmaximized");
+	}
+}
+
+// Basically the same as above, different parameters needed for ws.clientFullScreenSet-signal
+function fullScreenClient(client, full, user) {
+	ws.activeClient = client;
+	if (full) {
+		print("attempting to fullscreen client " + client.caption);
+		reserveClient(client);
+		client.maxed = true;
+		print(client.caption + " fullscreened");
+	} else {
+		print("attempting to unfullscreen client " + client.caption);
+		// Checks if the client has already existed (to avoid the dumb changeClientDesktop shenanigans)
+		if (client.float === true) {
+			return;
+		} else if (client.float === false) {
+			client.maxed = false;
+			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
+			// (Unminimized clients are pushed to the end of the window array)
+			unreserveClient(client, true);
+		// New clients left maximized go to the end of the array because logic
+		} else addClient(client);
+		print(client.caption + " unfullscreened");
 	}
 }
 
