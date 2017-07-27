@@ -354,6 +354,7 @@ function connectClient(client) {
 		client.desktopChanged.connect(client, changeClientDesktop);
 	}
 	client.float = false;
+	client.oldIndex = -1;
 	client.oldDesk = -1;
 }
 
@@ -433,6 +434,7 @@ function removeClients() {
 
 // "Removes" a client, reserving a spot for it by decreasing the maximum amount of clients on its desktop
 function reserveClient(client) {
+	client.oldIndex = findClientIndex(client, client.desktop, client.screen);
 	for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
 		if (sameClient(tiles[client.desktop][client.screen][i], client)) {
 			tiles[client.desktop][client.screen].splice(i, 1);
@@ -447,11 +449,7 @@ function reserveClient(client) {
 function unreserveClient(client, unshift) {
 	ws.currentDesktop = client.desktop;
 	tiles[client.desktop][client.screen].max += 1;
-	if(unshift) {
-		tiles[client.desktop][client.screen].unshift(client);
-	} else {
-		tiles[client.desktop][client.screen].push(client);
-	}
+	tiles[client.desktop][client.screen].splice(client.oldIndex, 0, client);
 	tileClients();
 }
 
