@@ -408,16 +408,6 @@ function removeClientNoFollow(client, desk, scr) {
 	}
 }
 
-function removeClients() {
-	for (var i = 1; i < tiles.length; i++) {
-		for (var j = 0; j < tiles[i].length; j++) {
-			for (var k = 0; k < tiles[i][j].length; k++) {
-				removeClientNoFollow(tiles[i][j][k], i, j);
-			}
-		}
-	}
-}
-
 // "Removes" a client, reserving a spot for it by decreasing the maximum amount of clients on its desktop
 function reserveClient(client) {
 	client.oldIndex = findClientIndex(client, client.desktop, client.screen);
@@ -888,7 +878,7 @@ function checkClient(client) {
 
 // Compare two clients without unnecessary type conversion (see issue #1)
 function sameClient(client1, client2) {
-	if (client1.frameId === client2.frameId) {
+	if (client1.windowId === client2.windowId) {
 		return true;
 	} else return false;
 }
