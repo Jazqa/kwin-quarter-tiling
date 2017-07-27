@@ -228,8 +228,8 @@ function connectWorkspace() {
 	ws.clientRemoved.connect(removeClient);
 	ws.clientMaximizeSet.connect(maximizeClient); // Maximize (workspace), Minimize (client)...
 	ws.clientFullScreenSet.connect(fullScreenClient);
-	ws.currentDesktopChanged.connect(changeDesktop);
 	ws.numberDesktopsChanged.connect(adjustDesktops);
+	ws.currentDesktopChanged.connect(changeDesktop);
 }
 
 
@@ -407,6 +407,10 @@ function removeClientNoFollow(client, desk, scr) {
 			}
 		}
 	}
+}
+
+function closeWindow(client) {
+	client.closeWindow();
 }
 
 // "Removes" a client, reserving a spot for it by decreasing the maximum amount of clients on its desktop
@@ -879,7 +883,7 @@ function checkClient(client) {
 
 // Compare two clients without unnecessary type conversion (see issue #1)
 function sameClient(client1, client2) {
-	if (client1.windowId === client2.windowId) {
+	if (client1.frameId === client2.frameId) {
 		return true;
 	} else return false;
 }
@@ -922,17 +926,10 @@ function swapClients(i, j, scrI, scrJ) {
 	print("successfully swapped clients " + i + " " + j);
 }
 
-// Closes a client, client can either be connected to the function or given as a parameter
-function closeWindow(client) {
-	if (client) {
-		client.closeWindow();
-	} else this.closeWindow();
-}
-
 function changeClientDesktop() {
 	if (this.minimized) {
 		if (this.oldDesk > ws.desktops) {
-			closeWindow(this);
+			this.closeWindow();
 		} else {
 			print("attempting to change the desktop of minimized" + this.caption + " to desktop " + this.desktop);
 			removeClientNoFollow(this, this.oldDesk, this.screen);
@@ -940,13 +937,17 @@ function changeClientDesktop() {
 		}
 	} else if (this.maxed) {
 		if (this.oldDesk > ws.desktops) {
-			closeWindow(this);
+			this.closeWindow();
 		} else {
 			print("attempting to change the desktop of maximized" + this.caption + " to desktop " + this.desktop);
 			removeClientNoFollow(this, this.oldDesk, this.screen);
 			print("successfully changed the desktop of maximized" + this.caption + " to desktop " + this.desktop);
 		}
 	} else {
+		if (this.oldDesk > ws.desktops) {
+			this.closeWindow();
+			return;
+		}
 		print("attempting to change the desktop of " + this.caption + " to desktop " + this.desktop);
 		removeClientNoFollow(this, this.oldDesk, this.screen);
 		if (ignoredDesktops.indexOf(this.desktop) > -1) {
@@ -986,7 +987,7 @@ function changeDesktop(desktop) {
 function adjustDesktops(desktop) {
 	// Checks if a workspace is removed
 	if (ws.desktops < desktop) {
-		removeDesktop(desktop);
+		tileClients();
 	}
 	// Checks if a workspace is added
 	else if (ws.desktops > desktop) {
@@ -1005,33 +1006,6 @@ function createDesktop(desktop) {
 	print("desktop " + desktop + " created");
 	tileClients();
 }
-
-function removeDesktop(desktop) {
-	// Because the API returns desktops as an integer, they can not be recognized
-	// which is why the latest workspace is always the one removed
-	// Todo: recognize desktops by comparing tiles[] and switching desktops before removal
-	print("attempting to remove desktop " + desktop);
-	// Check to save from weird crashes
-	if (typeof tiles[desktop] != "undefined") {
-		for (var i = 0; i < tiles[desktop].length; i++) {
-			for (var j = 0; j < tiles[desktop][i].length; j++) {
-				closeWindow(tiles[desktop][i][j]);
-			}
-			print("desktop " + desktop + " screen " + i + " removed");
-		}
-	}
-	tileClients();
-}
-
-/* Todo
-function createScreen(scr) {
-	for (var i = 1; i <= tiles.length; i++) {
-		tiles[i][scr] = [];
-		tiles[i][scr].max = 4;
-		tiles[i][scr].layout = newLayout(scr);
-	}
-}
-*/
 
 function findSpace() {
 	print("attempting to find space on existing desktops");
