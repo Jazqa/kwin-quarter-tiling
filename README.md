@@ -43,12 +43,8 @@
 
 
 ## Note
-- **Maximizing & Unmaximizing** a window will **UNSHIFT** it to the beginning of the array and **Minimizing & Unminimizing** a window will **PUSH** it to the end of the array.
 - If you have multiple clients open from earlier session, the script might not start succesfully and you'll have to restart it (I'm working on this).
 - If you remove a virtual desktop, all of the tiled clients on the desktop will also be closed (it's a feature).
 - Some programs, like Spotify, do not play nice with tiling and can not be recognized and/or automatically excluded. If you use such programs, use the "Float On/Off" shortcut to disable them.
 
 #### Suggestions and bug reports are welcome! File them under the issues-section and I'll adress them as soon as I can.
-
-## Upcoming features
-- Improved support for multi-screen environments
