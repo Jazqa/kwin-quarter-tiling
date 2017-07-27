@@ -275,23 +275,8 @@ function addClient(client) {
 		if (typeof tiles[client.desktop] == "undefined") {
 			createDesktop(client.desktop);
 		}
-		// If unshift parameter is given, client is pushed to the beginning of the array
 		tiles[client.desktop][scr].push(client);
-		print(client.caption + " added");
-		/* Todo: Think about respecting minSizes: Addings & Resizing
-		var index  = tiles[client.desktop][scr].length - 1;
-		if (tiles[client.desktop][scr].layout[index].width < client.minSize.w ||
-			tiles[client.desktop][scr].layout[index].height < client.minSize.h) {
-			oldGeo = client.geometry;
-			if (tiles[client.desktop][scr].layout[index].width < client.minSize.w) {
-				oldGeo.width = client.minSize.w;
-			}
-			if (tiles[client.desktop][scr].layout[index].height < client.minSize.h) {
-				oldGeo.height = client.minSize.h;
-			}
-			resizeClient(client);
-		}
-		*/
+		print(client.caption + " added on desktop " + client.desktop + " screen " + scr);
 		tileClients();
 		connectClient(client);
 		// If the client is minimized, trigger the minimize function
@@ -317,6 +302,7 @@ function addClientNoFollow(client, desk, scr) {
 			if (tiles[desk][scr].length === 4) {
 				tiles[desk][scr].max = 4;
 			}
+			// If the given screen is full, checks the other screens
 			for (var i = 0; i < ws.numScreens; i++) {
 				if (tiles[desk][i].length < tiles[desk][i].max) {
 					scr = i;
@@ -355,7 +341,7 @@ function connectClient(client) {
 	}
 	client.float = false;
 	client.oldIndex = -1;
-	client.oldDesk = -1;
+	client.oldDesk = client.desktop;
 }
 
 // Removes the closed client from tiles[]
@@ -842,10 +828,7 @@ function maximizeClient(client, h, v) {
 			return;
 		} else if (client.float === false) {
 			client.maxed = false;
-			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
-			// (Unminimized clients are pushed to the end of the window array)
 			unreserveClient(client);
-		// New clients left maximized go to the end of the array because logic
 		} else addClient(client);
 		print(client.caption + " unmaximized");
 	}
@@ -866,10 +849,7 @@ function fullScreenClient(client, full, user) {
 			return;
 		} else if (client.float === false) {
 			client.maxed = false;
-			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
-			// (Unminimized clients are pushed to the end of the window array)
 			unreserveClient(client);
-		// New clients left maximized go to the end of the array because logic
 		} else addClient(client);
 		print(client.caption + " unfullscreened");
 	}
@@ -974,7 +954,7 @@ function changeClientDesktop() {
 		removeClientNoFollow(this, this.desktop, this.screen);
 	} else {
 		print("attempting to change the desktop of " + this.caption + " to desktop " + this.desktop);
-		removeClientNoFollow(this, ws.currentDesktop, this.screen);
+		removeClientNoFollow(this, this.oldDesk, this.screen);
 		if (ignoredDesktops.indexOf(this.desktop) > -1) {
 			print(this.caption + " on ignored desktop");
 			return;
@@ -1005,13 +985,8 @@ function isMaxed(client) {
 
 function changeDesktop(desktop) {
 	print("attempting to switch desktop to " + desktop);
-	for (var i = 0; i < ws.numScreens; i++) {
-		if (tiles[desktop][i].length === 0) {
-			createDesktop(desktop, i);
-		}
-	}
-	print("desktop switched to " + desktop);
 	tileClients();
+	print("desktop switched to " + desktop);
 }
 
 function adjustDesktops(desktop) {
@@ -1074,6 +1049,7 @@ function findSpace() {
 			}
 		}
 	}
+	print("no space found");
 	return false;
 }
 
