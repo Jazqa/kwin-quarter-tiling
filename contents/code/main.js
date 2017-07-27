@@ -325,6 +325,7 @@ function addClientNoFollow(client, desk, scr) {
 function addClients() {
 	var clients = ws.clientList();
 	for (var i = 0; i < clients.length; i++) {
+		delete clients[i].float;
 		addClient(clients[i]);
 	}
 }
@@ -929,19 +930,22 @@ function closeWindow(client) {
 }
 
 function changeClientDesktop() {
-	if (this.float === true) {
-		return;
-	}
 	if (this.minimized) {
 		if (this.oldDesk > ws.desktops) {
 			closeWindow(this);
 		} else {
-			unreserveClient(this);
-			removeClientNoFollow(this, this.desktop, this.screen);
+			print("attempting to change the desktop of minimized" + this.caption + " to desktop " + this.desktop);
+			removeClientNoFollow(this, this.oldDesk, this.screen);
+			print("successfully changed the desktop of minimized " + this.caption + " to desktop " + this.desktop);
 		}
 	} else if (this.maxed) {
-		unreserveClient(this);
-		removeClientNoFollow(this, this.desktop, this.screen);
+		if (this.oldDesk > ws.desktops) {
+			closeWindow(this);
+		} else {
+			print("attempting to change the desktop of maximized" + this.caption + " to desktop " + this.desktop);
+			removeClientNoFollow(this, this.oldDesk, this.screen);
+			print("successfully changed the desktop of maximized" + this.caption + " to desktop " + this.desktop);
+		}
 	} else {
 		print("attempting to change the desktop of " + this.caption + " to desktop " + this.desktop);
 		removeClientNoFollow(this, this.oldDesk, this.screen);
