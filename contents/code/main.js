@@ -365,7 +365,7 @@ function removeClient(client) {
 		client.clientUnminimized.disconnect(unminimizeClient);
 		tiles[client.desktop][client.screen].max += 1;
 	}
-	if (client.float === true || client.float === false) {
+	if (client.float === true || client.float === false) {
 		if (client.maxed) {
 			tiles[client.desktop][client.screen].max += 1;
 		}
@@ -401,7 +401,7 @@ function removeClientNoFollow(client, desk, scr) {
 		client.clientUnminimized.disconnect(unminimizeClient);
 		tiles[desk][scr].max += 1;
 	}
-	if (client.float === true || client.float === false) {
+	if (client.float === true || client.float === false) {
 		if (client.maxed) {
 			tiles[client.desktop][client.screen].max += 1;
 		}
@@ -435,11 +435,8 @@ function removeClients() {
 // "Removes" a client, reserving a spot for it by decreasing the maximum amount of clients on its desktop
 function reserveClient(client) {
 	client.oldIndex = findClientIndex(client, client.desktop, client.screen);
-	for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
-		if (sameClient(tiles[client.desktop][client.screen][i], client)) {
-			tiles[client.desktop][client.screen].splice(i, 1);
-		}
-	}
+	var i = findClientIndex(client, client.desktop, client.screen);
+	tiles[client.desktop][client.screen].splice(i, 1);
 	tiles[client.desktop][client.screen].max -= 1;
 	client.oldDesk = client.desktop;
 	tileClients();
@@ -818,13 +815,22 @@ function minimizeClient(client) {
 function unminimizeClient(client) {
 	print("attempting to unminimize " + client.caption);
 	client.clientUnminimized.disconnect(unminimizeClient);
-	unreserveClient(client);
+	if (client.float === true) {
+		return;
+	} else if (client.float === false) {
+		unreserveClient(client);
+	} else {
+		addClient(client);
+	}
 	print(client.caption + " unminimized");
 }
 
 function maximizeClient(client, h, v) {
 	ws.activeClient = client;
 	if (h && v) {
+		if (client.float === true) {
+			return;
+		}
 		print("attempting to maximize client " + client.caption);
 		reserveClient(client);
 		client.maxed = true;
@@ -838,7 +844,7 @@ function maximizeClient(client, h, v) {
 			client.maxed = false;
 			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
 			// (Unminimized clients are pushed to the end of the window array)
-			unreserveClient(client, true);
+			unreserveClient(client);
 		// New clients left maximized go to the end of the array because logic
 		} else addClient(client);
 		print(client.caption + " unmaximized");
@@ -862,7 +868,7 @@ function fullScreenClient(client, full, user) {
 			client.maxed = false;
 			// Unmaximized clients are unshifted to the beginning of the window array for a logical workflow
 			// (Unminimized clients are pushed to the end of the window array)
-			unreserveClient(client, true);
+			unreserveClient(client);
 		// New clients left maximized go to the end of the array because logic
 		} else addClient(client);
 		print(client.caption + " unfullscreened");
@@ -947,20 +953,25 @@ function swapClients(i, j, scrI, scrJ) {
 
 // Closes a client, client can either be connected to the function or given as a parameter
 function closeWindow(client) {
-	if (client) {
+	if (client) {
 		client.closeWindow();
 	} else this.closeWindow();
 }
 
 function changeClientDesktop() {
+	if (this.float === true) {
+		return;
+	}
 	if (this.minimized) {
 		if (this.oldDesk > ws.desktops) {
 			closeWindow(this);
 		} else {
-			tiles[this.oldDesk][this.screen].max += 1;
+			unreserveClient(this);
+			removeClientNoFollow(this, this.desktop, this.screen);
 		}
 	} else if (this.maxed) {
-		tiles[this.oldDesk][this.screen].max += 1;
+		unreserveClient(this);
+		removeClientNoFollow(this, this.desktop, this.screen);
 	} else {
 		print("attempting to change the desktop of " + this.caption + " to desktop " + this.desktop);
 		removeClientNoFollow(this, ws.currentDesktop, this.screen);
