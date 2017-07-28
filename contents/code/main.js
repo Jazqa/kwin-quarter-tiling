@@ -78,8 +78,14 @@ var oldGeo; // Hack: Saves the pre-movement position as a global variable
 
 function init() {
 	registerKeys();
-	ws.desktops = 1;
-	createDesktop(1);
+	var desks = readConfig("numDesks", 2);
+	if (desks < 1) {
+		desks = 1;
+	}
+	ws.desktops = desks;
+	for (var i = 1; i <= desks; i++) {
+		createDesktop(i);
+	}
 	addClients();
 	connectWorkspace();
 }
@@ -928,6 +934,7 @@ function swapClients(i, j, scrI, scrJ) {
 
 function changeClientDesktop() {
 	if (this.minimized) {
+		// Closes clients if their workspace gets removed
 		if (this.oldDesk > ws.desktops) {
 			this.closeWindow();
 		} else {
@@ -936,6 +943,7 @@ function changeClientDesktop() {
 			print("successfully changed the desktop of minimized " + this.caption + " to desktop " + this.desktop);
 		}
 	} else if (this.maxed) {
+		// Closes clients if their workspace gets removed
 		if (this.oldDesk > ws.desktops) {
 			this.closeWindow();
 		} else {
@@ -944,6 +952,7 @@ function changeClientDesktop() {
 			print("successfully changed the desktop of maximized" + this.caption + " to desktop " + this.desktop);
 		}
 	} else {
+		// Closes clients if their workspace gets removed
 		if (this.oldDesk > ws.desktops) {
 			this.closeWindow();
 			return;

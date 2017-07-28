@@ -13,6 +13,10 @@
 		  <label>If set to true, removes the window borders and title bars</label>
 		  <default>false</default>
 		</entry>
+    <entry name="numDesks" type="int">
+      <label>Right margin</label>
+      <default>2</default>
+    </entry>
     <entry name="mt" type="int">
       <label>Top margin</label>
       <default>0</default>
