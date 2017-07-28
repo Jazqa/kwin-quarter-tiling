@@ -32,7 +32,13 @@ var ignoredClients = [
 	"yakuake",
 ];
 
-ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine,steam,kate").toString().split(', '));
+ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine, steam, kate").toString().split(', '));
+
+var freeClients = [
+
+];
+
+freeClients = freeClients.concat(readConfig("freeClients", "telegram, telegram-desktop, telegramdesktop").toString().split(', '));
 
 // If the program can't be blacklisted via the array above (resourceClass)
 // Try adding its caption to the array below
@@ -283,8 +289,8 @@ function addClient(client) {
 		}
 		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added on desktop " + client.desktop + " screen " + scr);
-		tileClients();
 		connectClient(client);
+		tileClients();
 		// If the client is minimized, trigger the minimize function
 		if (client.minimized) {
 			minimizeClient(client);
@@ -319,8 +325,8 @@ function addClientNoFollow(client, desk, scr) {
 		client.desktop = desk;
 		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added (no follow) to desktop " + desk + " screen " + scr);
-		tileClients();
 		connectClient(client);
+		tileClients();
 		// If the client is minimized, trigger the minimize function
 		if (client.minimized) {
 			minimizeClient(client);
@@ -345,6 +351,9 @@ function connectClient(client) {
 	// So it's only connected when client.float is undefined, meaning it has not been connected or disconnected before
 	if (typeof client.float == "undefined") {
 		client.desktopChanged.connect(client, changeClientDesktop);
+	}
+	if (freeClients.indexOf(client.resourceClass.toString()) > -1) {
+		client.free = true;
 	}
 	client.float = false;
 	client.oldIndex = -1;
@@ -529,7 +538,14 @@ function tileClients() {
 				adjusted[3].height = tiles[ws.currentDesktop][i].layout[3].height - gap * 1.5;
 			}
 			for (var j = 0; j < adjusted.length; j++) {
-				tiles[ws.currentDesktop][i][j].geometry = adjusted[j];
+				if (tiles[ws.currentDesktop][i][j].free) {
+					var rect = tiles[ws.currentDesktop][i][j].geometry;
+					rect.x = adjusted[j].x + adjusted[j].width * 0.5 - rect.width * 0.5;
+					rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
+					tiles[ws.currentDesktop][i][j].geometry = rect;
+				} else {
+					tiles[ws.currentDesktop][i][j].geometry = adjusted[j];
+				}
 			}
 			print("desktop " + ws.currentDesktop + " screen " + i + " tiled");
 		}
@@ -603,6 +619,10 @@ function resizeClient(client) {
 	var difY = client.geometry.y - oldGeo.y;
 	var difW = client.geometry.width - oldGeo.width;
 	var difH = client.geometry.height - oldGeo.height;
+	if (client.free) {
+		tileClients();
+		return;
+	}
 	switch (findClientIndex(client, ws.currentDesktop, ws.activeScreen)) {
 		case 0:
 			if (difX === 0 && difY === 0) {

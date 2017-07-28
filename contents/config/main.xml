@@ -37,9 +37,13 @@
   	  <label>Programs that should be ignored by the script (f.ex. "kate", "steam")</label>
   	  <default>wine, steam, kate</default>
         </entry>
-         <entry name="ignoredCaptions" type="string">
-  	  <label>(Parts of) Window captions that should be ignored by the script (f.ex "move to trash"</label>
+    <entry name="ignoredCaptions" type="string">
+  	  <label>(Parts of) Window captions that should be ignored by the script (f.ex "move to trash")</label>
   	  <default></default>
+    </entry>
+    <entry name="freeClients" type="string">
+      <label>Clients that are aligned (position) but not resized with the layout</label>
+      <default>telegram, telegram-desktop, telegramdesktop</default>
     </entry>
    	</group>
 </kcfg>
