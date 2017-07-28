@@ -32,7 +32,7 @@ var ignoredClients = [
 	"yakuake",
 ];
 
-ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine,steam,kate").toString().split(','));
+ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine,steam,kate").toString().split(', '));
 
 // If the program can't be blacklisted via the array above (resourceClass)
 // Try adding its caption to the array below
@@ -43,7 +43,7 @@ var ignoredCaptions = [
 	"Create a New Image",
 ];
 
-ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(','));
+ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(', '));
 
 // Virtual desktops that will be completely ignored
 var ignoredDesktops = [-1];
@@ -58,9 +58,9 @@ if (gap === 0) {
 // top, right, bottom, left (clockwise)
 var margins = [];
 margins[0] = readConfig("mt", 0);
-margins[1] = readConfig("mr", 0);
+margins[1] = readConfig("ml", 0);
 margins[2] = readConfig("mb", 0);
-margins[3] = readConfig("ml", 0);
+margins[3] = readConfig("mr", 0);
 
 var noBorders = readConfig("noBorders", false);
 
