@@ -61,7 +61,6 @@ if (gap === 0) {
 	gap = 2;
 }
 
-// top, right, bottom, left (clockwise)
 var margins = [];
 margins[0] = readConfig("mt", 0);
 margins[1] = readConfig("ml", 0);
@@ -194,14 +193,16 @@ function registerKeys() {
 		"Quarter: + Window Size",
 		"Meta++",
 		function() {
-			increaseClientSize();
+			increaseClientSize(ws.activeClient, 20, true, true);
+			tileClients();
 		});
 		registerShortcut(
 		"Quarter: - Window Size",
 		"Quarter: - Window Size",
 		"Meta+-",
 		function() {
-			decreaseClientSize();
+			decreaseClientSize(ws.activeClient, 20, true, true);
+			tileClients();
 		});
 	registerShortcut(
 		"Quarter: Reset Layout",
@@ -290,7 +291,11 @@ function addClient(client) {
 		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added on desktop " + client.desktop + " screen " + scr);
 		connectClient(client);
-		tileClients();
+		if (client.free) {
+			fitClient(client, scr);
+		} else {
+			tileClients();
+		}
 		// If the client is minimized, trigger the minimize function
 		if (client.minimized) {
 			minimizeClient(client);
@@ -326,6 +331,9 @@ function addClientNoFollow(client, desk, scr) {
 		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added (no follow) to desktop " + desk + " screen " + scr);
 		connectClient(client);
+		if (client.free) {
+			fitClient(client, scr);
+		}
 		tileClients();
 		// If the client is minimized, trigger the minimize function
 		if (client.minimized) {
@@ -540,8 +548,48 @@ function tileClients() {
 			for (var j = 0; j < adjusted.length; j++) {
 				if (tiles[ws.currentDesktop][i][j].free) {
 					var rect = tiles[ws.currentDesktop][i][j].geometry;
-					rect.x = adjusted[j].x + adjusted[j].width * 0.5 - rect.width * 0.5;
-					rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
+					// Tiles the "free clients" to the edge of the tile
+					// The code looks ugly but works wonders
+					switch (j) {
+						case 0:
+							if (adjusted.length === 1) {
+								rect.x = adjusted[j].x + adjusted[j].width * 0.5 - rect.width * 0.5;
+								rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
+							} else if (adjusted.length == 2 || adjusted.length == 3) {
+								rect.x = adjusted[j].x + adjusted[j].width - rect.width;
+								rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
+							} else {
+								rect.x = adjusted[j].x + adjusted[j].width - rect.width;
+								rect.y = adjusted[j].y + adjusted[j].height - rect.height;
+							}
+							break;
+						case 1:
+							if (adjusted.length === 2) {
+								rect.x = adjusted[j].x;
+								rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
+							}
+							else {
+								rect.x = adjusted[j].x;
+								rect.y = adjusted[j].y + adjusted[j].height - rect.height;
+							}
+							break;
+						case 2:
+							rect.x = adjusted[j].x;
+							rect.y = adjusted[j].y;
+							break;
+						case 3:
+							rect.x = adjusted[j].x + adjusted[j].width - rect.width;
+							rect.y = adjusted[j].y;
+							break;
+					}
+					if (rect.width > adjusted[j].width) {
+						rect.x = adjusted[j].x;
+						rect.width = adjusted[j].width;
+					}
+					if (rect.height > adjusted[j].height) {
+						rect.y = adjusted[j].y;
+						rect.height = adjusted[j].height;
+					}
 					tiles[ws.currentDesktop][i][j].geometry = rect;
 				} else {
 					tiles[ws.currentDesktop][i][j].geometry = adjusted[j];
@@ -555,14 +603,14 @@ function tileClients() {
 // Saves the pre-movement position when called
 function saveClientGeo(client) {
 	oldGeo = client.geometry;
-	oldGeo.screen = client.screen;
+	oldScr = client.screen;
 }
 
 // Decides if a client is moved or resized
 function adjustClient(client) {
 	// If the size equals the pre-movement size, user is trying to move the client, not resize it
 	if (client.geometry.width === oldGeo.width && client.geometry.height === oldGeo.height) {
-		if (oldGeo.screen != client.screen) {
+		if (oldScr != client.screen) {
 			if (tiles[ws.currentDesktop][client.screen].length < tiles[ws.currentDesktop][client.screen].max) {
 				print("attempting to push " + client.caption + " to screen" + client.screen);
 				var rect = client.geometry;
@@ -600,9 +648,9 @@ function moveClient(client) {
 	});
 	// If the closest geometry is not the client's old position, switches the geometries and indexes
 	if (geometries[0] != oldGeo) {
-		i = findClientIndex(client, ws.currentDesktop, oldGeo.screen);
+		i = findClientIndex(client, ws.currentDesktop, oldScr);
 		var j = findGeometryIndex(geometries[0], ws.currentDesktop, client.screen);
-		swapClients(i, j, oldGeo.screen, client.screen);
+		swapClients(i, j, oldScr, client.screen);
 		tileClients();
 		return true;
 	} else {
@@ -615,15 +663,12 @@ function moveClient(client) {
 // Resizes all the clients
 function resizeClient(client) {
 	print("attempting to resize " + client.caption);
-	var difX = client.geometry.x - oldGeo.x;
-	var difY = client.geometry.y - oldGeo.y;
 	var difW = client.geometry.width - oldGeo.width;
 	var difH = client.geometry.height - oldGeo.height;
-	if (client.free) {
-		tileClients();
-		return;
-	}
-	switch (findClientIndex(client, ws.currentDesktop, ws.activeScreen)) {
+	var difX = client.geometry.x - oldGeo.x;
+	var difY = client.geometry.y - oldGeo.y;
+	var i = findClientIndex(client, client.desktop, oldScr);
+	switch (i) {
 		case 0:
 			if (difX === 0 && difY === 0) {
 				tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += difW;
@@ -689,118 +734,215 @@ function resizeClient(client) {
 	tileClients();
 }
 
-function increaseClientSize() {
-	switch (findClientIndex(ws.activeClient, ws.currentDesktop, ws.activeScreen)) {
-		case 0:
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].height += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= 20;
-			break;
-		case 1:
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].height += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].y += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].height -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
-			break;
-		case 2:
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].height -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].y -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].height += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
-			break;
-		case 3:
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].height -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].y -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].height += 20;
-			break;
+// Screen must be carried as a parameter because clients too large have a different screen (scr vs. client.screen)
+function fitClient(client, scr) {
+	var i = findClientIndex(client, client.desktop, scr);
+	var tile = tiles[client.desktop][scr].layout[i];
+	var rect = client.geometry;
+	var x = rect.width - tile.width;
+	var y = rect.height - tile.height;
+	if (x < 0) {
+		x = 0;
 	}
-	// Block resizing if a window is getting too small
-	for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].layout.length; i++) {
-		if (tiles[ws.currentDesktop][ws.activeScreen].layout[i].width < 200 ||
-			tiles[ws.currentDesktop][ws.activeScreen].layout[i].height < 200) {
-			decreaseClientSize();
-		}
-	}
+	adjustClientSize(client, scr, x, y);
 	tileClients();
 }
 
-function decreaseClientSize() {
-	switch (findClientIndex(ws.activeClient, ws.currentDesktop, ws.activeScreen)) {
+// TODO: Remove increaseClientSize() and decreaseClientSize() and replace them with adjustClientSize()
+// Screen must be carried as a parameter because clients too large have a different screen
+function adjustClientSize(client, scr, x, y) {
+	switch (findClientIndex(client, client.desktop, scr)) {
 		case 0:
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].height -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].y -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].height += 20;
-			break;
+			tiles[client.desktop][scr].layout[0].width += x;
+			tiles[client.desktop][scr].layout[1].x += x;
+			tiles[client.desktop][scr].layout[1].width -= x;
+			tiles[client.desktop][scr].layout[2].x += x;
+			tiles[client.desktop][scr].layout[2].width -= x;
+			tiles[client.desktop][scr].layout[3].width += x;
+			tiles[client.desktop][scr].layout[0].height += y;
+			tiles[client.desktop][scr].layout[3].y += y;
+			tiles[client.desktop][scr].layout[3].height -= y;
+		break;
 		case 1:
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].height -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].y -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].height += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+
+				tiles[client.desktop][scr].layout[0].width -= x;
+				tiles[client.desktop][scr].layout[1].x -= x;
+				tiles[client.desktop][scr].layout[1].width += x;
+				tiles[client.desktop][scr].layout[2].x -= x;
+				tiles[client.desktop][scr].layout[2].width += x;
+				tiles[client.desktop][scr].layout[3].width -= x;
+				tiles[client.desktop][scr].layout[1].height += y;
+				tiles[client.desktop][scr].layout[2].y += y;
+				tiles[client.desktop][scr].layout[2].height -= y;
 			break;
 		case 2:
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].height += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].y += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].height -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += 20;
+
+				tiles[client.desktop][scr].layout[0].width -= x;
+				tiles[client.desktop][scr].layout[1].x -= x;
+				tiles[client.desktop][scr].layout[1].width += x;
+				tiles[client.desktop][scr].layout[2].x -= x;
+				tiles[client.desktop][scr].layout[2].width += x;
+				tiles[client.desktop][scr].layout[3].width -= x;
+				tiles[client.desktop][scr].layout[1].height -= y;
+				tiles[client.desktop][scr].layout[2].y -= y;
+				tiles[client.desktop][scr].layout[2].height += y;
 			break;
 		case 3:
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[0].height += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= 20;
-			tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= 20;
+				tiles[client.desktop][scr].layout[0].width += x;
+				tiles[client.desktop][scr].layout[1].x += x;
+				tiles[client.desktop][scr].layout[1].width -= x;
+				tiles[client.desktop][scr].layout[2].x += x;
+				tiles[client.desktop][scr].layout[2].width -= x;
+				tiles[client.desktop][scr].layout[3].width += x;
+				tiles[client.desktop][scr].layout[0].height -= y;
+				tiles[client.desktop][scr].layout[3].y -= y;
+				tiles[client.desktop][scr].layout[3].height += y;
+			break;
+	}
+}
+
+function increaseClientSize(client, px, x, y) {
+	switch (findClientIndex(client, client.desktop, client.screen)) {
+		case 0:
+		if (x) {
+			tiles[client.desktop][client.screen].layout[0].width += px;
+			tiles[client.desktop][client.screen].layout[1].x += px;
+			tiles[client.desktop][client.screen].layout[1].width -= px;
+			tiles[client.desktop][client.screen].layout[2].x += px;
+			tiles[client.desktop][client.screen].layout[2].width -= px;
+			tiles[client.desktop][client.screen].layout[3].width += px;
+		}
+		if (y) {
+			tiles[client.desktop][client.screen].layout[0].height += px;
+			tiles[client.desktop][client.screen].layout[3].y += px;
+			tiles[client.desktop][client.screen].layout[3].height -= px;
+		}
+		break;
+		case 1:
+			if (x) {
+				tiles[client.desktop][client.screen].layout[0].width -= px;
+				tiles[client.desktop][client.screen].layout[1].x -= px;
+				tiles[client.desktop][client.screen].layout[1].width += px;
+				tiles[client.desktop][client.screen].layout[2].x -= px;
+				tiles[client.desktop][client.screen].layout[2].width += px;
+				tiles[client.desktop][client.screen].layout[3].width -= px;
+			}
+			if (y) {
+				tiles[client.desktop][client.screen].layout[1].height += px;
+				tiles[client.desktop][client.screen].layout[2].y += px;
+				tiles[client.desktop][client.screen].layout[2].height -= px;
+			}
+			break;
+		case 2:
+			if (x) {
+				tiles[client.desktop][client.screen].layout[0].width -= px;
+				tiles[client.desktop][client.screen].layout[1].x -= px;
+				tiles[client.desktop][client.screen].layout[1].width += px;
+				tiles[client.desktop][client.screen].layout[2].x -= px;
+				tiles[client.desktop][client.screen].layout[2].width += px;
+				tiles[client.desktop][client.screen].layout[3].width -= px;
+			}
+			if (y) {
+				tiles[client.desktop][client.screen].layout[1].height -= px;
+				tiles[client.desktop][client.screen].layout[2].y -= px;
+				tiles[client.desktop][client.screen].layout[2].height += px;
+			}
+			break;
+		case 3:
+			if (x) {
+				tiles[client.desktop][client.screen].layout[0].width += px;
+				tiles[client.desktop][client.screen].layout[1].x += px;
+				tiles[client.desktop][client.screen].layout[1].width -= px;
+				tiles[client.desktop][client.screen].layout[2].x += px;
+				tiles[client.desktop][client.screen].layout[2].width -= px;
+				tiles[client.desktop][client.screen].layout[3].width += px;
+			}
+			if (y) {
+				tiles[client.desktop][client.screen].layout[0].height -= px;
+				tiles[client.desktop][client.screen].layout[3].y -= px;
+				tiles[client.desktop][client.screen].layout[3].height += px;
+			}
+			break;
+	}
+	// Block resizing if a window is getting too small
+	for (var i = 0; i < tiles[client.desktop][client.screen].layout.length; i++) {
+		if (tiles[client.desktop][client.screen].layout[i].width < 100 ||
+			tiles[client.desktop][client.screen].layout[i].height < 100) {
+				decreaseClientSize(client, px, x, y);
+		}
+	}
+}
+
+function decreaseClientSize(client, px, x, y) {
+	switch (findClientIndex(client, client.desktop, client.screen)) {
+		case 0:
+			if (x) {
+				tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= px;
+			}
+			if (y) {
+				tiles[ws.currentDesktop][ws.activeScreen].layout[0].height -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[3].y -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[3].height += px;
+			}
+			break;
+		case 1:
+			if (x) {
+				tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += px;
+			}
+			if (y) {
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].height -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].y -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].height += px;
+			}
+			break;
+		case 2:
+			if (x) {
+				tiles[ws.currentDesktop][ws.activeScreen].layout[0].width += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].x += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].width -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].x += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].width -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[3].width += px;
+			}
+			if (y) {
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].height += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].y += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].height -= px;
+			}
+			break;
+		case 3:
+			if (x) {
+				tiles[ws.currentDesktop][ws.activeScreen].layout[0].width -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].x -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[1].width += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].x -= px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[2].width += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[3].width -= px;
+			}
+			if (y) {
+				tiles[ws.currentDesktop][ws.activeScreen].layout[0].height += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[3].y += px;
+				tiles[ws.currentDesktop][ws.activeScreen].layout[3].height -= px;
+			}
 			break;
 	}
 	// Block resizing if a window is getting too small
 	for (var i = 0; i < tiles[ws.currentDesktop][ws.activeScreen].layout.length; i++) {
-		if (tiles[ws.currentDesktop][ws.activeScreen].layout[i].width < 200 ||
-			tiles[ws.currentDesktop][ws.activeScreen].layout[i].height < 200) {
-			increaseClientSize();
+		if (tiles[ws.currentDesktop][ws.activeScreen].layout[i].width < 100 ||
+			tiles[ws.currentDesktop][ws.activeScreen].layout[i].height < 100) {
+			increaseClientSize(client, px, x, y);
 		}
 	}
-	tileClients();
 }
 
 
@@ -1057,7 +1199,8 @@ function newLayout(screen) {
 	area.width -= margins[1] + margins[3];
 	area.height -= margins[0] + margins[2];
 	var layout = [];
-	for (var i = 0; i < 4; i++) {
+	// layout[-1] = screen
+	for (var i = -1; i < 4; i++) {
 		layout[i] = {}; // Note: Need to clone the properties!
 		layout[i].x = area.x;
 		layout[i].y = area.y;
