@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>276</width>
-    <height>399</height>
+    <height>452</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -371,12 +371,12 @@
    <item>
     <widget class="QLabel" name="label_5">
      <property name="text">
-      <string>Small Programs:</string>
+      <string>Small/Large Programs (Respect Size):</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QLineEdit" name="kcfg_freeClients">
+    <widget class="QLineEdit" name="kcfg_fixedClients">
      <property name="text">
       <string>telegram, telegramdesktop, telegram-desktop</string>
      </property>

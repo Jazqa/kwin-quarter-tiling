@@ -34,11 +34,12 @@ var ignoredClients = [
 
 ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine, steam, kate").toString().split(', '));
 
-var freeClients = [
-
+var fixedClients = [
+	"Spotify",
+	"spotify",
 ];
 
-freeClients = freeClients.concat(readConfig("freeClients", "telegram, telegram-desktop, telegramdesktop").toString().split(', '));
+fixedClients = fixedClients.concat(readConfig("fixedClients", "telegram, telegram-desktop, telegramdesktop").toString().split(', '));
 
 // If the program can't be blacklisted via the array above (resourceClass)
 // Try adding its caption to the array below
@@ -291,7 +292,7 @@ function addClient(client) {
 		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added on desktop " + client.desktop + " screen " + scr);
 		connectClient(client);
-		if (client.free) {
+		if (client.fixed) {
 			fitClient(client, scr);
 		} else {
 			tileClients();
@@ -331,7 +332,7 @@ function addClientNoFollow(client, desk, scr) {
 		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added (no follow) to desktop " + desk + " screen " + scr);
 		connectClient(client);
-		if (client.free) {
+		if (client.fixed) {
 			fitClient(client, scr);
 		}
 		tileClients();
@@ -360,8 +361,8 @@ function connectClient(client) {
 	if (typeof client.float == "undefined") {
 		client.desktopChanged.connect(client, changeClientDesktop);
 	}
-	if (freeClients.indexOf(client.resourceClass.toString()) > -1) {
-		client.free = true;
+	if (fixedClients.indexOf(client.resourceClass.toString()) > -1) {
+		client.fixed = true;
 	}
 	client.float = false;
 	client.oldIndex = -1;
@@ -546,7 +547,7 @@ function tileClients() {
 				adjusted[3].height = tiles[ws.currentDesktop][i].layout[3].height - gap * 1.5;
 			}
 			for (var j = 0; j < adjusted.length; j++) {
-				if (tiles[ws.currentDesktop][i][j].free) {
+				if (tiles[ws.currentDesktop][i][j].fixed) {
 					var rect = tiles[ws.currentDesktop][i][j].geometry;
 					// Tiles the "free clients" to the edge of the tile
 					// The code looks ugly but works wonders
@@ -744,7 +745,22 @@ function fitClient(client, scr) {
 	if (x < 0) {
 		x = 0;
 	}
-	adjustClientSize(client, scr, x, y);
+	// If window is on a lower tile (2 or 3), fitClient is shrinking the tile and the upper tile is also fixed
+	// Doesn't shrink the tile
+	if (i === 2) {
+		if (y < 0) {
+			if (tiles[client.desktop][scr][1].fixed) {
+				y *= 0.5;
+			}
+		}
+	} else if (i === 3) {
+		if (y < 0) {
+			if (tiles[client.desktop][scr][0].fixed) {
+				y *= 0.5;
+			}
+		}
+	}
+	adjustClientSize(client, scr, x, y + gap * 1.5);
 	tileClients();
 }
 

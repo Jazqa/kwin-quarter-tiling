@@ -41,7 +41,7 @@
   	  <label>(Parts of) Window captions that should be ignored by the script (f.ex "move to trash")</label>
   	  <default></default>
     </entry>
-    <entry name="freeClients" type="string">
+    <entry name="fixedClients" type="string">
       <label>Clients that are aligned (position) but not resized with the layout</label>
       <default>telegram, telegram-desktop, telegramdesktop</default>
     </entry>
