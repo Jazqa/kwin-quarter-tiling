@@ -23,6 +23,7 @@
 Arch Linux: [AUR (thanks to mareex)](https://aur.archlinux.org/packages/kwin-scripts-quarter-tiling-git/)
 
 Manually:
+
     git clone https://github.com/Jazqa/kwin-quarter-tiling.git
     cd kwin-quarter-tiling
     plasmapkg2 --type kwinscript -i .
