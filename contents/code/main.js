@@ -884,6 +884,8 @@ function maximizeClient(client, h, v) {
 	} else {
 		if (isConnected(client)) {
 			unreserveClient(client);
+			client.clientFinishUserMovedResized.disconnect(unmaximizeClient);
+			client.clientFinishUserMovedResized.connect(adjustClient);
 		} else {
 			addClient(client);
 		}
