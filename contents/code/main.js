@@ -260,7 +260,10 @@ function connectWorkspace() {
 	});
 	ws.clientAdded.connect(addClient);
 	ws.clientRemoved.connect(removeClient);
-	ws.clientMaximizeSet.connect(maximizeClient); // Maximize (workspace), Minimize (client)...
+	ws.clientMaximizeSet.connect(maximizeClient);
+	ws.clientFullScreenSet.connect(fullScreenClient);
+	ws.clientMinimized.connect(minimizeClient);
+	ws.clientUnminimized.connect(unminimizeClient);
 	ws.numberDesktopsChanged.connect(adjustDesktops);
 	ws.currentDesktopChanged.connect(changeDesktop);
 }
@@ -311,14 +314,12 @@ function addClient(client) {
 		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added on desktop " + client.desktop + " screen " + scr);
 		connectClient(client);
-		if (client.fixed) {
+		if (client.minimized || client.fullScreen || isMaxed(client)) {
+			removeClient(client);
+		} else if (client.fixed) {
 			fitClient(client, scr);
 		} else {
 			tileClients();
-		}
-		// If the client is minimized, trigger the minimize function
-		if (client.minimized) {
-			minimizeClient(client);
 		}
 	}
 }
@@ -355,10 +356,6 @@ function addClientNoFollow(client, desk, scr) {
 			fitClient(client, scr);
 		}
 		tileClients();
-		// If the client is minimized, trigger the minimize function
-		if (client.minimized) {
-			minimizeClient(client);
-		}
 	}
 }
 // Adds all the clients that existed before the script was executed
@@ -374,8 +371,6 @@ function addClients() {
 function connectClient(client) {
 	client.clientStartUserMovedResized.connect(saveClientGeo);
 	client.clientFinishUserMovedResized.connect(adjustClient);
-	client.clientMinimized.connect(minimizeClient);
-	client.clientFullScreenSet.connect(fullScreenClient);
 	// Hack: client.desktopChanged can't be disconnected (for some reason calling disconnect with the same parameters fails)
 	// So it's only connected when client.float is undefined, meaning it has not been connected or disconnected before
 	if (typeof client.float == "undefined") {
@@ -385,6 +380,7 @@ function connectClient(client) {
 		client.fixed = true;
 	}
 	client.float = false;
+	client.reserved = false;
 	client.oldIndex = -1;
 	client.oldDesk = client.desktop;
 }
@@ -392,19 +388,8 @@ function connectClient(client) {
 // Removes the closed client from tiles[]
 function removeClient(client) {
 	print("attempting to remove " + client.caption);
-	if (client.minimized) {
-		client.clientUnminimized.disconnect(unminimizeClient);
+	if (client.reserved) {
 		tiles[client.desktop][client.screen].max += 1;
-	}
-	if (client.fullScreen) {
-		if (isConnected(client)) {
-			tiles[client.desktop][client.screen].max += 1;
-		}
-	} else if (isMaxed(client)) {
-		if (isConnected(client)) {
-			tiles[client.desktop][client.screen].max += 1;
-			client.clientFinishUserMovedResized.disconnect(unmaximizeClient);
-		}
 	}
 	if (typeof tiles[client.desktop] != "undefined") {
 		for (var i = 0; i < tiles[client.desktop][client.screen].length; i++) {
@@ -432,19 +417,8 @@ function removeClient(client) {
 // Unlike removeClient(), does not follow the client
 function removeClientNoFollow(client, desk, scr) {
 	print("attempting to remove " + client.caption + " (no follow) from desktop  " + desk + " screen " + scr);
-	if (client.minimized) {
-		client.clientUnminimized.disconnect(unminimizeClient);
+	if (client.reserved) {
 		tiles[desk][scr].max += 1;
-	}
-	if (client.fullScreen) {
-		if (isConnected(client)) {
-			tiles[desk][scr].max += 1;
-		}
-	} else if (isMaxed(client)) {
-		if (isConnected(client)) {
-			tiles[desk][scr].max += 1;
-			client.clientFinishUserMovedResized.disconnect(unmaximizeClient);
-		}
 	}
 	if (typeof tiles[desk] != "undefined") {
 		for (var i = 0; i < tiles[desk][scr].length; i++) {
@@ -467,19 +441,32 @@ function closeWindow(client) {
 
 // "Removes" a client, reserving a spot for it by decreasing the maximum amount of clients on its desktop
 function reserveClient(client) {
-	var i = findClientIndex(client, client.desktop, client.screen);
-	client.oldIndex = i;
-	tiles[client.desktop][client.screen].splice(i, 1);
-	tiles[client.desktop][client.screen].max -= 1;
-	client.oldDesk = client.desktop;
-	tileClients();
+	if (client.float === false && client.reserved === false) {
+		var i = findClientIndex(client, client.desktop, client.screen);
+		tiles[client.desktop][client.screen].max -= 1;
+		tiles[client.desktop][client.screen].splice(i, 1);
+		client.oldIndex = i;
+		client.oldDesk = client.desktop;
+		client.reserved = true;
+		tileClients();
+	}
 }
 
 // "Adds" a client back to the desktop on its reserved tile
 function unreserveClient(client) {
-	ws.currentDesktop = client.desktop;
-	tiles[client.desktop][client.screen].max += 1;
-	tiles[client.desktop][client.screen].splice(client.oldIndex, 0, client);
+	if (client.reserved && client.float === false) {
+		ws.currentDesktop = client.desktop;
+		if (client.oldDesk === client.desktop) {
+			tiles[client.oldDesk][client.screen].max += 1;
+			tiles[client.oldDesk][client.screen].splice(client.oldIndex, 0, client);
+		} else {
+			disconnectClient(client);
+			addClient(client);
+		}
+		client.reserved = false;
+	} else {
+		 addClient(client);
+	}
 	tileClients();
 }
 
@@ -489,7 +476,6 @@ function unreserveClient(client) {
 function disconnectClient(client) {
 	client.clientStartUserMovedResized.disconnect(saveClientGeo);
 	client.clientFinishUserMovedResized.disconnect(adjustClient);
-	client.clientMinimized.disconnect(minimizeClient);
 	client.float = true;
 }
 
@@ -848,61 +834,26 @@ function adjustClientSize(client, scr, x, y) {
 
 // Minimize and Unminimize-functions are a mess because client.desktopChanged signal does not return a client
 function minimizeClient(client) {
-	print("attempting to minimize " + client.caption);
-	if (isMaxed(client)) {
-		print(client.caption + " is maximized, no need to reserve spot anymore");
-		return;
-	}
 	reserveClient(client);
-	client.clientUnminimized.connect(unminimizeClient);
-	if (tiles[client.desktop][client.screen].length == 0) {
-		ws.currentDesktop -= 1;
-	}
-	print(client.caption + " minimized");
 }
 
 function unminimizeClient(client) {
-	print("attempting to unminimize " + client.caption);
-	client.clientUnminimized.disconnect(unminimizeClient);
-	if (client.float === true) {
-		return;
-	} else if (client.float === false) {
-		unreserveClient(client);
-	} else {
-		addClient(client);
-	}
-	print(client.caption + " unminimized");
+	unreserveClient(client);
 }
 
 function maximizeClient(client, h, v) {
 	if (h && v) {
-		if (isConnected(client)) {
-			reserveClient(client);
-			client.clientFinishUserMovedResized.disconnect(adjustClient);
-			client.clientFinishUserMovedResized.connect(unmaximizeClient);
-		}
+		reserveClient(client);
 	} else {
-		if (isConnected(client)) {
-			unreserveClient(client);
-			client.clientFinishUserMovedResized.disconnect(unmaximizeClient);
-			client.clientFinishUserMovedResized.connect(adjustClient);
-		} else {
-			addClient(client);
-		}
+		unreserveClient(client);
 	}
-}
-
-function unmaximizeClient(client) {
-	client.clientFinishUserMovedResized.disconnect(unmaximizeClient);
-	client.clientFinishUserMovedResized.connect(adjustClient);
-	tileClients();
 }
 
 function fullScreenClient(client, full, user) {
 	if (full) {
-		reserveClient(client);
+			reserveClient(client);
 	} else {
-		unreserveClient(client);
+			unreserveClient(client);
 	}
 }
 
@@ -929,10 +880,11 @@ function checkClient(client) {
 		client.transient ||
 		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
 		ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
-		ignoredDesktops.indexOf(client.desktop) > -1 ||
-		isMaxed(client)) {
+		ignoredDesktops.indexOf(client.desktop) > -1) {
 		return false;
-	} else return true;
+	} else {
+		return true;
+	}
 }
 
 // Todo: Unify clients & geometries for readability, optimization and coherence
@@ -1012,30 +964,14 @@ function swapClients(i, j, scrI, scrJ) {
 }
 
 function changeClientDesktop() {
-	if (this.minimized) {
-		// Closes clients if their workspace gets removed
-		if (this.oldDesk > ws.desktops) {
-			this.closeWindow();
-		} else {
-			print("attempting to change the desktop of minimized" + this.caption + " to desktop " + this.desktop);
-			removeClientNoFollow(this, this.oldDesk, this.screen);
-			print("successfully changed the desktop of minimized " + this.caption + " to desktop " + this.desktop);
-		}
-	} else if (this.maxed) {
-		// Closes clients if their workspace gets removed
-		if (this.oldDesk > ws.desktops) {
-			this.closeWindow();
-		} else {
-			print("attempting to change the desktop of maximized" + this.caption + " to desktop " + this.desktop);
-			removeClientNoFollow(this, this.oldDesk, this.screen);
-			print("successfully changed the desktop of maximized" + this.caption + " to desktop " + this.desktop);
-		}
+	if (this.oldDesk > ws.desktops) {
+		this.closeWindow();
+		return;
+	} else if (this.reserved) {
+		print("attempting to change the desktop of reserved" + this.caption + " to desktop " + this.desktop);
+		tiles[this.oldDesk][this.screen].max += 1;
+		print("successfully changed the desktop of reserved " + this.caption + " to desktop " + this.desktop);
 	} else {
-		// Closes clients if their workspace gets removed
-		if (this.oldDesk > ws.desktops) {
-			this.closeWindow();
-			return;
-		}
 		print("attempting to change the desktop of " + this.caption + " to desktop " + this.desktop);
 		removeClientNoFollow(this, this.oldDesk, this.screen);
 		if (ignoredDesktops.indexOf(this.desktop) > -1) {
@@ -1050,8 +986,7 @@ function changeClientDesktop() {
 
 function isMaxed(client) {
 	var area = ws.clientArea(0, client.screen, 0);
-	if (client.geometry.height >= area.height && client.geometry.width >= area.width ||
-	client.fullScreen) {
+	if (client.geometry.height >= area.height && client.geometry.width >= area.width) {
 		return true;
 	} else {
 		return false;
