@@ -30,16 +30,25 @@ var ignoredClients = [
 	"plugin-container",
 	"simplescreenrecorder",
 	"yakuake",
+	"Spotify",
+	"spotify",
 ];
 
 ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine, steam, kate").toString().split(', '));
 
 var fixedClients = [
-	"Spotify",
-	"spotify",
+
 ];
 
 fixedClients = fixedClients.concat(readConfig("fixedClients", "telegram, telegram-desktop, telegramdesktop").toString().split(', '));
+
+
+// Clients that constantly fight the tiling
+var agressiveClients = [
+	"konqueror",
+	"Spotify",
+	"spotify",
+];
 
 // If the program can't be blacklisted via the array above (resourceClass)
 // Try adding its caption to the array below
@@ -125,10 +134,11 @@ function registerKeys() {
 		"Quarter: Float On/Off",
 		"Meta+F",
 		function() {
-			if (ws.activeClient.float) {
-				addClient(ws.activeClient);
-			} else {
+			if (ws.activeClient.included) {
 				removeClient(ws.activeClient);
+				ws.activeClient.included = false;
+			} else {
+				addClient(ws.activeClient);
 			}
 		});
 	registerShortcut(
@@ -280,7 +290,7 @@ function addClient(client) {
 		if (noBorders == true) {
 			client.noBorder = true;
 		} else client.noBorder = false;
-		var scr = ws.activeScreen;
+		var scr = client.screen;
 		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
 		if (tiles[ws.currentDesktop][scr].length === tiles[ws.currentDesktop][scr].max ||
 			tiles[ws.currentDesktop][scr].length === 4) {
@@ -296,6 +306,7 @@ function addClient(client) {
 			}
 			// If client isn't thrown to another screen, it's thrown into an other desktop
 			if (scr === ws.activeScreen) {
+				// Looks for space on existing desktops before creating new one
 				var freeTile = findSpace();
 				if (freeTile) {
 					ws.currentDesktop = freeTile[0];
@@ -352,10 +363,13 @@ function addClientNoFollow(client, desk, scr) {
 		tiles[client.desktop][scr].push(client);
 		print(client.caption + " added (no follow) to desktop " + desk + " screen " + scr);
 		connectClient(client);
-		if (client.fixed) {
+		if (client.minimized || client.fullScreen || isMaxed(client)) {
+			removeClientNoFollow(client, desk, scr);
+		} else if (client.fixed) {
 			fitClient(client, scr);
+		} else {
+			tileClients();
 		}
-		tileClients();
 	}
 }
 // Adds all the clients that existed before the script was executed
@@ -372,14 +386,17 @@ function connectClient(client) {
 	client.clientStartUserMovedResized.connect(saveClientGeo);
 	client.clientFinishUserMovedResized.connect(adjustClient);
 	// Hack: client.desktopChanged can't be disconnected (for some reason calling disconnect with the same parameters fails)
-	// So it's only connected when client.float is undefined, meaning it has not been connected or disconnected before
-	if (typeof client.float == "undefined") {
+	// So it's only connected when client.included is undefined, meaning it has not been connected or disconnected before
+	if (typeof client.included == "undefined") {
 		client.desktopChanged.connect(client, changeClientDesktop);
 	}
 	if (fixedClients.indexOf(client.resourceClass.toString()) > -1) {
 		client.fixed = true;
 	}
-	client.float = false;
+	if (agressiveClients.indexOf(client.resourceClass.toString()) > -1) {
+		client.activeChanged.connect(tileClients);
+	}
+	client.included = true;
 	client.reserved = false;
 	client.oldIndex = -1;
 	client.oldDesk = client.desktop;
@@ -441,7 +458,7 @@ function closeWindow(client) {
 
 // "Removes" a client, reserving a spot for it by decreasing the maximum amount of clients on its desktop
 function reserveClient(client) {
-	if (client.float === false && client.reserved === false) {
+	if (client.included && client.reserved === false) {
 		var i = findClientIndex(client, client.desktop, client.screen);
 		tiles[client.desktop][client.screen].max -= 1;
 		tiles[client.desktop][client.screen].splice(i, 1);
@@ -454,7 +471,7 @@ function reserveClient(client) {
 
 // "Adds" a client back to the desktop on its reserved tile
 function unreserveClient(client) {
-	if (client.reserved && client.float === false) {
+	if (client.included && client.reserved) {
 		ws.currentDesktop = client.desktop;
 		if (client.oldDesk === client.desktop) {
 			tiles[client.oldDesk][client.screen].max += 1;
@@ -464,7 +481,7 @@ function unreserveClient(client) {
 			addClient(client);
 		}
 		client.reserved = false;
-	} else {
+	} else if (client.included) {
 		 addClient(client);
 	}
 	tileClients();
@@ -476,7 +493,6 @@ function unreserveClient(client) {
 function disconnectClient(client) {
 	client.clientStartUserMovedResized.disconnect(saveClientGeo);
 	client.clientFinishUserMovedResized.disconnect(adjustClient);
-	client.float = true;
 }
 
 // Calculates the geometries to maintain the layout
@@ -564,40 +580,8 @@ function tileClients() {
 			for (var j = 0; j < adjusted.length; j++) {
 				if (tiles[desk][i][j].fixed) {
 					var rect = tiles[desk][i][j].geometry;
-					// Tiles the "free clients" to the edge of the tile
-					// The code looks ugly but works wonders
-					switch (j) {
-						case 0:
-							if (adjusted.length === 1) {
-								rect.x = adjusted[j].x + adjusted[j].width * 0.5 - rect.width * 0.5;
-								rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
-							} else if (adjusted.length == 2 || adjusted.length == 3) {
-								rect.x = adjusted[j].x + adjusted[j].width - rect.width;
-								rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
-							} else {
-								rect.x = adjusted[j].x + adjusted[j].width - rect.width;
-								rect.y = adjusted[j].y + adjusted[j].height - rect.height;
-							}
-							break;
-						case 1:
-							if (adjusted.length === 2) {
-								rect.x = adjusted[j].x;
-								rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
-							}
-							else {
-								rect.x = adjusted[j].x;
-								rect.y = adjusted[j].y + adjusted[j].height - rect.height;
-							}
-							break;
-						case 2:
-							rect.x = adjusted[j].x;
-							rect.y = adjusted[j].y;
-							break;
-						case 3:
-							rect.x = adjusted[j].x + adjusted[j].width - rect.width;
-							rect.y = adjusted[j].y;
-							break;
-					}
+					rect.x = adjusted[j].x + adjusted[j].width * 0.5 - rect.width * 0.5;
+					rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
 					if (rect.width > adjusted[j].width) {
 						rect.x = adjusted[j].x;
 						rect.width = adjusted[j].width;
@@ -620,20 +604,44 @@ function tileClients() {
 function saveClientGeo(client) {
 	oldGeo = client.geometry;
 	oldScr = client.screen;
+	if (client.fixed) {
+		var i = findClientIndex(client, client.desktop, client.screen);
+		var rect = tiles[client.desktop][client.screen].layout[i];
+		switch (tiles[client.desktop][client.screen].length) {
+			case 1:
+				rect.width += tiles[client.desktop][client.screen].layout[1].width;
+				rect.height += tiles[client.desktop][client.screen].layout[3].height;
+				ws.showOutline(rect);
+				rect.width -= tiles[client.desktop][client.screen].layout[1].width;
+				rect.height -= tiles[client.desktop][client.screen].layout[3].height;
+				break;
+			case 2:
+				rect.height += tiles[client.desktop][client.screen].layout[2].height;
+				ws.showOutline(rect);
+				rect.height -= tiles[client.desktop][client.screen].layout[2].height;
+				break;
+			case 3:
+				ws.showOutline(rect);
+				break;
+			case 4:
+				ws.showOutline(rect);
+				break;
+		}
+	}
 }
 
 // Decides if a client is moved or resized
 function adjustClient(client) {
+	if (client.fixed) {
+		ws.hideOutline();
+	}
 	// If the size equals the pre-movement size, user is trying to move the client, not resize it
 	if (client.geometry.width === oldGeo.width && client.geometry.height === oldGeo.height) {
 		// If screen has changed, removes the client from the old screen and adds it to the new one
-		if (oldScr != client.screen) {
+		if (oldScr !== client.screen) {
 			if (tiles[ws.currentDesktop][client.screen].length < tiles[ws.currentDesktop][client.screen].max) {
 				print("attempting to push " + client.caption + " to screen" + client.screen);
-				var rect = client.geometry;
-				client.geometry = oldGeo;
-				removeClientNoFollow(client, client.desktop, client.screen);
-				client.geometry = rect;
+				removeClientNoFollow(client, client.desktop, oldScr);
 				addClientNoFollow(client, client.desktop, client.screen);
 				print("pushed client " + client.caption + " to screen" + client.screen);
 			} else moveClient(client);
@@ -677,16 +685,28 @@ function moveClient(client) {
 	}
 }
 
-// Resizes all the clients
+// Resizes client and alters all tiles accordingly
 function resizeClient(client) {
 	print("attempting to resize " + client.caption);
-	var desk = ws.currentDesktop;
-	var scr = ws.activeScreen;
-	var difW = client.geometry.width - oldGeo.width;
-	var difH = client.geometry.height - oldGeo.height;
-	var difX = client.geometry.x - oldGeo.x;
-	var difY = client.geometry.y - oldGeo.y;
+	var desk = client.desktop;
+	var scr = oldScr;
 	var i = findClientIndex(client, client.desktop, oldScr);
+	var difW, difH, difX, difY;
+	if (client.fixed) {
+		difW = client.geometry.width - tiles[desk][scr].layout[i].width - gap;
+		difH = client.geometry.height - tiles[desk][scr].layout[i].height - gap;
+		difX = client.geometry.x - tiles[desk][scr].layout[i].x - gap;
+		difY = client.geometry.y - tiles[desk][scr].layout[i].y - gap;
+		if (difW < 0) { difW = 0;}
+		if (difH < 0) { difH = 0;}
+		if (difX > 0) { difX = 0;}
+		if (difY > 0) { difY = 0;}
+	} else {
+		difW = client.geometry.width - oldGeo.width;
+		difH = client.geometry.height - oldGeo.height;
+		difX = client.geometry.x - oldGeo.x;
+		difY = client.geometry.y - oldGeo.y;
+	}
 	switch (i) {
 		case 0:
 			if (difX === 0 && difY === 0) {
@@ -753,7 +773,7 @@ function resizeClient(client) {
 	tileClients();
 }
 
-// Screen must be carried as a parameter because clients too large have a different screen (scr vs. client.screen)
+// Screen must be carried as a parameter (scr vs. client.screen) because once a client gets too large, its screen will change
 function fitClient(client, scr) {
 	if (typeof scr === "undefined") {
 		scr = client.screen;
@@ -766,8 +786,7 @@ function fitClient(client, scr) {
 	if (x < 0) {
 		x = 0;
 	}
-	// If window is on a lower tile (2 or 3), fitClient is shrinking the tile and the upper tile is also fixed
-	// Doesn't shrink the tile
+	// If the opposite (upper / lower) client does not exist or is also fixed, the tile will not be shrunk
 	if (y < 0) {
 		var j = oppositeIndex(i);
 		if (typeof tiles[client.desktop][scr][j] === "undefined" || tiles[client.desktop][scr][j].fixed) {
@@ -778,8 +797,7 @@ function fitClient(client, scr) {
 	tileClients();
 }
 
-// TODO: Remove increaseClientSize() and decreaseClientSize() and replace them with adjustClientSize()
-// Screen must be carried as a parameter because clients too large have a different screen
+// Screen must be carried as a parameter because once a client gets too large, its screen will change
 function adjustClientSize(client, scr, x, y) {
 	var desk = client.desktop;
 	switch (findClientIndex(client, desk, scr)) {
@@ -832,7 +850,10 @@ function adjustClientSize(client, scr, x, y) {
 	}
 }
 
-// Minimize and Unminimize-functions are a mess because client.desktopChanged signal does not return a client
+
+// Minimizing, Maximizing and FullScreening a client all reserve a spot for the client and undoing the action unreserves the spot
+// Multiple functions needed because the signals are different
+
 function minimizeClient(client) {
 	reserveClient(client);
 }
@@ -884,16 +905,6 @@ function checkClient(client) {
 		return false;
 	} else {
 		return true;
-	}
-}
-
-// Todo: Unify clients & geometries for readability, optimization and coherence
-
-function isConnected(client) {
-	if (client.float === true || client.float === false) {
-		return true;
-	} else {
-		return false;
 	}
 }
 
