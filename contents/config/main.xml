@@ -14,8 +14,12 @@
 		  <default>false</default>
 		</entry>
     <entry name="numDesks" type="int">
-      <label>Right margin</label>
+      <label>Initial number of desktops</label>
       <default>2</default>
+    </entry>
+    <entry name="tileTo" type="int">
+      <label>Tile to the center of screen/tile</label>
+      <default>0</default>
     </entry>
     <entry name="mt" type="int">
       <label>Top margin</label>
