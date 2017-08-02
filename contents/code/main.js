@@ -67,7 +67,8 @@ var ignoredDesktops = [-1];
 // Todo: Add an configuration option for ignored desktops
 
 var gap = readConfig("gap", 10); // Gap size in pixels
-if (gap === 0) {
+
+if (gap < 2) {
 	gap = 2;
 }
 
@@ -122,9 +123,12 @@ function registerKeys() {
 				}
 			} else {
 				ignoredDesktops.push(ws.currentDesktop);
+				var j = 0;
 				for (var i = 0; i < clients.length; i++) {
 					if (clients[i].desktop === ws.currentDesktop) {
 						removeClientNoFollow(clients[i], clients[i].desktop, clients[i].screen);
+						clients[i].geometry = tiles[clients[i].desktop][clients[i].screen].layout[j];
+						j += 1;
 					}
 				}
 			}
@@ -244,6 +248,18 @@ function registerKeys() {
 			tileClients();
 		});
 	registerShortcut(
+		"Quarter: Toggle Gaps On/Off",
+		"Quarter: Toggle Gaps On/Off",
+		"Meta+G",
+		function() {
+			if (gap <= 2) {
+				gap = readConfig("gap", 10);
+			} else {
+				gap = 2;
+			}
+			tileClients();
+		});
+	registerShortcut(
 		"Quarter: + Gap Size",
 		"Quarter: + Gap Size",
 		"Meta+O",
@@ -256,10 +272,11 @@ function registerKeys() {
 		"Quarter: - Gap Size",
 		"Meta+L",
 		function() {
-			if (gap > 2) {
 				gap -= 2;
+				if (gap < 2) {
+					gap = 2;
+				}
 				tileClients();
-			}
 		});
 }
 
@@ -290,16 +307,17 @@ function addClient(client) {
 		if (noBorders == true) {
 			client.noBorder = true;
 		} else client.noBorder = false;
+		var desk = client.desktop;
 		var scr = client.screen;
 		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
-		if (tiles[ws.currentDesktop][scr].length === tiles[ws.currentDesktop][scr].max ||
-			tiles[ws.currentDesktop][scr].length === 4) {
+		if (tiles[desk][scr].length === tiles[desk][scr].max ||
+			tiles[desk][scr].length === 4) {
 			// Fixes a bug that makes the maximum go over 4 when removing virtual desktops
-			if (tiles[ws.currentDesktop][scr].length === 4) {
-				tiles[ws.currentDesktop][scr].max = 4;
+			if (tiles[desk][scr].length === 4) {
+				tiles[desk][scr].max = 4;
 			}
 			for (var i = 0; i < ws.numScreens; i++) {
-				if (tiles[ws.currentDesktop][i].length < tiles[ws.currentDesktop][i].max) {
+				if (tiles[desk][i].length < tiles[desk][i].max) {
 					scr = i;
 					break;
 				}
@@ -317,13 +335,14 @@ function addClient(client) {
 				}
 			}
 		}
-		client.desktop = ws.currentDesktop;
+		desk = ws.currentDesktop;
+		client.desktop = desk;
 		// Not needed per se, only important when activating the script with more than four clients active
-		if (typeof tiles[client.desktop] == "undefined") {
-			createDesktop(client.desktop);
+		if (typeof tiles[desk] == "undefined") {
+			createDesktop(desk);
 		}
-		tiles[client.desktop][scr].push(client);
-		print(client.caption + " added on desktop " + client.desktop + " screen " + scr);
+		tiles[desk][scr].push(client);
+		print(client.caption + " added on desktop " + desk + " screen " + scr);
 		connectClient(client);
 		if (client.minimized || client.fullScreen || isMaxed(client)) {
 			removeClient(client);
@@ -394,7 +413,9 @@ function connectClient(client) {
 		client.fixed = true;
 	}
 	if (agressiveClients.indexOf(client.resourceClass.toString()) > -1) {
-		client.activeChanged.connect(tileClients);
+		if (typeof client.included == "undefined") {
+			client.activeChanged.connect(tileClients);
+		}
 	}
 	client.included = true;
 	client.reserved = false;
@@ -770,7 +791,11 @@ function resizeClient(client) {
 			break;
 		}
 	print("clients resized successfully (resize initiated by: " + client.caption + ")");
-	tileClients();
+	if (client.fixed) {
+		fitClient(client);
+	} else {
+		tileClients();
+	}
 }
 
 // Screen must be carried as a parameter (scr vs. client.screen) because once a client gets too large, its screen will change
