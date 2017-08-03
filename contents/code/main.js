@@ -37,7 +37,7 @@ var ignoredClients = [
 ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine, steam, kate").toString().split(', '));
 
 var fixedClients = [
-	"konsole",
+
 ];
 
 fixedClients = fixedClients.concat(readConfig("fixedClients", "telegram, telegram-desktop, telegramdesktop").toString().split(', '));
