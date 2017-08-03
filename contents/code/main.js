@@ -78,9 +78,11 @@ margins[1] = readConfig("ml", 0);
 margins[2] = readConfig("mb", 0);
 margins[3] = readConfig("mr", 0);
 
-var noBorders = readConfig("noBorders", false);
+var borders = readConfig("borders", 0);
 
-var tileTo = readConfig("tileTo", 0);
+var centerTo = readConfig("centerTo", 0);
+
+var autoSize = readConfig("autoSize", 1);
 
 var ws = workspace;
 
@@ -306,9 +308,9 @@ function connectWorkspace() {
 function addClient(client) {
 	if (checkClient(client)) {
 		print("attempting to add " + client.caption);
-		if (noBorders == true) {
-			client.noBorder = true;
-		} else client.noBorder = false;
+		if (borders == 0) {
+			client.noBorder = false;
+		} else client.noBorder = true;
 		var desk = client.desktop;
 		var scr = client.screen;
 		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
@@ -349,13 +351,8 @@ function addClient(client) {
 		if (client.minimized || client.fullScreen || isMaxed(client)) {
 			removeClient(client);
 		} else {
-			if (client.fixed) {
-				fitClient(client, scr);
-			} else {
-				var rect = newTile(scr);
-				client.geometry = rect;
-				fitClient(client, scr);
-			}
+			optSpace(client, scr);
+			tileClients();
 		}
 	}
 }
@@ -366,9 +363,9 @@ function addClient(client) {
 function addClientNoFollow(client, desk, scr) {
 	if (checkClient(client)) {
 		print("attempting to add " + client.caption + " (no follow) to desktop " + desk + " screen " + scr);
-		if (noBorders == true) {
-			client.noBorder = true;
-		} else client.noBorder = false;
+		if (borders == 0) {
+			client.noBorder = false;
+		} else client.noBorder = true;
 		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
 		if (tiles[desk][scr].length === tiles[desk][scr].max ||
 			tiles[desk][scr].length === 4) {
@@ -390,12 +387,9 @@ function addClientNoFollow(client, desk, scr) {
 		connectClient(client);
 		if (client.minimized || client.fullScreen || isMaxed(client)) {
 			removeClientNoFollow(client, desk, scr);
-		} else if (client.fixed) {
-			fitClient(client, scr);
 		} else {
-			var rect = newTile(scr);
-			client.geometry = rect;
-			fitClient(client, scr);
+			optSpace(client, scr);
+			tileClients();
 		}
 	}
 }
@@ -445,7 +439,11 @@ function removeClient(client) {
 				print(client.caption + " removed");
 				// If there are still tiles after the removal, calculates the geometries
 				if (tiles[client.desktop][client.screen].length > 0) {
-					fitClient(tiles[client.desktop][client.screen][tiles[client.desktop][client.screen].length - 1]);
+					tileClients();
+					if (autoSize == 0) {
+						fitClients(client.desktop, client.screen);
+						tileClients();
+					}
 				} else if (tiles[client.desktop][client.screen].length === 0) {
 					if (ws.currentDesktop > 1) {
 						// client.desktop = null;
@@ -611,7 +609,7 @@ function tileClients() {
 					var rect = tiles[ws.currentDesktop][i][j].geometry;
 					// Tiles the "free clients" to the edge of the tile
 					// The code looks ugly but works wonders
-					if (tileTo == 1) {
+					if (centerTo == 1) {
 						rect.x = adjusted[j].x + adjusted[j].width * 0.5 - rect.width * 0.5;
 						rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
 					} else {
@@ -769,10 +767,10 @@ function resizeClient(client) {
 	var i = findClientIndex(client, client.desktop, oldScr);
 	var difW, difH, difX, difY;
 	if (client.fixed) {
-		difW = client.geometry.width - tiles[desk][scr].layout[i].width - gap;
-		difH = client.geometry.height - tiles[desk][scr].layout[i].height - gap;
-		difX = client.geometry.x - tiles[desk][scr].layout[i].x - gap;
-		difY = client.geometry.y - tiles[desk][scr].layout[i].y - gap;
+		difW = client.geometry.width - tiles[desk][scr].layout[i].width;
+		difH = client.geometry.height - tiles[desk][scr].layout[i].height;
+		difX = client.geometry.x - tiles[desk][scr].layout[i].x;
+		difY = client.geometry.y - tiles[desk][scr].layout[i].y;
 		if (difW < 0) { difW = 0;}
 		if (difH < 0) { difH = 0;}
 		if (difX > 0) { difX = 0;}
@@ -846,6 +844,23 @@ function resizeClient(client) {
 			break;
 	}
 	tileClients();
+	if (autoSize == 0) {
+		if (client.fixed) {
+			fitClient(client, scr);
+		} else {
+
+		}
+		var j = findClientIndex(client, desk, scr);
+		var k = oppositeIndex(j);
+		var l = neighbourIndex(j);
+		if (typeof tiles[desk][scr][k] !== "undefined" && tiles[desk][scr][k].fixed) {
+			fitClient(tiles[desk][scr][k], scr);
+		}
+		if (typeof tiles[desk][scr][l] !== "undefined" && tiles[desk][scr][l].fixed) {
+			fitClient(tiles[desk][scr][l], scr);
+		}
+		tileClients();
+	}
 	print("clients resized successfully (resize initiated by: " + client.caption + ")");
 }
 
@@ -866,7 +881,6 @@ function adjustClientSize(client, scr, x, y) {
 			tiles[desk][scr].layout[3].height -= y;
 		break;
 		case 1:
-
 				tiles[desk][scr].layout[0].width -= x;
 				tiles[desk][scr].layout[1].x -= x;
 				tiles[desk][scr].layout[1].width += x;
@@ -878,7 +892,6 @@ function adjustClientSize(client, scr, x, y) {
 				tiles[desk][scr].layout[2].height -= y;
 			break;
 		case 2:
-
 				tiles[desk][scr].layout[0].width -= x;
 				tiles[desk][scr].layout[1].x -= x;
 				tiles[desk][scr].layout[1].width += x;
@@ -904,7 +917,6 @@ function adjustClientSize(client, scr, x, y) {
 }
 
 // Screen must be carried as a parameter (scr vs. client.screen) because once a client gets too large, its screen will change
-// Screen must be carried as a parameter (scr vs. client.screen) because once a client gets too large, its screen will change
 function fitClient(client, scr) {
 	var desk = client.desktop;
 	if (typeof scr === "undefined") {
@@ -912,8 +924,15 @@ function fitClient(client, scr) {
 	}
 	var i = findClientIndex(client, desk, scr);
 	var tile = tiles[desk][scr].layout[i];
-	var x = client.geometry.width - tile.width + gap * 1.5;
-	var y = client.geometry.height - tile.height + gap * 1.5;
+	var x, y;
+	if (client.fixed) {
+		x = client.geometry.width - tile.width + gap * 1.5;
+		y = client.geometry.height - tile.height + gap * 1.5;
+	} else {
+		var rect = newTile(scr);
+		x = rect.width - tile.width + gap * 1.5;
+		y = rect.height - tile.height + gap * 1.5;
+	}
 	var j = oppositeIndex(i);
 	var k = neighbourIndex(i);
 	if (typeof tiles[desk][scr][j] !== "undefined") {
@@ -922,14 +941,12 @@ function fitClient(client, scr) {
 			x = xJ;
 		}
 		var yJ = tiles[desk][scr][j].geometry.height - tiles[desk][scr].layout[j].height + gap * 1.5;
-		if (yJ < y) {
+		if (yJ < y && client.fixed != true && tiles[desk][scr][j].fixed) {
 			y = -1 * yJ;
 		}
 		if (tiles[desk][scr][j].fixed && client.fixed) {
 			y = 0.5 * (y - yJ);
 		}
-	} else if (client.fixed && y < 0) {
-		y = 0; // Helps keeping the fixed clients centered by not shrinking the tile if the neighbour/opposite tile is empty
 	}
 	if (typeof tiles[desk][scr][k] !== "undefined") {
 		if (tiles[desk][scr][k].fixed && client.fixed) {
@@ -938,11 +955,45 @@ function fitClient(client, scr) {
 				x = 0.5 * (x - xK); // Helps keeping the fixed clients centered by not shrinking the tile if the neighbour/opposite tile is empty
 			}
 		}
-	} else if (client.fixed && x < 0) {
-		x = 0; // Helps keeping the fixed clients centered by not shrinking the tile if the neighbour/opposite tile is empty
+	}
+	// If autosize is disabled, doesn't shrink the tiles automatically
+	if (autoSize == 1) {
+		if (x < 0) {
+			x = 0;
+		}
+		if (y < 0) {
+			y = 0;
+		}
 	}
 	adjustClientSize(client, scr, x, y);
-	tileClients();
+}
+
+// Optimizes space for a *NEW* client
+function optSpace(client, scr) {
+	if (client.fixed) {
+		fitClient(client, scr);
+	} else {
+		var i = tiles[client.desktop][scr].indexOf(client);
+		var j = tiles[client.desktop][scr][oppositeIndex(i)];
+		if (typeof j !== "undefined" && j.fixed) {
+			fitClient(j, scr);
+		} else {
+			var tile = newTile(scr);
+			var rect = client.geometry;
+			rect.width = tile.width;
+			rect.height = tile.height;
+			client.geometry = rect;
+			fitClient(client, scr);
+		}
+	}
+}
+
+function fitClients(desk, scr) {
+	for (var i = 0; i < tiles[desk][scr].length; i++) {
+		if (tiles[desk][scr][i].fixed) {
+			fitClient(tiles[desk][scr][i], scr);
+		}
+	}
 }
 
 // Swaps tiles[desktop][ws.activeScreen][i] and tiles[desktop][ws.activeScreen][j]
@@ -952,6 +1003,14 @@ function swapClients(i, j, scrI, scrJ) {
 	var temp = tiles[desk][scrI][i];
 	tiles[desk][scrI][i] = tiles[desk][scrJ][j];
 	tiles[desk][scrJ][j] = temp;
+	if (autoSize == 0) {
+		if (tiles[desk][scrJ][j].fixed) {
+			fitClient(tiles[desk][scrJ][j], scrJ);
+		}
+		if (tiles[desk][scrI][i].fixed) {
+			fitClient(tiles[desk][scrI][i], scrI);
+		}
+	}
 	print("successfully swapped clients " + i + " " + j);
 }
 

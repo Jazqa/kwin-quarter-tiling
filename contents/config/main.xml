@@ -9,16 +9,20 @@
 		  <label>Pixels between the windows and screen edges</label>
 		  <default>10</default>
 		</entry>
-		<entry name="noBorders" type="bool">
-		  <label>If set to true, removes the window borders and title bars</label>
-		  <default>false</default>
-		</entry>
     <entry name="numDesks" type="int">
       <label>Initial number of desktops</label>
       <default>2</default>
     </entry>
-    <entry name="tileTo" type="int">
-      <label>Tile to the center of screen/tile</label>
+		<entry name="borders" type="int">
+		  <label>If set to true, removes the window borders and title bars</label>
+		  <default>0</default>
+		</entry>
+    <entry name="autoSize" type="int">
+      <label>Automatically optimize available space</label>
+      <default>1</default>
+    </entry>
+    <entry name="centerTo" type="int">
+      <label>Tile small clients to the center of the tile instead of the center of the screen</label>
       <default>0</default>
     </entry>
     <entry name="mt" type="int">
