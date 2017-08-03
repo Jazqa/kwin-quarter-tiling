@@ -857,16 +857,15 @@ function resizeClient(client) {
 		if (client.fixed) {
 			fitClient(client, scr);
 		} else {
-
-		}
-		var j = findClientIndex(client, desk, scr);
-		var k = oppositeIndex(j);
-		var l = neighbourIndex(j);
-		if (typeof tiles[desk][scr][k] !== "undefined" && tiles[desk][scr][k].fixed) {
-			fitClient(tiles[desk][scr][k], scr);
-		}
-		if (typeof tiles[desk][scr][l] !== "undefined" && tiles[desk][scr][l].fixed) {
-			fitClient(tiles[desk][scr][l], scr);
+			var j = findClientIndex(client, desk, scr);
+			var k = oppositeIndex(j);
+			var l = neighbourIndex(j);
+			if (typeof tiles[desk][scr][k] !== "undefined" && tiles[desk][scr][k].fixed) {
+				fitClient(tiles[desk][scr][k], scr);
+			}
+			if (typeof tiles[desk][scr][l] !== "undefined" && tiles[desk][scr][l].fixed) {
+				fitClient(tiles[desk][scr][l], scr);
+			}
 		}
 		tileClients();
 	}
@@ -938,6 +937,7 @@ function fitClient(client, scr) {
 		x = client.geometry.width - tile.width + gap * 1.5;
 		y = client.geometry.height - tile.height + gap * 1.5;
 	} else {
+		// Make sure non-fixed client isn't larger than a default tile
 		var rect = newTile(scr);
 		x = rect.width - tile.width + gap * 1.5;
 		y = rect.height - tile.height + gap * 1.5;
@@ -962,7 +962,7 @@ function fitClient(client, scr) {
 		if (tiles[desk][scr][k].fixed && client.fixed) {
 			if (typeof tiles[desk][scr][j] === "undefined" || tiles[desk][scr][j].fixed) {
 				xK = tiles[desk][scr][k].geometry.width - tiles[desk][scr].layout[k].width + gap * 1.5;
-				x = 0.5 * (x - xK); // Helps keeping the fixed clients centered by not shrinking the tile if the neighbour/opposite tile is empty
+				x = 0;
 			}
 		} else if (autoSize == 0 && tiles[desk][scr][k].fixed && client.fixed != true) {
 			xK = tiles[desk][scr][k].geometry.width - tiles[desk][scr].layout[k].width + gap * 1.5;
@@ -990,11 +990,22 @@ function optSpace(client, scr) {
 	} else {
 		var i = tiles[client.desktop][scr].indexOf(client);
 		var j = tiles[client.desktop][scr][oppositeIndex(i)];
+		var tile;
+		var rect;
 		if (typeof j !== "undefined" && j.fixed) {
+			if (client.fixed != true) {
+				// Make sure non-fixed client isn't larger than a default tile
+				tile = newTile(scr);
+				rect = client.geometry;
+				rect.width = tile.width;
+				rect.height = tile.height;
+				client.geometry = rect;
+			}
 			fitClient(j, scr);
 		} else {
-			var tile = newTile(scr);
-			var rect = client.geometry;
+			// Make sure non-fixed client isn't larger than a default tile
+			tile = newTile(scr);
+			rect = client.geometry;
 			rect.width = tile.width;
 			rect.height = tile.height;
 			client.geometry = rect;
