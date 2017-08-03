@@ -37,7 +37,7 @@ var ignoredClients = [
 ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine, steam, kate").toString().split(', '));
 
 var fixedClients = [
-
+	"konsole",
 ];
 
 fixedClients = fixedClients.concat(readConfig("fixedClients", "telegram, telegram-desktop, telegramdesktop").toString().split(', '));
@@ -103,8 +103,9 @@ function init() {
 		desks = 1;
 	}
 	ws.desktops = desks;
+	ws.currentDesktop = 1;
 	for (var i = 1; i <= desks; i++) {
-		createDesktop(i);
+			createDesktop(i);
 	}
 	addClients();
 	connectWorkspace();
@@ -345,9 +346,13 @@ function addClient(client) {
 		if (typeof tiles[desk] == "undefined") {
 			createDesktop(desk);
 		}
-		tiles[desk][scr].push(client);
-		print(client.caption + " added on desktop " + desk + " screen " + scr);
 		connectClient(client);
+		if (autoSize == 0 && tiles[desk][scr].length >= 1 && tiles[desk][scr][0].fixed && client.fixed != true) {
+			tiles[desk][scr].unshift(client);
+		} else {
+			tiles[desk][scr].push(client);
+		}
+		print(client.caption + " added on desktop " + desk + " screen " + scr);
 		if (client.minimized || client.fullScreen || isMaxed(client)) {
 			removeClient(client);
 		} else {
@@ -382,9 +387,13 @@ function addClientNoFollow(client, desk, scr) {
 			}
 		}
 		client.desktop = desk;
-		tiles[client.desktop][scr].push(client);
-		print(client.caption + " added (no follow) to desktop " + desk + " screen " + scr);
 		connectClient(client);
+		if (autoSize == 0 && tiles[desk][scr].length >= 1 && tiles[desk][scr][0].fixed && client.fixed != true) {
+			tiles[desk][scr].unshift(client);
+		} else {
+			tiles[desk][scr].push(client);
+		}
+		print(client.caption + " added (no follow) to desktop " + desk + " screen " + scr);
 		if (client.minimized || client.fullScreen || isMaxed(client)) {
 			removeClientNoFollow(client, desk, scr);
 		} else {
@@ -949,12 +958,18 @@ function fitClient(client, scr) {
 		}
 	}
 	if (typeof tiles[desk][scr][k] !== "undefined") {
+		var xK;
 		if (tiles[desk][scr][k].fixed && client.fixed) {
 			if (typeof tiles[desk][scr][j] === "undefined" || tiles[desk][scr][j].fixed) {
-				var xK = tiles[desk][scr][k].geometry.width - tiles[desk][scr].layout[k].width + gap * 1.5;
+				xK = tiles[desk][scr][k].geometry.width - tiles[desk][scr].layout[k].width + gap * 1.5;
 				x = 0.5 * (x - xK); // Helps keeping the fixed clients centered by not shrinking the tile if the neighbour/opposite tile is empty
 			}
+		} else if (autoSize == 0 && tiles[desk][scr][k].fixed && client.fixed != true) {
+			xK = tiles[desk][scr][k].geometry.width - tiles[desk][scr].layout[k].width + gap * 1.5;
+			x = -1 * xK;
 		}
+	} else if (typeof tiles[desk][scr][k] === "undefined" && client.fixed && i == 2) {
+		x = 0; // Only for third fixed client, neighbourIndex doesn't take desktop as a parameter so it doesn't return 1 if 3 doesn't exist yet
 	}
 	// If autosize is disabled, doesn't shrink the tiles automatically
 	if (autoSize == 1) {
@@ -1189,7 +1204,6 @@ function createDesktop(desktop) {
 		tiles[desktop][i].layout = newLayout(i);
 	}
 	print("desktop " + desktop + " created");
-	tileClients();
 }
 
 function changeDesktop(desktop) {
