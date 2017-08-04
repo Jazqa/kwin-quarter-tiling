@@ -945,15 +945,11 @@ function fitClient(client, scr) {
 	}
 	var i = findClientIndex(client, desk, scr);
 	var tile = tiles[desk][scr].layout[i];
-	var x, y;
+	var x = client.geometry.width - tile.width;
+	var y = client.geometry.height - tile.height;
 	if (client.fixed) {
-		x = client.geometry.width - tile.width + gap * 1.5;
-		y = client.geometry.height - tile.height + gap * 1.5;
-	} else {
-		// Make sure non-fixed client isn't larger than a default tile
-		var rect = newTile(scr);
-		x = rect.width - tile.width + gap * 1.5;
-		y = rect.height - tile.height + gap * 1.5;
+		x += gap * 1.5;
+		y += gap * 1.5;
 	}
 	var j = oppositeIndex(i);
 	var k = neighbourIndex(i);
@@ -971,14 +967,12 @@ function fitClient(client, scr) {
 		}
 	}
 	if (typeof tiles[desk][scr][k] !== "undefined") {
-		var xK;
 		if (tiles[desk][scr][k].fixed && client.fixed) {
 			if (typeof tiles[desk][scr][j] === "undefined" || tiles[desk][scr][j].fixed) {
-				xK = tiles[desk][scr][k].geometry.width - tiles[desk][scr].layout[k].width + gap * 1.5;
 				x = 0;
 			}
-		} else if (autoSize == 0 && tiles[desk][scr][k].fixed && client.fixed != true) {
-			xK = tiles[desk][scr][k].geometry.width - tiles[desk][scr].layout[k].width + gap * 1.5;
+		} else if (autoSize == 0 && tiles[desk][scr][k].fixed && client.fixed != true && i !== 3) {
+			var xK = tiles[desk][scr][k].geometry.width - tiles[desk][scr].layout[k].width + gap * 1.5;
 			x = -1 * xK;
 		}
 	} else if (typeof tiles[desk][scr][k] === "undefined" && client.fixed && i == 2) {
@@ -1006,15 +1000,17 @@ function optSpace(client, scr) {
 		var tile;
 		var rect;
 		if (typeof j !== "undefined" && j.fixed) {
-			if (client.fixed != true) {
+			if (client.fixed) {
+				fitClient(j, scr);
+			} else {
 				// Make sure non-fixed client isn't larger than a default tile
 				tile = newTile(scr);
 				rect = client.geometry;
 				rect.width = tile.width;
 				rect.height = tile.height;
 				client.geometry = rect;
+				fitClient(j, scr);
 			}
-			fitClient(j, scr);
 		} else {
 			// Make sure non-fixed client isn't larger than a default tile
 			tile = newTile(scr);
@@ -1256,6 +1252,10 @@ function findSpace() {
 
 function newTile(scr) {
 	var area = ws.clientArea(0, scr, 0);
+	area.x += margins[1];
+	area.y += margins[0];
+	area.width -= margins[1] + margins[3];
+	area.height -= margins[0] + margins[2];
 	area.height *= 0.5;
 	area.width *= 0.5;
 	return area;
