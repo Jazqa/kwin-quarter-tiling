@@ -512,6 +512,9 @@ function unreserveClient(client) {
 		if (client.oldDesk === client.desktop) {
 			tiles[client.oldDesk][client.screen].max += 1;
 			tiles[client.oldDesk][client.screen].splice(client.oldIndex, 0, client);
+			if (autoSize == 0 && client.fixed) {
+				fitClient(client, client.screen);
+			}
 		} else {
 			disconnectClient(client);
 			addClient(client);
@@ -1030,11 +1033,11 @@ function swapClients(i, j, scrI, scrJ) {
 	tiles[desk][scrI][i] = tiles[desk][scrJ][j];
 	tiles[desk][scrJ][j] = temp;
 	if (autoSize == 0) {
-		if (tiles[desk][scrJ][j].fixed) {
-			fitClient(tiles[desk][scrJ][j], scrJ);
-		}
 		if (tiles[desk][scrI][i].fixed) {
 			fitClient(tiles[desk][scrI][i], scrI);
+		}
+		if (tiles[desk][scrJ][j].fixed) {
+			fitClient(tiles[desk][scrJ][j], scrJ);
 		}
 	}
 	print("successfully swapped clients " + i + " " + j);
