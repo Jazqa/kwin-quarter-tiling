@@ -313,7 +313,11 @@ function connectWorkspace() {
 		}
 	});
 	*/
-	ws.clientAdded.connect(addClient);
+	if (options.useCompositing) {
+		ws.clientAdded.connect(addCompClient);
+	} else {
+		ws.clientAdded.connect(addClient);
+	}
 	ws.clientRemoved.connect(removeClient);
 	ws.clientMaximizeSet.connect(maximizeClient);
 	ws.clientFullScreenSet.connect(fullScreenClient);
@@ -329,6 +333,16 @@ function connectWorkspace() {
 /*--------------------------------/
 / CLIENT ADDING, MOVING & REMOVAL /
 /--------------------------------*/
+
+function addCompClient(client) {
+	client.windowShown.connect(addClient);
+	client.windowShown.connect(compClientAdded);
+}
+
+function compClientAdded(client) {
+	client.windowShown.disconnect(addClient);
+	client.windowShown.disconnect(compClientAdded);
+}
 
 // Runs an ignore-check and if it passes, adds a client to tiles[]
 function addClient(client) {
@@ -1083,7 +1097,7 @@ function changeClientDesktop() {
 	if (this.oldDesk > ws.desktops) {
 		this.closeWindow();
 		return;
-	} else if (this.reserved) {
+	} else if(this.reserved) {
 		print("attempting to change the desktop of reserved" + this.caption + " to desktop " + this.desktop);
 		tiles[curAct(this)][this.oldDesk][this.screen].max += 1;
 		print("successfully changed the desktop of reserved " + this.caption + " to desktop " + this.desktop);
@@ -1092,6 +1106,7 @@ function changeClientDesktop() {
 		removeClientNoFollow(this, this.oldDesk, this.screen);
 		if (ignoredDesktops.indexOf(this.desktop) > -1) {
 			print(this.caption + " on ignored desktop");
+			this.included = false;
 			return;
 		} else if (tiles[curAct(this)][this.desktop][this.screen].length < tiles[curAct(this)][this.desktop][this.screen].max) {
 			addClientNoFollow(this, this.desktop, this.screen);
