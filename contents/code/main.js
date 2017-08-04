@@ -113,7 +113,7 @@ function init() {
 	ws.desktops = desks;
 	ws.currentDesktop = 1;
 	for (var j = 0; j < ws.activities.length; j++) {
-		tiles[j] = [];
+		tiles[j] = [];
 		for (var i = 1; i <= desks; i++) {
 				createDesktop(j, i);
 		}
@@ -310,6 +310,8 @@ function connectWorkspace() {
 	ws.numberDesktopsChanged.connect(adjustDesktops);
 	ws.currentDesktopChanged.connect(changeDesktop);
 	ws.currentActivityChanged.connect(tileClients);
+	ws.activityAdded.connect(createActivity);
+	ws.activityRemoved.connect(removeActivity);
 }
 
 
@@ -362,9 +364,9 @@ function addClient(client) {
 			tiles[curAct(client)][desk][scr].push(client);
 		}
 		print(client.caption + " added on desktop " + desk + " screen " + scr);
-		if (client.minimized || client.fullScreen || isMaxed(client)) {
+		if (client.minimized || client.fullScreen || isMaxed(client)) {
 			removeClient(client);
-		} else {
+		} else {
 			optSpace(client, scr);
 			tileClients();
 		}
@@ -404,7 +406,7 @@ function addClientNoFollow(client, desk, scr) {
 			tiles[curAct()][desk][scr].push(client);
 		}
 		print(client.caption + " added (no follow) to desktop " + desk + " screen " + scr);
-		if (client.minimized || client.fullScreen || isMaxed(client)) {
+		if (client.minimized || client.fullScreen || isMaxed(client)) {
 			removeClientNoFollow(client, desk, scr);
 		} else {
 			optSpace(client, scr);
@@ -524,8 +526,8 @@ function unreserveClient(client) {
 	if (client.included && client.reserved) {
 		ws.currentDesktop = client.desktop;
 		if (client.oldDesk === client.desktop) {
-			tiles[client.oldDesk][client.screen].max += 1;
-			tiles[client.oldDesk][client.screen].splice(client.oldIndex, 0, client);
+			tiles[curAct()][client.oldDesk][client.screen].max += 1;
+			tiles[curAct()][client.oldDesk][client.screen].splice(client.oldIndex, 0, client);
 			if (autoSize == 0 && client.fixed) {
 				fitClient(client, client.screen);
 			}
@@ -967,7 +969,7 @@ function fitClient(client, scr) {
 			x = xJ;
 		}
 		var yJ = tiles[curAct(client)][desk][scr][j].geometry.height - tiles[curAct(client)][desk][scr].layout[j].height + gap * 1.5;
-		if (yJ < y && client.fixed != true && tiles[curAct(client)][desk][scr][j].fixed) {
+		if (yJ < y && client.fixed != true && tiles[curAct(client)][desk][scr][j].fixed) {
 			y = -1 * yJ;
 		}
 		if (tiles[curAct(client)][desk][scr][j].fixed && client.fixed) {
@@ -1207,6 +1209,22 @@ function isMaxed(client) {
 	}
 }
 
+function createActivity(act) {
+	var j = ws.activities.indexOf(act);
+	tiles[j] = [];
+	for (var i = 1; i <= ws.desktops; i++) {
+		createDesktop(j, i);
+	}
+}
+
+function removeActivity(act) {
+	var j = ws.activities.indexOf(act);
+	for (var i = 1; i <= ws.desktops; i++) {
+		removeDesktop(j, i);
+	}
+	tiles[j] = null;
+}
+
 /*--------------------------/
 / VIRTUAL DESKTOP FUNCTIONS /
 /--------------------------*/
@@ -1233,6 +1251,14 @@ function createDesktop(act, desk) {
 	print("desktop " + desk + " created");
 }
 
+function removeDesktop(act, desk) {
+	for (var i = 0; i < tiles[act][desk].length; i++) {
+		for (var j = 0; j < tiles[act][desk][i].length; j++) {
+			tiles[act][desk][i][j].closeWindow();
+		}
+	}
+}
+
 function changeDesktop(desktop) {
 	print("attempting to switch desktop to " + desktop);
 	tileClients();
@@ -1243,7 +1269,7 @@ function findSpace() {
 	print("attempting to find space on existing desktops");
 	for (var i = 1; i <= ws.desktops; i++) {
 		for (var j = 0; j < ws.numScreens; j++) {
-			if (tiles[i][j].length < tiles[i][j].max) {
+			if (tiles[curAct()][i][j].length < tiles[curAct()][i][j].max) {
 				print("found space on desktop " + i + " screen " + j);
 				return [i, j];
 			}
