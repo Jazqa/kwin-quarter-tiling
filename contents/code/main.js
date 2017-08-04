@@ -2,8 +2,10 @@
 / TODO-LIST /
 /----------*/
 /*
+	- Improved activities support
+	- Wayland support
+	- Improved small clients support (Space optimization)
 	- Automatic virtual desktop removal (Plasma crashes when a desktop is removed via script)
-	- Respect minimum and maximum sizes set by programs (not imporant, user has a brain and can resize windows as they see fit, can also be an advantage)
 	- No restart required after modifying the configuration or adjusting the number of screens
 	- Figure out a way to include multiple files, this one is getting huge
 */
@@ -298,9 +300,19 @@ function registerKeys() {
 
 // Connects the KWin:Workspace signals to the following functions
 function connectWorkspace() {
-	ws.numberScreensChanged.connect(function(scr) {
-		// Todo
+	/* TODO: Fix
+	ws.numberScreensChanged.connect(function() {
+		if (ws.screens >= tiles[curAct()][ws.currentDesktop].length) {
+			for (var i = 0; i < ws.activities; i++) {
+				for (var j = 1; j <= ws.desktops; j++) {
+					tiles[i][j][ws.screens] = [];
+					tiles[i][j][ws.screens].max = 4;
+					tiles[i][j][ws.screens].layout = newLayout(ws.screens);
+				}
+			}
+		}
 	});
+	*/
 	ws.clientAdded.connect(addClient);
 	ws.clientRemoved.connect(removeClient);
 	ws.clientMaximizeSet.connect(maximizeClient);
