@@ -696,6 +696,7 @@ function tileClients() {
 function saveClientGeo(client) {
 	oldGeo = client.geometry;
 	oldScr = client.screen;
+	/*
 	if (client.fixed) {
 		var i = findClientIndex(client, client.desktop, client.screen);
 		var rect = tiles[client.desktop][client.screen].layout[i];
@@ -720,13 +721,16 @@ function saveClientGeo(client) {
 				break;
 		}
 	}
+	*/
 }
 
 // Decides if a client is moved or resized
 function adjustClient(client) {
+	/*
 	if (client.fixed) {
 		ws.hideOutline();
 	}
+	*/
 	// If the size equals the pre-movement size, user is trying to move the client, not resize it
 	if (client.geometry.width === oldGeo.width && client.geometry.height === oldGeo.height) {
 		// If screen has changed, removes the client from the old screen and adds it to the new one
@@ -1039,11 +1043,11 @@ function swapClients(i, j, scrI, scrJ) {
 	tiles[desk][scrI][i] = tiles[desk][scrJ][j];
 	tiles[desk][scrJ][j] = temp;
 	if (autoSize == 0) {
-		if (tiles[desk][scrI][i].fixed) {
-			fitClient(tiles[desk][scrI][i], scrI);
-		}
 		if (tiles[desk][scrJ][j].fixed) {
 			fitClient(tiles[desk][scrJ][j], scrJ);
+		}
+		if (tiles[desk][scrI][i].fixed) {
+			fitClient(tiles[desk][scrI][i], scrI);
 		}
 	}
 	print("successfully swapped clients " + i + " " + j);
