@@ -349,6 +349,7 @@ function addClient(client) {
 		connectClient(client);
 		if (autoSize == 0 && tiles[desk][scr].length >= 1 && tiles[desk][scr][0].fixed && client.fixed != true) {
 			tiles[desk][scr].unshift(client);
+			fitClient(tiles[desk][scr][1], scr);
 		} else {
 			tiles[desk][scr].push(client);
 		}
@@ -390,6 +391,7 @@ function addClientNoFollow(client, desk, scr) {
 		connectClient(client);
 		if (autoSize == 0 && tiles[desk][scr].length >= 1 && tiles[desk][scr][0].fixed && client.fixed != true) {
 			tiles[desk][scr].unshift(client);
+			fitClient(tiles[desk][scr][1], scr);
 		} else {
 			tiles[desk][scr].push(client);
 		}
@@ -482,6 +484,10 @@ function removeClientNoFollow(client, desk, scr) {
 				// If there are still tiles after the removal, calculates the geometries
 				if (tiles[ws.currentDesktop][ws.activeScreen].length > 0) {
 					tileClients();
+					if (autoSize == 0) {
+						fitClients(client.desktop, client.screen);
+						tileClients();
+					}
 				}
 			}
 		}
