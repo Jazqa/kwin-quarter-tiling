@@ -313,11 +313,8 @@ function connectWorkspace() {
 		}
 	});
 	*/
-	if (options.useCompositing) {
-		ws.clientAdded.connect(addCompClient);
-	} else {
-		ws.clientAdded.connect(addClient);
-	}
+
+	ws.clientAdded.connect(addClient);
 	ws.clientRemoved.connect(removeClient);
 	ws.clientMaximizeSet.connect(maximizeClient);
 	ws.clientFullScreenSet.connect(fullScreenClient);
@@ -333,16 +330,6 @@ function connectWorkspace() {
 /*--------------------------------/
 / CLIENT ADDING, MOVING & REMOVAL /
 /--------------------------------*/
-
-function addCompClient(client) {
-	client.windowShown.connect(addClient);
-	client.windowShown.connect(compClientAdded);
-}
-
-function compClientAdded(client) {
-	client.windowShown.disconnect(addClient);
-	client.windowShown.disconnect(compClientAdded);
-}
 
 // Runs an ignore-check and if it passes, adds a client to tiles[]
 function addClient(client) {
@@ -504,7 +491,7 @@ function removeClient(client) {
 				}
 			}
 		}
-	}
+	} print (client.caption + " not included");
 }
 
 // Removes the closed client from tiles[]
@@ -524,7 +511,7 @@ function removeClientNoFollow(client, desk, scr) {
 				if (tiles[curAct()][ws.currentDesktop][ws.activeScreen].length > 0) {
 					tileClients();
 					if (autoSize == 0) {
-						fitClients(client.desktop, client.screen);
+						fitClients(desk, client.screen);
 						tileClients();
 					}
 				}
@@ -1268,7 +1255,9 @@ function adjustDesktops(desktop) {
 	}
 	// Checks if a workspace is added
 	else if (ws.desktops > desktop) {
-		createDesktop(ws.desktops);
+		for (var i = 0; i < ws.activities.length; i++) {
+			createDesktop(ws.activities[i].toString(), ws.desktops);
+		}
 	}
 }
 
