@@ -70,8 +70,8 @@ var ignoredDesktops = [-1];
 
 var gap = readConfig("gap", 10); // Gap size in pixels
 
-if (gap < 2) {
-	gap = 2;
+if (gap < 0) {
+	gap = 0;
 }
 
 var margins = [];
@@ -79,6 +79,14 @@ margins[0] = readConfig("mt", 0);
 margins[1] = readConfig("ml", 0);
 margins[2] = readConfig("mb", 0);
 margins[3] = readConfig("mr", 0);
+
+if (gap == 0) {
+		for (var i = 0; i < margins.length; i++) {
+			if (margins[i] == 0) {
+				margins[i] = 1;
+			}
+		}
+}
 
 var borders = readConfig("borders", 0);
 
@@ -227,10 +235,40 @@ function registerKeys() {
 		"Meta++",
 		function() {
 			var client = ws.activeClient;
-			var scr = client.screen;
 			var desk = client.desktop;
-			adjustClientSize(client, scr, 20, 20);
-			tileClients();
+			var scr = client.screen;
+			if (client.fixed) {
+				saveClientGeo(client);
+				var rect = client.geometry;
+				switch(findClientIndex(client, desk, scr)) {
+					case 0:
+						rect.width += 20;
+						rect.height += 20;
+						break;
+					case 1:
+						if (tiles[curAct(client)][desk][scr].length == 2) {
+							rect.x -= 20;
+						}
+						rect.width += 20;
+						rect.height += 20;
+						break;
+					case 2:
+						rect.y -= 20;
+						rect.width += 20;
+						rect.height += 20;
+						break;
+					case 3:
+						rect.y -= 20;
+						rect.width += 20;
+						rect.height += 20;
+						break;
+				}
+				client.geometry = rect;
+				resizeClient(client);
+			} else {
+				adjustClientSize(client, scr, 20, 20);
+				tileClients();
+			}
 			// Block resizing if a window is getting too small
 			for (var i = 0; i < tiles[curAct()][desk][scr].layout.length; i++) {
 				if (tiles[curAct()][desk][scr].layout[i].width < 100 ||
@@ -245,10 +283,41 @@ function registerKeys() {
 		"Meta+-",
 		function() {
 			var client = ws.activeClient;
-			var scr = client.screen;
 			var desk = client.desktop;
-			adjustClientSize(client, scr, -20, -20);
-			tileClients();
+			var scr = client.screen;
+			if (client.fixed) {
+				saveClientGeo(client);
+				var rect = client.geometry;
+				switch(findClientIndex(client, desk, scr)) {
+					// TODO: Calculations
+					case 0:
+						rect.width -= 20;
+						rect.height -= 20;
+						break;
+					case 1:
+						if (tiles[curAct(client)][desk][scr].length == 2) {
+							rect.x += 20;
+						}
+						rect.width -= 20;
+						rect.height -= 20;
+						break;
+					case 2:
+						rect.y += 20;
+						rect.width -= 20;
+						rect.height -= 20;
+						break;
+					case 3:
+						rect.y += 20;
+						rect.width -= 20;
+						rect.height -= 20;
+						break;
+				}
+				client.geometry = rect;
+				resizeClient(client);
+			} else {
+				adjustClientSize(client, scr, -20, -20);
+				tileClients();
+			}
 			// Block resizing if a window is getting too small
 			for (var i = 0; i < tiles[curAct()][desk][scr].layout.length; i++) {
 				if (tiles[curAct()][desk][scr].layout[i].width < 100 ||
@@ -270,10 +339,10 @@ function registerKeys() {
 		"Quarter: Toggle Gaps On/Off",
 		"Meta+G",
 		function() {
-			if (gap <= 2) {
+			if (gap <= 0) {
 				gap = readConfig("gap", 10);
 			} else {
-				gap = 2;
+				gap = 0;
 			}
 			tileClients();
 		});
@@ -291,8 +360,8 @@ function registerKeys() {
 		"Meta+L",
 		function() {
 				gap -= 2;
-				if (gap < 2) {
-					gap = 2;
+				if (gap < 0) {
+					gap = 0;
 				}
 				tileClients();
 		});
