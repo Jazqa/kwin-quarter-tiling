@@ -1187,6 +1187,11 @@ function maximizeClient(client, h, v) {
 		reserveClient(client);
 	} else {
 		unreserveClient(client);
+		if (borders == 0) {
+			client.noBorder = false;
+		} else {
+			client.noBorder = true;
+		}
 	}
 }
 
@@ -1327,6 +1332,7 @@ function adjustDesktops(desktop) {
 		for (var i = 0; i < ws.activities.length; i++) {
 			createDesktop(ws.activities[i].toString(), ws.desktops);
 		}
+		tileClients();
 	}
 }
 
