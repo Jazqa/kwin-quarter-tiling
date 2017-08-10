@@ -121,7 +121,6 @@ function init() {
 		desks = 1;
 	}
 	ws.desktops = desks;
-	ws.currentDesktop = 1;
 	for (var j = 0; j < ws.activities.length; j++) {
 		tiles[ws.activities[j].toString()] = [];
 		for (var i = 1; i <= desks; i++) {
@@ -464,16 +463,17 @@ function addClientNoFollow(client, desk, scr) {
 		if (borders == 0) {
 			client.noBorder = false;
 		} else client.noBorder = true;
+		var act = curAct(client);
 		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
-		if (tiles[curAct()][desk][scr].length === tiles[curAct()][desk][scr].max ||
-			tiles[curAct()][desk][scr].length === 4) {
+		if (tiles[act][desk][scr].length === tiles[act][desk][scr].max ||
+			tiles[act][desk][scr].length === 4) {
 			// Fixes a bug that makes the maximum go over 4 when removing virtual desktops
-			if (tiles[curAct()][desk][scr].length === 4) {
-				tiles[curAct()][desk][scr].max = 4;
+			if (tiles[act][desk][scr].length === 4) {
+				tiles[act][desk][scr].max = 4;
 			}
 			// If the given screen is full, checks the other screens
 			for (var i = 0; i < ws.numScreens; i++) {
-				if (tiles[curAct()][desk][i].length < tiles[curAct()][desk][i].max) {
+				if (tiles[act][desk][i].length < tiles[act][desk][i].max) {
 					scr = i;
 					break;
 				}
@@ -481,11 +481,11 @@ function addClientNoFollow(client, desk, scr) {
 		}
 		client.desktop = desk;
 		connectClient(client);
-		if (autoSize == 0 && tiles[curAct()][desk][scr].length >= 1 && tiles[curAct()][desk][scr][0].fixed && client.fixed != true) {
-			tiles[curAct()][desk][scr].unshift(client);
-			fitClient(tiles[curAct()][desk][scr][1], scr);
+		if (autoSize == 0 && tiles[act][desk][scr].length >= 1 && tiles[act][desk][scr][0].fixed && client.fixed != true) {
+			tiles[act][desk][scr].unshift(client);
+			fitClient(tiles[act][desk][scr][1], scr);
 		} else {
-			tiles[curAct()][desk][scr].push(client);
+			tiles[act][desk][scr].push(client);
 		}
 		print(client.caption + " added (no follow) to desktop " + desk + " screen " + scr);
 		if (client.minimized || client.fullScreen || isMaxed(client)) {
@@ -501,7 +501,12 @@ function addClients() {
 	var clients = ws.clientList();
 	for (var i = 0; i < clients.length; i++) {
 		delete clients[i].float;
-		addClient(clients[i]);
+		var desk = clients[i].desktop;
+		if (desk > ws.desktops) {
+			addClient(clients[i]);
+		} else {
+			addClientNoFollow(clients[i], desk, clients[i].screen);
+		}
 	}
 }
 
@@ -553,7 +558,7 @@ function removeClient(client) {
 				} else if (tiles[act][desk][scr].length === 0) {
 					if (ws.currentDesktop > 1) {
 						// client.desktop = null;
-						ws.currentDesktop -= 1;
+						ws.currentDesktop = findBusy();
 						// ws.activeClient = tiles[curAct()][ws.currentDesktop][ws.activeScreen][0];
 						// ws.desktops -= 1;
 					}
@@ -1375,6 +1380,24 @@ function findSpace() {
 	}
 	print("no space found");
 	return false;
+}
+
+function findBusy() {
+	print("attempting to find a busy desktop");
+	var busyDesk = 1;
+	var busyTotal = 0;
+	for (var i = 1; i <= ws.desktops; i++) {
+		var curTotal = 0;
+		for (var j = 0; j < ws.numScreens; j++) {
+			curTotal += tiles[curAct()][i][j].length;
+		}
+		if (curTotal > busyTotal) {
+			busyDesk = i;
+			busyTotal = curTotal;
+		}
+	}
+	print("busiest desktop: " + busyDesk);
+	return busyDesk;
 }
 
 /*-----------------/
