@@ -164,7 +164,8 @@ function registerKeys() {
 		"Meta+F",
 		function() {
 			if (ws.activeClient.included) {
-				removeClient(ws.activeClient);
+				var client = ws.activeClient;
+				removeClientNoFollow(client, client.desktop, client.screen);
 				ws.activeClient.included = false;
 			} else {
 				addClient(ws.activeClient);
