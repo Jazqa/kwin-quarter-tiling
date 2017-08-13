@@ -80,6 +80,7 @@ margins[1] = readConfig("ml", 0);
 margins[2] = readConfig("mb", 0);
 margins[3] = readConfig("mr", 0);
 
+/*
 if (gap == 0) {
 		for (var i = 0; i < margins.length; i++) {
 			if (margins[i] == 0) {
@@ -87,6 +88,7 @@ if (gap == 0) {
 			}
 		}
 }
+*/
 
 var borders = readConfig("borders", 0);
 
@@ -404,9 +406,6 @@ function connectWorkspace() {
 function addClient(client) {
 	if (checkClient(client)) {
 		print("attempting to add " + client.caption);
-		if (borders == 0) {
-			client.noBorder = false;
-		} else client.noBorder = true;
 		var act = curAct(client);
 		var desk = client.desktop;
 		var scr = client.screen;
@@ -461,9 +460,6 @@ function addClient(client) {
 function addClientNoFollow(client, desk, scr) {
 	if (checkClient(client)) {
 		print("attempting to add " + client.caption + " (no follow) to desktop " + desk + " screen " + scr);
-		if (borders == 0) {
-			client.noBorder = false;
-		} else client.noBorder = true;
 		var act = curAct(client);
 		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
 		if (tiles[act][desk][scr].length === tiles[act][desk][scr].max ||
@@ -513,6 +509,11 @@ function addClients() {
 
 // Connects the signals of the new KWin:Client to the following functions
 function connectClient(client) {
+	if (borders == 0) {
+		client.noBorder = false;
+	} else {
+		client.noBorder = true;
+	}
 	client.clientStartUserMovedResized.connect(saveClientGeo);
 	client.clientFinishUserMovedResized.connect(adjustClient);
 	// Hack: client.desktopChanged can't be disconnected (for some reason calling disconnect with the same parameters fails)
@@ -1193,11 +1194,6 @@ function maximizeClient(client, h, v) {
 		reserveClient(client);
 	} else {
 		unreserveClient(client);
-		if (borders == 0) {
-			client.noBorder = false;
-		} else {
-			client.noBorder = true;
-		}
 	}
 }
 
@@ -1304,7 +1300,7 @@ function neighbourIndex(index) {
 
 function isMaxed(client) {
 	var area = ws.clientArea(0, client.screen, 0);
-	if (client.geometry.height >= area.height && client.geometry.width >= area.width) {
+	if (client.shadeable == false && client.geometry.height >= area.height && client.geometry.width >= area.width) {
 		return true;
 	} else {
 		return false;
