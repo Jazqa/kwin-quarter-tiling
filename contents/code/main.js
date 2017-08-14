@@ -90,8 +90,6 @@ if (gap == 0) {
 }
 */
 
-var borders = readConfig("borders", 0);
-
 var centerTo = readConfig("centerTo", 0);
 
 var autoSize = readConfig("autoSize", 1);
@@ -104,7 +102,11 @@ var oldGeo; // Hack: Saves the pre-movement position as a global variable
 
 function curAct (client) {
 	if (client) {
-		return client.activities[0].toString();
+		if (client.activities[0]) {
+			return client.activities[0].toString();
+		} else {
+			return ws.currentActivity.toString();
+		}
 	} else {
 		return ws.currentActivity.toString();
 	}
@@ -509,11 +511,6 @@ function addClients() {
 
 // Connects the signals of the new KWin:Client to the following functions
 function connectClient(client) {
-	if (borders == 0) {
-		client.noBorder = false;
-	} else {
-		client.noBorder = true;
-	}
 	client.clientStartUserMovedResized.connect(saveClientGeo);
 	client.clientFinishUserMovedResized.connect(adjustClient);
 	// Hack: client.desktopChanged can't be disconnected (for some reason calling disconnect with the same parameters fails)
@@ -1075,12 +1072,14 @@ function fitClient(client, scr) {
 			if (typeof tiles[curAct(client)][desk][scr][j] === "undefined" || tiles[curAct(client)][desk][scr][j].fixed) {
 				x = 0;
 			}
-		} else if (autoSize == 0 && tiles[curAct(client)][desk][scr][k].fixed && client.fixed != true && i !== 3) {
+		} else if (tiles[curAct(client)][desk][scr][k].fixed && client.fixed != true && i !== 3) {
 			var xK = tiles[curAct()][desk][scr][k].geometry.width - tiles[curAct(client)][desk][scr].layout[k].width + gap * 1.5;
 			x = -1 * xK;
 		}
 	} else if (typeof tiles[curAct(client)][desk][scr][k] === "undefined" && client.fixed && i == 2) {
-		x = 0; // Only for third fixed client, neighbourIndex doesn't take desktop as a parameter so it doesn't return 1 if 3 doesn't exist yet
+		if (tiles[curAct(client)][desk][scr][0].fixed) {
+			x = 0; // TODO: Explore this, it's __mostly__ fine
+		}
 	}
 	// If autosize is disabled, doesn't shrink the tiles automatically
 	if (autoSize == 1) {
@@ -1300,7 +1299,7 @@ function neighbourIndex(index) {
 
 function isMaxed(client) {
 	var area = ws.clientArea(0, client.screen, 0);
-	if (client.shadeable == false && client.geometry.height >= area.height && client.geometry.width >= area.width) {
+	if (client.geometry.height >= area.height && client.geometry.width >= area.width) {
 		return true;
 	} else {
 		return false;
