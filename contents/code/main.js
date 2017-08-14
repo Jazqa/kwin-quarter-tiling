@@ -409,8 +409,8 @@ function addClient(client) {
 	if (checkClient(client)) {
 		print("attempting to add " + client.caption);
 		var act = curAct(client);
-		var desk = client.desktop;
-		var scr = client.screen;
+		var desk = ws.currentDesktop;
+		var scr = ws.activeScreen;
 		// If tiles.length exceeds the maximum amount, creates a new virtual desktop
 		if (tiles[act][desk][scr].length === tiles[act][desk][scr].max ||
 			tiles[act][desk][scr].length === 4) {

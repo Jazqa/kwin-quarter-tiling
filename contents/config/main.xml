@@ -13,10 +13,6 @@
       <label>Initial number of desktops</label>
       <default>2</default>
     </entry>
-		<entry name="borders" type="int">
-		  <label>If set to true, removes the window borders and title bars</label>
-		  <default>0</default>
-		</entry>
     <entry name="autoSize" type="int">
       <label>Automatically optimize available space</label>
       <default>1</default>
