@@ -16,6 +16,8 @@
 / GLOBAL VARIABLES /
 /-----------------*/
 
+var java = "sun-awt-x11";
+
 // Add programs that don't tile well
 // Names usually in lowercase with no spaces
 var ignoredClients = [
@@ -1225,6 +1227,7 @@ function checkClient(client) {
 		client.tooltip ||
 		client.utility ||
 		client.transient ||
+		client.resourceName.toString().indexOf(java) > -1 ||
 		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
 		ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
 		ignoredDesktops.indexOf(client.desktop) > -1) {
