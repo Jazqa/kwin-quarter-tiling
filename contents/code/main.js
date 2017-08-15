@@ -16,8 +16,6 @@
 / GLOBAL VARIABLES /
 /-----------------*/
 
-var java = "sun-awt-x11";
-
 // Add programs that don't tile well
 // Names usually in lowercase with no spaces
 var ignoredClients = [
@@ -34,8 +32,7 @@ var ignoredClients = [
 	"plugin-container",
 	"simplescreenrecorder",
 	"yakuake",
-	"Spotify",
-	"spotify",
+	"sun-awt-x11-xframepeer",
 ];
 
 ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine, steam, kate").toString().split(', '));
@@ -520,10 +517,12 @@ function connectClient(client) {
 	if (typeof client.included == "undefined") {
 		client.desktopChanged.connect(client, changeClientDesktop);
 	}
-	if (fixedClients.indexOf(client.resourceClass.toString()) > -1) {
+	if (fixedClients.indexOf(client.resourceClass.toString()) > -1 ||
+			fixedClients.indexOf(client.resourceClass.toString()) > -1) {
 		client.fixed = true;
 	}
-	if (agressiveClients.indexOf(client.resourceClass.toString()) > -1) {
+	if (agressiveClients.indexOf(client.resourceClass.toString()) > -1 ||
+			agressiveClients.indexOf(client.resourceName.toString()) > -1) {
 		if (typeof client.included == "undefined") {
 			client.activeChanged.connect(tileClients);
 		}
@@ -1213,7 +1212,10 @@ function fullScreenClient(client, full, user) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
-	if (client.comboBox ||
+	if (client.dialog) {
+		tileClients();
+	}
+	if ( client.comboBox ||
 		client.desktopWindow ||
 		client.dndIcon ||
 		client.dock ||
@@ -1227,8 +1229,8 @@ function checkClient(client) {
 		client.tooltip ||
 		client.utility ||
 		client.transient ||
-		client.resourceName.toString().indexOf(java) > -1 ||
 		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
+		ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
 		ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
 		ignoredDesktops.indexOf(client.desktop) > -1) {
 		return false;
