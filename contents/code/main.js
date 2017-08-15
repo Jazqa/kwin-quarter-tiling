@@ -32,8 +32,12 @@ var ignoredClients = [
 	"plugin-container",
 	"simplescreenrecorder",
 	"yakuake",
-	"sun-awt-x11-xframepeer",
 ];
+
+if (readConfig("ignoreJava", 0) == 1) {
+	var java = "sun-awt-x11-xframepeer";
+	ignoredClients.push(java);
+}
 
 ignoredClients = ignoredClients.concat(readConfig("ignoredClients", "wine, steam, kate").toString().split(', '));
 
