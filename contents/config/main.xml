@@ -13,6 +13,14 @@
       <label>Initial number of desktops</label>
       <default>2</default>
     </entry>
+    <entry name="ignoredScreens" type="string">
+      <label>Ignored Screens</label>
+      <default></default>
+    </entry>
+    <entry name="ignoredDesktops" type="string">
+      <label>Ignored Desktops</label>
+      <default></default>
+    </entry>
     <entry name="autoSize" type="int">
       <label>Automatically optimize available space</label>
       <default>1</default>

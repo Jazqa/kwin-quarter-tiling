@@ -63,9 +63,34 @@ var ignoredCaptions = [
 ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(', '));
 
 // Virtual desktops that will be completely ignored
-var ignoredDesktops = [-1];
+var ignoredDesktops = readConfig("ignoredDesktops", "").toString().split(', ');
+if (ignoredDesktops != "") {
+	for (var i = 0; i < ignoredDesktops.length; i++) {
+		var num = Number(ignoredDesktops[i]);
+		if (isNaN(num)) {
+			ignoredDesktops.splice(i, 0);
+		} else {
+			ignoredDesktops[i] = num;
+		}
+	}
+} else {
+	ignoredDesktops = [-1];
+}
 
-// Todo: Add an configuration option for ignored desktops
+// Screens that will be completely ignored
+var ignoredScreens = readConfig("ignoredScreens", "").toString().split(', ');
+if (ignoredScreens != "") {
+	for (var i = 0; i < ignoredScreens.length; i++) {
+		var num = Number(ignoredScreens[i]);
+		if (isNaN(num)) {
+			ignoredScreens.splice(i, 0);
+		} else {
+			ignoredScreens[i] = num - 1;
+		}
+	}
+} else {
+	ignoredScreens = [-1];
+}
 
 var gap = readConfig("gap", 10); // Gap size in pixels
 
@@ -239,6 +264,9 @@ function registerKeys() {
 		function() {
 			var client = ws.activeClient;
 			var scr = client.screen + 1;
+			if (ignoredScreens.indexOf(scr) > -1) {
+				scr += 1;
+			}
 			if (scr > tiles[curAct()][client.desktop].length - 1 ) {
 				scr = 0;
 			}
@@ -255,6 +283,9 @@ function registerKeys() {
 		function() {
 			var client = ws.activeClient;
 			var scr = client.screen - 1;
+			if (ignoredScreens.indexOf(scr) > -1) {
+				scr -= 1;
+			}
 			if (scr < 0 ) {
 				scr = tiles[curAct()][client.desktop].length - 1;
 			}
@@ -451,8 +482,10 @@ function addClient(client) {
 			}
 			for (var i = 0; i < ws.numScreens; i++) {
 				if (tiles[act][desk][i].length < tiles[act][desk][i].max) {
-					scr = i;
-					break;
+					if (ignoredScreens.indexOf(i) === -1) {
+						scr = i;
+						break;
+					}
 				}
 			}
 			// If client isn't thrown to another screen, it's thrown into an other desktop
@@ -632,6 +665,9 @@ function closeWindow(client) {
 
 // "Removes" a client, reserving a spot for it by decreasing the maximum amount of clients on its desktop
 function reserveClient(client) {
+	if (ignoredScreens.indexOf(client.screen) > -1) {
+		return; // No need to do this if the client is on an ignored screen
+	}
 	if (client.included && client.reserved === false) {
 		var i = findClientIndex(client, client.desktop, client.screen);
 		tiles[curAct()][client.desktop][client.screen].max -= 1;
@@ -645,6 +681,9 @@ function reserveClient(client) {
 
 // "Adds" a client back to the desktop on its reserved tile
 function unreserveClient(client) {
+	if (ignoredScreens.indexOf(client.screen) > -1) {
+		return; // No need to do this if the client is on an ignored screen
+	}
 	if (client.included && client.reserved) {
 		ws.currentDesktop = client.desktop;
 		if (client.oldDesk === client.desktop) {
@@ -685,7 +724,9 @@ function tileClients() {
 	var act = curAct();
 	var desk = ws.currentDesktop;
 	for (var i = 0; i < ws.numScreens; i++) {
-		if (typeof tiles[act][desk][i] != "undefined") {
+		if (ignoredScreens.indexOf(i) > -1) {
+
+		} else if (typeof tiles[act][desk][i] != "undefined") {
 			print("attempting to tile desktop " + desk + " screen " + i);
 			// Creates new layouts whenever a desktop is empty or contains only a single client
 			// Ideally, this should be done in createDesktop(), but currently, it causes an insane amount of bugs
@@ -829,41 +870,39 @@ function tileClients() {
 function saveClientGeo(client) {
 	oldGeo = client.geometry;
 	oldScr = client.screen;
-	/*
-	if (client.fixed) {
-		var i = findClientIndex(client, client.desktop, client.screen);
-		var rect = tiles[curAct()][client.desktop][client.screen].layout[i];
-		switch (tiles[curAct()][client.desktop][client.screen].length) {
-			case 1:
-				rect.width += tiles[curAct()][client.desktop][client.screen].layout[1].width;
-				rect.height += tiles[curAct()][client.desktop][client.screen].layout[3].height;
-				ws.showOutline(rect);
-				rect.width -= tiles[curAct()][client.desktop][client.screen].layout[1].width;
-				rect.height -= tiles[curAct()][client.desktop][client.screen].layout[3].height;
-				break;
-			case 2:
-				rect.height += tiles[curAct()][client.desktop][client.screen].layout[2].height;
-				ws.showOutline(rect);
-				rect.height -= tiles[curAct()][client.desktop][client.screen].layout[2].height;
-				break;
-			case 3:
-				ws.showOutline(rect);
-				break;
-			case 4:
-				ws.showOutline(rect);
-				break;
-		}
-	}
-	*/
 }
 
 // Decides if a client is moved or resized
 function adjustClient(client) {
-	/*
-	if (client.fixed) {
-		ws.hideOutline();
+	if (ignoredScreens.indexOf(client.screen) > -1) {
+		// If oldScr === client.screen, nothing needs to be done as both are ignored
+		if (oldScr !== client.screen) {
+			// However, if oldScr !== client.screen, client needs to be removed from the old screen and moved to the new one
+			if (tiles[curAct()][ws.currentDesktop][client.screen].length < tiles[curAct()][ws.currentDesktop][client.screen].max) {
+				print("attempting to push " + client.caption + " to screen" + client.screen);
+				removeClientNoFollow(client, client.desktop, oldScr);
+				addClientNoFollow(client, client.desktop, client.screen);
+				print("pushed client " + client.caption + " to screen" + client.screen);
+				return;
+			}
+		}
+	} else if (ignoredScreens.indexOf(oldScr) > -1) {
+		// Same as above but reversed, in case a client is moved *from* and ignored screen *to* an actual screen
+		if (oldScr !== client.screen) {
+			if (tiles[curAct()][ws.currentDesktop][client.screen].length < tiles[curAct()][ws.currentDesktop][client.screen].max) {
+				print("attempting to push " + client.caption + " to screen" + client.screen);
+				removeClientNoFollow(client, client.desktop, oldScr);
+				addClientNoFollow(client, client.desktop, client.screen);
+				print("pushed client " + client.caption + " to screen" + client.screen);
+				return;
+			}
+		}
 	}
-	*/
+	// If none of the above are triggered but the client *is* and *was* on an ignored screen, returns without triggering the normal client adjustments
+	if (ignoredScreens.indexOf(client.screen) > -1 && ignoredScreens.indexOf(oldScr) > -1) {
+		print(client.caption + " on ignored screen");
+		return;
+	}
 	// If the size equals the pre-movement size, user is trying to move the client, not resize it
 	if (client.geometry.width === oldGeo.width && client.geometry.height === oldGeo.height) {
 		// If screen has changed, removes the client from the old screen and adds it to the new one
@@ -1380,7 +1419,11 @@ function createDesktop(act, desk) {
 	tiles[act][desk] = [];
 	for (var i = 0; i < ws.numScreens; i++) {
 		tiles[act][desk][i] = [];
-		tiles[act][desk][i].max = 4;
+		if (ignoredScreens.indexOf(i) > -1) {
+			tiles[act][desk][i].max = Number.MAX_VALUE;
+		} else {
+			tiles[act][desk][i].max = 4;
+		}
 		tiles[act][desk][i].layout = newLayout(i);
 	}
 	print("desktop " + desk + " created");
@@ -1406,9 +1449,11 @@ function findSpace() {
 	print("attempting to find space on existing desktops");
 	for (var i = 1; i <= ws.desktops; i++) {
 		for (var j = 0; j < ws.numScreens; j++) {
-			if (tiles[curAct()][i][j].length < tiles[curAct()][i][j].max) {
-				print("found space on desktop " + i + " screen " + j);
-				return [i, j];
+			if (ignoredScreens.indexOf(j) === -1) {
+				if (tiles[curAct()][i][j].length < tiles[curAct()][i][j].max) {
+					print("found space on desktop " + i + " screen " + j);
+					return [i, j];
+				}
 			}
 		}
 	}
