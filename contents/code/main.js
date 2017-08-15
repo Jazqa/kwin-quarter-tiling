@@ -233,6 +233,38 @@ function registerKeys() {
 			tileClients();
 		});
 	registerShortcut(
+		"Quarter: Move to Next Screen",
+		"Quarter: Move to Next Screen",
+		"Meta+M",
+		function() {
+			var client = ws.activeClient;
+			var scr = client.screen + 1;
+			if (scr > tiles[curAct()][client.desktop].length - 1 ) {
+				scr = 0;
+			}
+			print("attempting to push " + client.caption + " to screen" + scr);
+			removeClientNoFollow(client, client.desktop, client.screen);
+			addClientNoFollow(client, client.desktop, scr);
+			print("pushed client " + client.caption + " to screen" + client.screen);
+			tileClients();
+		});
+	registerShortcut(
+		"Quarter: Move to Previous Screen",
+		"Quarter: Move to Previous Screen",
+		"Meta+N",
+		function() {
+			var client = ws.activeClient;
+			var scr = client.screen - 1;
+			if (scr < 0 ) {
+				scr = tiles[curAct()][client.desktop].length - 1;
+			}
+			print("attempting to push " + client.caption + " to screen" + scr);
+			removeClientNoFollow(client, client.desktop, client.screen);
+			addClientNoFollow(client, client.desktop, scr);
+			print("pushed client " + client.caption + " to screen" + client.screen);
+			tileClients();
+		});
+	registerShortcut(
 		"Quarter: + Window Size",
 		"Quarter: + Window Size",
 		"Meta++",
@@ -1214,6 +1246,7 @@ function fullScreenClient(client, full, user) {
 function checkClient(client) {
 	if (client.dialog) {
 		tileClients();
+		return false;
 	}
 	if ( client.comboBox ||
 		client.desktopWindow ||
