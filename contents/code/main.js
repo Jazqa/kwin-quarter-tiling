@@ -67,67 +67,68 @@ var ignoredCaptions = [
 ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(', '));
 
 // Virtual desktops that will be completely ignored
+// Splits the ignoredDesktops kcfg string with ', ' and forms an array
 var ignoredDesktops = readConfig("ignoredDesktops", "").toString().split(', ');
 if (ignoredDesktops != "") {
 	for (var i = 0; i < ignoredDesktops.length; i++) {
+		// Removes every non-number entry
 		var num = Number(ignoredDesktops[i]);
 		if (isNaN(num)) {
 			ignoredDesktops.splice(i, 0);
 		} else {
+			// Transfers all the numbers to integers
 			ignoredDesktops[i] = num;
 		}
 	}
 } else {
+	// If the kcfg setting is empty, -1 is the only ignoredDesktop
 	ignoredDesktops = [-1];
 }
 
 // Screens that will be completely ignored
+// Splits the ignoredScreens kcfg string with ', ' and forms an array
 var ignoredScreens = readConfig("ignoredScreens", "").toString().split(', ');
 if (ignoredScreens != "") {
 	for (var i = 0; i < ignoredScreens.length; i++) {
+		// Removes every non-number entry
 		var num = Number(ignoredScreens[i]);
 		if (isNaN(num)) {
 			ignoredScreens.splice(i, 0);
 		} else {
+			// Transfers all the numbers to integers, -1 for consistency with desktops (which start from 1, while screens start from 0)
 			ignoredScreens[i] = num - 1;
 		}
 	}
 } else {
+	// If the kcfg setting is empty, -1 is the only ignoredScreen
 	ignoredScreens = [-1];
 }
 
 var gap = readConfig("gap", 10); // Gap size in pixels
 
+// Gaps can't be negative to avoid problems (*cough* isMaxed *cough*)
 if (gap < 0) {
 	gap = 0;
 }
 
+// Margins around the screen (think extra "gaps" just on the edges)
 var margins = [];
 margins[0] = readConfig("mt", 0);
 margins[1] = readConfig("ml", 0);
 margins[2] = readConfig("mb", 0);
 margins[3] = readConfig("mr", 0);
 
-/*
-if (gap == 0) {
-		for (var i = 0; i < margins.length; i++) {
-			if (margins[i] == 0) {
-				margins[i] = 1;
-			}
-		}
-}
-*/
+var centerTo = readConfig("centerTo", 0); // Center fixed clients according to tiles/screen
 
-var centerTo = readConfig("centerTo", 0);
+var autoSize = readConfig("autoSize", 1); // Automatically optimize the screenspace when fixed clients are interacted with
 
-var autoSize = readConfig("autoSize", 1);
-
-var ws = workspace;
+var ws = workspace; // Just a shortcut as workspace is used a lot
 
 var tiles = []; // tiles[desktop][screen][client]
 
 var oldGeo; // Hack: Saves the pre-movement position as a global variable
 
+// Return the client's current act, if a client is given as a parameter, returns the client's first act
 function curAct (client) {
 	if (client) {
 		if (client.activities[0]) {
@@ -163,6 +164,7 @@ function init() {
 	connectWorkspace();
 }
 
+// Registers all the shortcuts used for the script
 function registerKeys() {
 	registerShortcut(
 		"Quarter: Float/Tile Desktop",
@@ -1287,6 +1289,8 @@ function fullScreenClient(client, full, user) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
+	// If a client is a "dialog", tiles all clients before returning false
+	// Most noticeable on confirmation windows, which usually break tiling momentarily
 	if (client.dialog) {
 		tileClients();
 		return false;
@@ -1307,10 +1311,17 @@ function checkClient(client) {
 		client.transient ||
 		ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
 		ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
-		ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
 		ignoredDesktops.indexOf(client.desktop) > -1) {
 		return false;
 	} else {
+		for (var i = 0; i < ignoredCaptions.length; i++) {
+			// ignoredCaptions.indexOf(client.caption.toString()) would be exact match, while this solution is a substring match
+			var caption = client.caption.toString();
+			if (caption.indexOf(ignoredCaptions[i]) > -1 && client.included !== true) {
+				// client.included === "undefined" to avoid ignoring a caption "Blahblah" to also ignore Spotify while listening to a song called "Blahblah" and Firefox while googling "Blahblah"
+				return false;
+			}
+		}
 		return true;
 	}
 }
