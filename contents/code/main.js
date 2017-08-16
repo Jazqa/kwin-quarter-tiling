@@ -47,7 +47,6 @@ var fixedClients = [
 
 fixedClients = fixedClients.concat(readConfig("fixedClients", "telegram, telegram-desktop, telegramdesktop").toString().split(', '));
 
-
 // Clients that constantly fight the tiling
 var agressiveClients = [
 	"konqueror",
@@ -64,7 +63,9 @@ var ignoredCaptions = [
 	"Create a New Image",
 ];
 
-ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(', '));
+if (readConfig("ignoredCaptions", "") != "") {
+	ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(', '));
+}
 
 // Virtual desktops that will be completely ignored
 // Splits the ignoredDesktops kcfg string with ', ' and forms an array
@@ -101,7 +102,7 @@ if (ignoredScreens != "") {
 	}
 } else {
 	// If the kcfg setting is empty, -1 is the only ignoredScreen
-	ignoredScreens = [-1];
+	ignoredScreens = [-1];
 }
 
 var gap = readConfig("gap", 10); // Gap size in pixels
