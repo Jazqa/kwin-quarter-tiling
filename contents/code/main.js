@@ -63,6 +63,7 @@ var ignoredCaptions = [
 	"Create a New Image",
 ];
 
+// Leaving ignoredCaptions empty doesn't ignore every window with a caption (#27)
 if (readConfig("ignoredCaptions", "") != "") {
 	ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(', '));
 }
@@ -1316,7 +1317,7 @@ function checkClient(client) {
 		return false;
 	} else {
 		for (var i = 0; i < ignoredCaptions.length; i++) {
-			// ignoredCaptions.indexOf(client.caption.toString()) would be exact match, while this solution is a substring match
+			// ignoredCaptions.indexOf(client.caption.toString()) would be exact match, while this solution is a substring match (#25)
 			var caption = client.caption.toString();
 			if (caption.indexOf(ignoredCaptions[i]) > -1 && client.included !== true) {
 				// client.included === "undefined" to avoid ignoring a caption "Blahblah" to also ignore Spotify while listening to a song called "Blahblah" and Firefox while googling "Blahblah"
@@ -1564,7 +1565,22 @@ function screenHeight(scr) {
 / MAIN /
 /-----*/
 
-ws.clientAdded.connect(wait);
+if (instantInit()) {
+	init();
+} else {
+	ws.clientAdded.connect(wait);
+}
+
+function instantInit() {
+	var clients = ws.clientList();
+	for (var i = 0; i < clients.length; i++) {
+		if (checkClient(clients[i])) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
 
 // Hack: Waits for client connections, then attempts to initiate the script
 // If client is valid for the script, the script is initiated
