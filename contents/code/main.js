@@ -157,9 +157,10 @@ function init() {
 	}
 	ws.desktops = desks;
 	for (var j = 0; j < ws.activities.length; j++) {
-		tiles[ws.activities[j].toString()] = [];
+		var act = ws.activities[j].toString();
+		tiles[act] = [];
 		for (var i = 1; i <= desks; i++) {
-				createDesktop(ws.activities[j].toString(), i);
+				createDesktop(act, i);
 		}
 	}
 	addClients();
@@ -456,7 +457,6 @@ function connectWorkspace() {
 		}
 	});
 	*/
-
 	ws.clientAdded.connect(addClient);
 	ws.clientRemoved.connect(removeClient);
 	ws.clientMaximizeSet.connect(maximizeClient);
@@ -468,7 +468,6 @@ function connectWorkspace() {
 	ws.activityAdded.connect(createActivity);
 	ws.currentActivityChanged.connect(tileClients);
 }
-
 
 /*--------------------------------/
 / CLIENT ADDING, MOVING & REMOVAL /
