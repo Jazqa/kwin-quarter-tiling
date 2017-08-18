@@ -407,10 +407,17 @@ function registerKeys() {
     "Quarter: Toggle Gaps On/Off",
     "Meta+G",
     function() {
-      if (gap <= 0) {
+      if (gap <= 1) {
         gap = readConfig("gap", 10);
       } else {
-        gap = 0;
+        for (var i = 0; i < margins.length; i++) {
+          if (margins[i] > 0) {
+            gap = 0;
+            tileClients();
+            return;
+          }
+        }
+        gap = 1;
       }
       tileClients();
     });
