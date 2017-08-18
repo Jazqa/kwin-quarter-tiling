@@ -637,7 +637,7 @@ function reserveClient(client, desk, scr) {
 // "Adds" a client back to the desktop on its reserved tile
 function unreserveClient(client) {
   print("attempting to unreserve " + client.caption);
-  if (client.included && client.reserved && ignoredScreens.indexOf(client.screen) === -1) {
+  if (client.included && client.reserved && ignoredScreens.indexOf(client.screen) === -1 && client.fullScreen !== true && isMaxed(client) !== true) {
     ws.currentDesktop = client.oldDesk;
     client.reserved = false;
     tiles[curAct()][client.oldDesk][client.oldScr].max += 1;
@@ -1167,10 +1167,16 @@ function swapClients(i, j, scrI, scrJ) {
 // Multiple functions needed because the signals are different
 
 function minimizeClient(client) {
+  if (client.fullScreen || isMaxed(client)) {
+    tiles[curAct(client)][client.desktop][client.screen].blocked = false;
+  }
   reserveClient(client, client.desktop, client.screen);
 }
 
 function unminimizeClient(client) {
+  if (client.fullScreen || isMaxed(client)) {
+    tiles[curAct(client)][client.desktop][client.screen].blocked = true;
+  }
   unreserveClient(client, client.desktop, client.screen);
 }
 
