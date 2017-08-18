@@ -19,7 +19,9 @@
 ![Resizing](http://i.imgur.com/O9aoQPk.gif)
 
 
-## Installing
+## Installation
+
+#### Installing
 Arch Linux: [AUR (thanks to mareex)](https://aur.archlinux.org/packages/kwin-scripts-quarter-tiling-git/)
 
 Manually:
@@ -31,10 +33,10 @@ Manually:
     cp ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
 **Note:** After the installation, you might want to configure your keybindings. To do so, go to Settings » Shortcuts » Global Shortcuts » KWin and search for "Quarter" to find all the script specific shortcuts. Bind the ones you wish to use. "Float On/Off" is recommended for an easy way to tile and untile the active window.
 
-## Updating
-Currently, the best ways to keep the script updated are either moving the .git folder to `~/.local/share/kwin/scripts/quarter-tiling/` (or initializing `path/to/script` as a git folder and setting this repository the origin, if that's easier for you) and using `git fetch origin && git pull` to update the script or always re-cloning the git folder and using `plasmapkg2 --type kwinscript -u .` inside the folder.
+#### Updating
+Currently, the best ways to keep the script updated are either moving the .git folder to `~/.local/share/kwin/scripts/quarter-tiling/` (or initializing `path/to/quarter-tiling` as a git folder and setting this repository the origin, if that's easier for you) and using `git fetch origin && git pull` to update the script or always re-cloning the git folder and using `plasmapkg2 --type kwinscript -u .` inside the cloned folder.
 
-## Uninstalling
+#### Uninstalling
 Either navigate to the script folder and use `plasmapkg2 --type kwinscript -r .` or re-clone the folder and enter the earlier command inside the cloned folder.
 
 **Note** On all the `plasmapk2 --type kwinscript -parameter .` the `.` stands for `path/to/quarter-tiling`. I'm just assuming you're inside the folder to make things simpler for both of us.
