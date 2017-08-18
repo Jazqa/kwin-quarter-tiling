@@ -106,6 +106,19 @@ margins[0] = readConfig("mt", 0);
 margins[1] = readConfig("ml", 0);
 margins[2] = readConfig("mb", 0);
 margins[3] = readConfig("mr", 0);
+if (gap == 0) {
+  fixMargins();
+}
+
+function fixMargins() {
+  for (var i = 0; i < margins.length; i++) {
+    if (margins[i] > 0) {
+      return;
+    }
+  }
+  margins[2] = 1;
+}
+
 
 var centerTo = readConfig("centerTo", 0); // Center fixed clients according to tiles/screen
 
