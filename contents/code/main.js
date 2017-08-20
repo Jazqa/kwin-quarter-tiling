@@ -180,22 +180,29 @@ function registerKeys() {
     "Meta+Esc",
     function() {
       var clients = ws.clientList();
-      var desk = ignoredDesktops.indexOf(ws.currentDesktop);
-      if (desk > -1) {
-        ignoredDesktops.splice(desk, 1);
+      var client;
+      var desk = ws.currentDesktop;
+      var i = ignoredDesktops.indexOf(desk);
+      if (i > -1) {
+        ignoredDesktops.splice(i, 1);
         for (var k = 0; k < clients.length; k++) {
-          if (clients[k].desktop === ws.currentDesktop) {
-            addClient(clients[k], true, clients[k].desktop, clients[k].screen);
+          client = clients[k];
+          if (client.desktop == desk && client.included !== true) {
+            addClient(client, true, client.desktop, client.screen);
           }
         }
       } else {
-        ignoredDesktops.push(ws.currentDesktop);
-        var j = 0;
-        for (var i = 0; i < clients.length; i++) {
-          if (clients[i].desktop === ws.currentDesktop) {
-            removeClient(clients[i], false, clients[i].desktop, clients[i].screen);
-            clients[i].geometry = tiles[clients[i].desktop][clients[i].screen].layout[j];
-            j += 1;
+        ignoredDesktops.push(desk);
+        var removed = 0;
+        for (var j = 0; j < clients.length; j++) {
+          client = clients[j];
+          if (client.desktop == desk) {
+            removed += 1;
+            removeClient(client, false, client.desktop, client.screen);
+            var rect = newTile(client.screen);
+            rect.x += removed * 90;
+            rect.y += removed * 60;
+            client.geometry = rect;
           }
         }
       }
@@ -633,6 +640,13 @@ function moveClientTo(client, desk, scr) {
     tileClients();
     client.oldDesk = client.desktop;
     client.oldScr = client.screen;
+    if (ignoredDesktops.indexOf(client.desktop) > -1 || ignoredScreens.indexOf(client.screen) > -1) {
+      var tile = newTile(client.screen);
+      var rect = client.geometry;
+      rect.width = tile.width;
+      rect.height = tile.height;
+      client.geometry = rect;
+    }
     print("successfully moved" + client.caption + " to desktop " + desk + " screen " + scr);
   } else {
     removeClient(client, true, client.desktop, client.screen);
@@ -658,6 +672,13 @@ function moveClientFrom(client, desk, scr) {
     tileClients();
     client.oldDesk = client.desktop;
     client.oldScr = client.screen;
+    if (ignoredDesktops.indexOf(client.desktop) > -1 || ignoredScreens.indexOf(client.screen) > -1) {
+      var tile = newTile(client.screen);
+      var rect = client.geometry;
+      rect.width = tile.width;
+      rect.height = tile.height;
+      client.geometry = rect;
+    }
     print("successfully moved" + client.caption + " to desktop " + desk + " screen " + scr);
   } else {
     removeClient(client, false, desk, scr);
