@@ -533,6 +533,11 @@ function addClients() {
 function connectClient(client, desk, scr) {
   client.clientStartUserMovedResized.connect(saveClientGeo);
   client.clientFinishUserMovedResized.connect(adjustClient);
+  client.desktopChanged.connect(function() {
+    if (ignoredDesktops.indexOf(client.desktop) > -1) {
+      removeClient(client, false, client.oldDesk, client.oldScr);
+    }
+  });
   if (agressiveClients.indexOf(client.resourceClass.toString()) > -1 || agressiveClients.indexOf(client.resourceName.toString()) > -1) {
     client.activeChanged.connect(tileClients);
   }
