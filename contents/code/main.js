@@ -42,6 +42,7 @@ var ignoredCaptions = [
   "Move to Trash",
   "Quit GIMP",
   "Create a New Image",
+  "QEMU",
 ];
 
 // Leaving ignoredCaptions empty doesn't ignore every window with a caption (#27)
@@ -463,10 +464,26 @@ function connectWorkspace() {
       tileClients();
     }
   });
-  ws.clientMaximizeSet.connect(maximizeClient);
-  ws.clientFullScreenSet.connect(fullScreenClient);
-  ws.clientMinimized.connect(minimizeClient);
-  ws.clientUnminimized.connect(unminimizeClient);
+  ws.clientMaximizeSet.connect(function(client, h, v) {
+    if (client.included) {
+      fullScreenClient(client, h, v);
+    }
+  });
+  ws.clientFullScreenSet.connect(function(client, full, user) {
+    if (client.included) {
+      fullScreenClient(client, full, user);
+    }
+  });
+  ws.clientMinimized.connect(function(client, full, user) {
+    if (client.included) {
+      minimizeClient(client);
+    }
+  });
+  ws.clientUnminimized.connect(function(client) {
+    if (client.included) {
+      unminimizeClient(client);
+    }
+  });
   ws.numberDesktopsChanged.connect(adjustDesktops);
   ws.activityAdded.connect(createActivity);
   ws.currentActivityChanged.connect(tileClients);
