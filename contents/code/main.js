@@ -1551,20 +1551,20 @@ function screenHeight(scr) {
 / MAIN /
 /-----*/
 
-// If a valid client already exists, initiates the script instantly
 if (instantInit()) {
   init();
-} else ws.clientAdded.connect(wait);
+} else {
+  ws.clientAdded.connect(wait);
+}
 
 function instantInit() {
   var clients = ws.clientList();
   for (var i = 0; i < clients.length; i++) {
     if (checkClient(clients[i])) {
       return true;
-    } else {
-      return false;
     }
   }
+  return false;
 }
 
 // Hack: Waits for client connections, then attempts to initiate the script
