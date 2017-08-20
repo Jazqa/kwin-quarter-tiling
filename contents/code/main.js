@@ -131,6 +131,8 @@ var tiles = []; // tiles[desktop][screen][client]
 
 var oldGeo; // Hack: Saves the pre-movement position as a global variable
 
+var running = false; // whether the script has been initialized or not
+
 // Return the client's current act, if a client is given as a parameter, returns the client's first act
 function curAct(client) {
   if (client) {
@@ -151,6 +153,8 @@ function curAct(client) {
 /---------------*/
 
 function init() {
+  print("initiated");
+  running = true;
   registerKeys();
   var desks = readConfig("numDesks", 2);
   if (desks < 1) {
@@ -888,7 +892,7 @@ function adjustClient(client) {
     }
   } else {
     var area = screenGeo(client.screen);
-    if (client.geometry.x >= area.x && oldScr === client.screen) {
+    if (client.geometry.width <= area.width && client.geometry.height <= area.height && client.geometry.x >= area.x && client.geometry.y >= area.y && oldScr === client.screen) {
       resizeClient(client);
     } else {
       var rect = oldGeo;
@@ -1155,13 +1159,23 @@ function fitClient(client, scr) {
 // Optimizes space for a *NEW* client
 function optSpace(client, scr) {
   print("attempting to find optimal space for " + client.caption);
+  var rect;
   if (client.fixed) {
+    rect = client.geometry;
+    // If the client is way too large for the screen, shrink it down a bit
+    if (rect.width > screenWidth(scr) * 0.8) {
+      rect.width = screenWidth(scr) * 0.5;
+      client.geometry = rect;
+    }
+    if (rect.height > screenHeight(scr) * 0.8) {
+      rect.height = screenHeight(scr) * 0.5;
+      client.geometry = rect;
+    }
     fitClient(client, scr);
   } else {
     var i = tiles[curAct(client)][client.desktop][scr].indexOf(client);
     var j = tiles[curAct(client)][client.desktop][scr][oppositeIndex(i)];
     var tile;
-    var rect;
     if (typeof j !== "undefined" && j.fixed) {
       if (client.fixed) {
         fitClient(j, scr);
@@ -1258,10 +1272,14 @@ function fullScreenClient(client, full, user) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
+  print("checking " + client.caption);
   // If a client is a "dialog", tiles all clients before returning false
   // Most noticeable on confirmation windows, which usually break tiling momentarily
   if (client.dialog) {
-    tileClients();
+    if (running) {
+      tileClients();
+    }
+    print(client.caption + " not suitable");
     return false;
   }
   if (client.comboBox ||
@@ -1281,6 +1299,7 @@ function checkClient(client) {
     ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
     ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
     ignoredDesktops.indexOf(client.desktop) > -1) {
+    print(client.caption + " not suitable");
     return false;
   } else {
     for (var i = 0; i < ignoredCaptions.length; i++) {
@@ -1288,9 +1307,11 @@ function checkClient(client) {
       var caption = client.caption.toString();
       if (caption.indexOf(ignoredCaptions[i]) > -1 && client.included !== true) {
         // client.included === "undefined" to avoid ignoring a caption "Blahblah" to also ignore Spotify while listening to a song called "Blahblah" and Firefox while googling "Blahblah"
+        print(client.caption + " not suitable");
         return false;
       }
     }
+    print(client.caption + " passed");
     return true;
   }
 }
@@ -1552,6 +1573,7 @@ function screenHeight(scr) {
 /-----*/
 
 if (instantInit()) {
+  print("instant init");
   init();
 } else {
   ws.clientAdded.connect(wait);
