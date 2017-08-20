@@ -24,8 +24,10 @@ Manually:
     cp ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
     
 **Keybindings:** Go to Settings » Shortcuts » Global Shortcuts » KWin and search for "Quarter" to find all the script specific shortcuts. Bind the ones you wish to use. "Float On/Off" is recommended for an easy way to tile and untile the active window.
+![Keybindings](http://i.imgur.com/DRBw9ZH.png)
 
 **Configuration:** Script is configured through the configuration interface.
+![Config](http://i.imgur.com/Kzx9pWa.png)
 
 ## Updating
 
