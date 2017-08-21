@@ -94,7 +94,7 @@ if (ignoredScreens != "") {
   ignoredScreens = [-1];
 }
 
-var gap = readConfig("gap", 10); // Gap size in pixels
+var gap = readConfig("gap", 8); // Gap size in pixels
 
 // Gaps can't be negative to avoid problems (*cough* isMaxed *cough*)
 if (gap < 0) {
@@ -105,7 +105,7 @@ if (gap < 0) {
 var margins = [];
 margins[0] = readConfig("mt", 0);
 margins[1] = readConfig("ml", 0);
-margins[2] = readConfig("mb", 0);
+margins[2] = readConfig("mb", 1);
 margins[3] = readConfig("mr", 0);
 if (gap == 0) {
   fixMargins();

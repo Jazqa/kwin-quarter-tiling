@@ -4,7 +4,7 @@
 - Tiles windows
 - Maintains the tiled layout when windows are interacted with
 - Automatically creates and moves between virtual desktops
-- Supports mouse and keyboard control
+- Supports mouse and keyboard controls
 
 ## Preview
 
@@ -26,8 +26,8 @@ Manually:
     cd kwin-quarter-tiling
     plasmapkg2 --type kwinscript -i .
     mkdir -p ~/.local/share/kservices5
-    cp ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
-    
+    ln -sf ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
+
 **[Configuration:](https://github.com/Jazqa/kwin-quarter-tiling/wiki/Configuration-Interface)** Script is configured through the configuration interface.
 
 **[Keybindings:](https://github.com/Jazqa/kwin-quarter-tiling/wiki/Keybindings)** Go to Settings » Shortcuts » Global Shortcuts » KWin and search for "Quarter" to find all the script specific shortcuts. Bind the ones you wish to use. "Float On/Off" is recommended for an easy way to tile and untile the active window.
@@ -36,7 +36,7 @@ Manually:
 
 **Git:**
 
-    git clone https://github.com/Jazqa/kwin-quarter-tiling.git && plasmapkg2 --type kwinscript -u kwin-quarter-tiling
+`git clone https://github.com/Jazqa/kwin-quarter-tiling.git && plasmapkg2 --type kwinscript -u kwin-quarter-tiling`
 
 Alternatively, set this repository as the git origin of `~/.local/share/kwin/scripts/quarter-tiling`. If you don't know how to do this, move the hidden .git folder inside the cloned folder to the location above. After this, the script can be updated by using `git fetch origin && git pull`.
 

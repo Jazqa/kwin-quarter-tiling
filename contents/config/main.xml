@@ -7,7 +7,7 @@
     <group name="">
     	<entry name="gap" type="int">
 		  <label>Pixels between the windows and screen edges</label>
-		  <default>10</default>
+		  <default>8</default>
 		</entry>
     <entry name="numDesks" type="int">
       <label>Initial number of desktops</label>
@@ -35,7 +35,7 @@
     </entry>
     <entry name="mb" type="int">
       <label>Bottom margin</label>
-      <default>0</default>
+      <default>1</default>
     </entry>
     <entry name="ml" type="int">
       <label>Left margin</label>
