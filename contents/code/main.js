@@ -691,8 +691,10 @@ function unreserveClient(client) {
 function resetClient(client, pos) {
   var tile = screenGeo(client.screen);
   var rect = client.geometry;
-  rect.width = tile.width * 0.5;
-  rect.height = tile.height * 0.5;
+  if (client.fixed !== true) {
+    rect.width = tile.width * 0.5;
+    rect.height = tile.height * 0.5;
+  }
   if (pos === "center") {
     rect.x = tile.x + tile.width * 0.5 - rect.width * 0.5;
     rect.y = tile.y + tile.height * 0.5 - rect.height * 0.5;
