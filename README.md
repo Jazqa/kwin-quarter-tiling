@@ -34,7 +34,11 @@ Manually:
 
 ## Updating
 
-**Git:** Set this repository as the git origin of `~/.local/share/kwin/scripts/quarter-tiling`. If you don't know how to do this, move the hidden .git folder inside the cloned folder to the location above. After this, the script can be updated by using `git fetch origin && git pull` inside `~/.local/share/kwin/scripts/quarter-tiling`. Alternatively, you can always re-clone the git repository and enter `plasmapkg2 --type kwinscript -u .` inside the cloned folder.
+**Git:**
+
+    git clone https://github.com/Jazqa/kwin-quarter-tiling.git && plasmapkg2 --type kwinscript -u kwin-quarter-tiling
+
+Alternatively, set this repository as the git origin of `~/.local/share/kwin/scripts/quarter-tiling`. If you don't know how to do this, move the hidden .git folder inside the cloned folder to the location above. After this, the script can be updated by using `git fetch origin && git pull`.
 
 **AUR:** Arch users can keep the script updated through AUR.
 
