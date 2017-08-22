@@ -4,7 +4,7 @@
 - Tiles windows
 - Maintains the tiled layout when windows are interacted with
 - Automatically creates and moves between virtual desktops
-- Supports mouse and [keyboard](https://github.com/Jazqa/kwin-quarter-tiling/wiki/Keybindings))
+- Supports mouse and [keyboard](https://github.com/Jazqa/kwin-quarter-tiling/wiki/Keybindings)
 
 ## Preview
 **Basics**

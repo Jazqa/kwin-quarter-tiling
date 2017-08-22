@@ -247,8 +247,17 @@ function registerKeys() {
         rect.x = tile.x + gap + margins[1];
         rect.y = tile.y + gap + margins[0];
         rect.width = tile.width - gap * 2 - margins[1] - margins[3];
-        rect.height = tile.height * 0.5 - gap * 0.5 - margins[0] - margins[2];
-        client.geometry = rect;
+        rect.height = tile.height * 0.5 - gap - margins[0];
+        if (client.geometry.x == rect.x && client.geometry.y == rect.y && client.geometry.width == rect.width && client.geometry.height == rect.height) {
+          rect = tile;
+          rect.x += gap + margins[1];
+          rect.y += gap + margins[0];
+          rect.width -= gap * 2 + margins[1] + margins[3];
+          rect.height -= gap * 2 + margins[0] + margins[2];
+          client.geometry = rect;
+        } else {
+          client.geometry = rect;
+        }
       }
     });
   registerShortcut(
@@ -273,9 +282,18 @@ function registerKeys() {
         rect.x = tile.x + gap + margins[1];
         rect.y = tile.y + gap + margins[0];
         rect.width = tile.width - gap * 2 - margins[1] - margins[3];
-        rect.height = tile.height * 0.5 - gap * 0.5 - margins[0] - margins[2];
-        rect.y += rect.height + gap;
-        client.geometry = rect;
+        rect.height = tile.height * 0.5 - gap - margins[2];
+        rect.y += rect.height;
+        if (client.geometry.x == rect.x && client.geometry.y == rect.y && client.geometry.width == rect.width && client.geometry.height == rect.height) {
+          rect = tile;
+          rect.x += gap + margins[1];
+          rect.y += gap + margins[0];
+          rect.width -= gap * 2 + margins[1] + margins[3];
+          rect.height -= gap * 2 + margins[0] + margins[2];
+          client.geometry = rect;
+        } else {
+          client.geometry = rect;
+        }
       }
     });
   registerShortcut(
@@ -301,9 +319,18 @@ function registerKeys() {
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
         rect.y = tile.y + gap + margins[0];
-        rect.width = tile.width * 0.5 - gap * 0.5 - margins[1] - margins[3];
+        rect.width = tile.width * 0.5 - gap - margins[1];
         rect.height = tile.height - gap * 2 - margins[0] - margins[2];
-        client.geometry = rect;
+        if (client.geometry.x == rect.x && client.geometry.y == rect.y && client.geometry.width == rect.width && client.geometry.height == rect.height) {
+          rect = tile;
+          rect.x += gap + margins[1];
+          rect.y += gap + margins[0];
+          rect.width -= gap * 2 + margins[1] + margins[3];
+          rect.height -= gap * 2 + margins[0] + margins[2];
+          client.geometry = rect;
+        } else {
+          client.geometry = rect;
+        }
       }
     });
   registerShortcut(
@@ -327,10 +354,19 @@ function registerKeys() {
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
         rect.y = tile.y + gap + margins[0];
-        rect.width = tile.width * 0.5 - gap * 0.5 - margins[1] - margins[3];
+        rect.width = tile.width * 0.5 - gap - margins[3];
         rect.height = tile.height - gap * 2 - margins[0] - margins[2];
-        rect.x += rect.width + gap;
-        client.geometry = rect;
+        rect.x += rect.width;
+        if (client.geometry.x == rect.x && client.geometry.y == rect.y && client.geometry.width == rect.width && client.geometry.height == rect.height) {
+          rect = tile;
+          rect.x += gap + margins[1];
+          rect.y += gap + margins[0];
+          rect.width -= gap * 2 + margins[1] + margins[3];
+          rect.height -= gap * 2 + margins[0] + margins[2];
+          client.geometry = rect;
+        } else {
+          client.geometry = rect;
+        }
       }
     });
   registerShortcut(
