@@ -4,10 +4,9 @@
 - Tiles windows
 - Maintains the tiled layout when windows are interacted with
 - Automatically creates and moves between virtual desktops
-- Supports mouse and keyboard controls
+- Supports mouse and [keyboard](https://github.com/Jazqa/kwin-quarter-tiling/wiki/Keybindings))
 
 ## Preview
-
 **Basics**
 ![Imgur](http://i.imgur.com/knyoWe6.gif)
 
@@ -23,8 +22,7 @@ Other: [KDE Store](https://store.kde.org/p/1187647/)
 Manually:
 
     git clone https://github.com/Jazqa/kwin-quarter-tiling.git
-    cd kwin-quarter-tiling
-    plasmapkg2 --type kwinscript -i .
+    plasmapkg2 --type kwinscript -i kwin-quarter-tiling
     mkdir -p ~/.local/share/kservices5
     ln -sf ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
 
