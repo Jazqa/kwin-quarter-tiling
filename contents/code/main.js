@@ -503,9 +503,17 @@ function connectWorkspace() {
       tileClients();
     }
   });
-  ws.currentDesktopChanged.connect(function(desk) {
-    tileClients(desk);
-    tileClients(ws.currentDesktop);
+  ws.currentDesktopChanged.connect(function(client, desk) {
+    if (client && client.included) {
+      if (ws.desktops < client.oldDesk) {
+        removeClient(client, false, client.oldDesk, client.oldScr);
+        client.closeWindow();
+      } else if (client.desktop !== client.oldDesk){
+        throwClient(client, client.oldDesk, client.oldScr, client.desktop, client.screen);
+      }
+    } else {
+      tileClients();
+    }
   });
   ws.clientMaximizeSet.connect(function(client, h, v) {
     if (client.included) {
