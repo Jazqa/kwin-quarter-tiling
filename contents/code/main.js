@@ -37,7 +37,7 @@ if (readConfig("ignoreJava", 0) == 1) {
 
 // KWin client.resourceClasses & client.resourceNames to which tiles are adjusted to
 var fixedClients = [
-
+  "kcalc",
 ];
 
 // Concats the hardcoded fixedClients with the ones read from the QML interface
@@ -195,7 +195,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: Move Up",
     "Quarter: Move Up",
-    "Meta+Up",
+    "Meta+K",
     function() {
       var client = ws.activeClient;
       if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
@@ -230,7 +230,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: Move Down",
     "Quarter: Move Down",
-    "Meta+Down",
+    "Meta+J",
     function() {
       var client = ws.activeClient;
       if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
@@ -266,7 +266,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: Move Left",
     "Quarter: Move Left",
-    "Meta+Left",
+    "Meta+H",
     function() {
       var client = ws.activeClient;
       if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
@@ -303,7 +303,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: Move Right",
     "Quarter: Move Right",
-    "Meta+Right",
+    "Meta+L",
     function() {
       var client = ws.activeClient;
       if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
@@ -339,7 +339,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: Move to Next Screen",
     "Quarter: Move to Next Screen",
-    "Meta+M",
+    "Meta+Right",
     function() {
       var client = ws.activeClient;
       if (client.included) {
@@ -357,7 +357,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: Move to Previous Screen",
     "Quarter: Move to Previous Screen",
-    "Meta+N",
+    "Meta+Left",
     function() {
       var client = ws.activeClient;
       if (client.included) {
@@ -375,7 +375,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: + Window Size",
     "Quarter: + Window Size",
-    "Meta+I",
+    "Meta+Y",
     function() {
       // TODO: Fix for fixed clients
       var client = ws.activeClient;
@@ -408,7 +408,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: - Window Size",
     "Quarter: - Window Size",
-    "Meta+K",
+    "Meta+N",
     function() {
       // TODO: Fix for fixed clients
       var client = ws.activeClient;
@@ -452,12 +452,12 @@ function registerKeys() {
     "Meta+G",
     function() {
       if (gap <= 1) {
-        gap = readConfig("gap", 10);
+        gap = readConfig("gap", 8);
       } else {
         for (var i = 0; i < margins.length; i++) {
           if (margins[i] > 0) {
             gap = 0;
-            tileClients();
+            tileClients()
             return;
           }
         }
@@ -468,7 +468,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: + Gap Size",
     "Quarter: + Gap Size",
-    "Meta+O",
+    "Meta+PgUp",
     function() {
       gap += 2;
       tileClients();
@@ -476,7 +476,7 @@ function registerKeys() {
   registerShortcut(
     "Quarter: - Gap Size",
     "Quarter: - Gap Size",
-    "Meta+L",
+    "Meta+Down",
     function() {
       gap -= 2;
       if (gap < 0) {
