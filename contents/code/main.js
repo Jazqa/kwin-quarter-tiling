@@ -687,6 +687,7 @@ function disconnectClient(client) {
   client.included = false;
   client.clientStartUserMovedResized.disconnect(saveClientGeo);
   client.clientFinishUserMovedResized.disconnect(adjustClient);
+  client.activitiesChanged.disconnect(removeClient);
 }
 
 // Closes the client, triggering the removal signal
