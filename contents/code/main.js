@@ -57,19 +57,22 @@ if (readConfig("ignoredCaptions", "") != "") {
   ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(', '));
 }
 
-// Activities that will be ignored by the script
-var ignoredActivities = readConfig("ignoredActivities", "").toString().split(', ');
-if (ignoredActivities != "") {
-  for (var i = 0; i < ignoredActivities.length; i++) {
-    var act = parseInt(ignoredActivities[i]); // Transfers the entries to integers
-    if (isNaN(act)) {
-      ignoredActivities.splice(i, 0); // Removes entries that aren't integers
-    } else if (ws.activities.length > act - 1) {
-      ignoredActivities[i] = ws.activities[act - 1].toString();
+var ignoredActivities = [];
+function readIgnoredActs() {
+  // Activities that will be ignored by the script
+  ignoredActivities = readConfig("ignoredActivities", "").toString().split(', ');
+  if (ignoredActivities != "") {
+    for (var i = 0; i < ignoredActivities.length; i++) {
+      var act = parseInt(ignoredActivities[i]); // Transfers the entries to integers
+      if (isNaN(act)) {
+        ignoredActivities.splice(i, 0); // Removes entries that aren't integers
+      } else if (ws.activities.length > act - 1) {
+        ignoredActivities[i] = ws.activities[act - 1].toString();
+      }
     }
+  } else {
+    ignoredActivities = [];
   }
-} else {
-  ignoredActivities = [];
 }
 
 // Virtual desktops that will be ignored by the script
@@ -143,6 +146,7 @@ function init() {
     desks = 1;
   }
   ws.desktops = desks;
+  readIgnoredActs();
   for (var j = 0; j < ws.activities.length; j++) {
     var act = ws.activities[j].toString();
     if (ignoredActivities.indexOf(act) === -1) {
