@@ -192,7 +192,6 @@ function registerKeys() {
         client = ws.activeClient;
         if (client.desktop == desk && client.included) {
           removeClient(client, false, client.desktop, client.screen);
-          resetClient(client, scrs[client.screen]);
         }
       }
     });
@@ -204,7 +203,6 @@ function registerKeys() {
       var client = ws.activeClient;
       if (client.included) {
         removeClient(client, false, client.desktop, client.screen);
-        resetClient(client, "center");
       } else {
         addClient(client, true, client.desktop, client.screen);
       }
@@ -633,7 +631,6 @@ function connectClient(client, desk, scr) {
   client.desktopChanged.connect(function() {
     if (ignoredDesktops.indexOf(client.desktop) > -1) {
       removeClient(client, false, client.oldDesk, client.oldScr);
-      resetClient(client, "center");
     } else {
       if (client.included !== true) {
         addClient(client, true, client.desktop, client.screen);
@@ -655,6 +652,7 @@ function connectClient(client, desk, scr) {
 function removeClient(client, follow, desk, scr) {
   print("attempting to remove " + client.caption);
   if (client.included) {
+    try { resetClient(client, "center"); } catch(err) { print(err); }
     if (typeof follow === "undefined") { follow = false; }
     if (typeof desk === "undefined") { desk = client.oldDesk; }
     if (typeof scr === "undefined") { scr = client.oldScr; }
@@ -1010,7 +1008,7 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
     client.oldDesk = tDesk;
     client.oldScr = tScr;
     if (ignoredScreens.indexOf(tScr) > -1) {
-      resetClient(client);
+      resetClient(client); // If the client is thrown to an ignored screen, reset it
     }
     print("successfully thrown" + client.caption + " to desktop " + tDesk + " screen " + tScr);
   } else {
