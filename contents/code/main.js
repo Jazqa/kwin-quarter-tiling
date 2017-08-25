@@ -1,6 +1,6 @@
-/******************************************************************
-KWin - Quarter Tiling: A Tiling Script for the KWin Window Manager
-******************************************************************/
+// -----------------------------------------------------------------
+// KWin - Quarter Tiling: A Tiling Script for the KWin Window Manager
+// -----------------------------------------------------------------
 
 var ws = workspace;
 var opt = options;
@@ -55,6 +55,21 @@ var ignoredCaptions = [
 // Concats the hardcoded ignoredCaptions with the ones read from the QML interface
 if (readConfig("ignoredCaptions", "") != "") {
   ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(', '));
+}
+
+// Activities that will be ignored by the script
+var ignoredActivities = readConfig("ignoredActivities", "").toString().split(', ');
+if (ignoredActivities != "") {
+  for (var i = 0; i < ignoredActivities.length; i++) {
+    var act = parseInt(ignoredActivities[i]); // Transfers the entries to integers
+    if (isNaN(act)) {
+      ignoredActivities.splice(i, 0); // Removes entries that aren't integers
+    } else if (ws.activities.length > act - 1) {
+      ignoredActivities[i] = ws.activities[act - 1].toString();
+    }
+  }
+} else {
+  ignoredActivities = [];
 }
 
 // Virtual desktops that will be ignored by the script
@@ -130,9 +145,11 @@ function init() {
   ws.desktops = desks;
   for (var j = 0; j < ws.activities.length; j++) {
     var act = ws.activities[j].toString();
-    tiles[act] = [];
-    for (var i = 1; i <= desks; i++) {
-      createDesktop(act, i);
+    if (ignoredActivities.indexOf(act) === -1) {
+      tiles[act] = [];
+      for (var i = 1; i <= desks; i++) {
+        createDesktop(act, i);
+      }
     }
   }
   addClients();
@@ -457,7 +474,7 @@ function registerKeys() {
         for (var i = 0; i < margins.length; i++) {
           if (margins[i] > 0) {
             gap = 0;
-            tileClients()
+            tileClients();
             return;
           }
         }
@@ -539,11 +556,20 @@ function connectWorkspace() {
     }
   });
   ws.numberDesktopsChanged.connect(adjustDesktops);
-  ws.activityAdded.connect(createActivity);
-  ws.currentActivityChanged.connect(tileClients);
+  ws.activityAdded.connect(function(act) {
+      createActivity(act);
+  });
+  ws.currentActivityChanged.connect(function(act) {
+    if (ignoredActivities.indexOf(act) === -1) {
+      tileClients();
+    }
+  });
 }
 
+
+// -------------------
 // Client Manipulation
+// -------------------
 
 // Runs an ignore-check and if it passes, adds a client to tiles[]
 function addClient(client, follow, desk, scr) {
@@ -603,6 +629,7 @@ function connectClient(client, desk, scr) {
   client.clientStartUserMovedResized.connect(saveClientGeo);
   client.clientFinishUserMovedResized.connect(adjustClient);
   client.activeChanged.connect(tileClients);
+  client.activitiesChanged.connect(removeClient);
   client.desktopChanged.connect(function() {
     if (ignoredDesktops.indexOf(client.desktop) > -1) {
       removeClient(client, false, client.oldDesk, client.oldScr);
@@ -619,6 +646,7 @@ function connectClient(client, desk, scr) {
   client.included = true;
   client.reserved = false;
   client.oldIndex = -1;
+  client.oldAct = curAct(client);
   client.oldDesk = desk;
   client.oldScr = scr;
 }
@@ -627,7 +655,10 @@ function connectClient(client, desk, scr) {
 function removeClient(client, follow, desk, scr) {
   print("attempting to remove " + client.caption);
   if (client.included) {
-    var act = curAct(client);
+    if (typeof follow === "undefined") { follow = false; }
+    if (typeof desk === "undefined") { desk = client.oldDesk; }
+    if (typeof scr === "undefined") { scr = client.oldScr; }
+    var act = client.oldAct;
     if (client.reserved) {
       tiles[act][desk][scr].max += 1;
       if (client.minimized !== true) {
@@ -713,6 +744,9 @@ function tileClients(desktop) {
   // Since it's just four, switch is also the easiest approach
   // TODO: Clean this up, big time
   var act = curAct();
+  if (typeof tiles[act] === "undefined") {
+    return; // Don't tile ignored activities
+  }
   var desk;
   if (desktop) {
     desk = desktop;
@@ -721,7 +755,7 @@ function tileClients(desktop) {
   }
   for (var i = 0; i < ws.numScreens; i++) {
     if (ignoredScreens.indexOf(i) > -1) {
-      // Don't tile ignored screens
+      // Don't tile ignored screens and activities
     } else if (typeof tiles[act][desk][i] !== "undefined") {
       print("attempting to tile desktop " + desk + " screen " + i);
       // Creates new layouts whenever a desktop is empty or contains only a single client
@@ -1294,11 +1328,9 @@ function unminimizeClient(client) {
 
 function maximizeClient(client, h, v) {
   if (h && v) {
-    client.full = true;
     tiles[curAct(client)][client.desktop][client.screen].blocked = true;
     reserveClient(client, client.desktop, client.screen);
   } else {
-    client.full = false;
     tiles[curAct(client)][client.oldDesk][client.oldScr].blocked = false;
     unreserveClient(client, client.desktop, client.screen);
   }
@@ -1306,17 +1338,18 @@ function maximizeClient(client, h, v) {
 
 function fullScreenClient(client, full, user) {
   if (full) {
-    client.full = true;
     tiles[curAct(client)][client.desktop][client.screen].blocked = true;
     reserveClient(client, client.desktop, client.screen);
   } else {
-    client.full = false;
     tiles[curAct(client)][client.desktop][client.screen].blocked = false;
     unreserveClient(client, client.desktop, client.screen);
   }
 }
 
+
+// -----------------
 // Client Properties
+// -----------------
 
 var oldGeo;
 var oldScr;
@@ -1355,6 +1388,7 @@ function checkClient(client) {
     client.transient ||
     ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
     ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
+    ignoredActivities.indexOf(curAct(client)) > -1 ||
     ignoredDesktops.indexOf(client.desktop) > -1) {
     print(client.caption + " not suitable");
     return false;
@@ -1450,7 +1484,10 @@ function neighbourIndex(index) {
   }
 }
 
+
+// ------------------------
 // Action, Desktop & Screen
+// ------------------------
 
 function createActivity(act) {
   print("attempting to create activity " + act);
@@ -1621,7 +1658,10 @@ function screenHeight(scr) {
   return area.height;
 }
 
+
+// ----
 // Init
+// ----
 
 if (instantInit()) {
   print("instant init");

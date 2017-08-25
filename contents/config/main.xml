@@ -21,6 +21,10 @@
       <label>Ignored Desktops</label>
       <default></default>
     </entry>
+    <entry name="ignoredActivities" type="string">
+      <label>Ignored Desktops</label>
+      <default></default>
+    </entry>
     <entry name="autoSize" type="int">
       <label>Automatically optimize available space</label>
       <default>1</default>
