@@ -644,6 +644,7 @@ function connectClient(client, desk, scr) {
 function removeClient(client, follow, desk, scr) {
   print("attempting to remove " + client.caption);
   if (client.included) {
+
     try { resetClient(client, "center"); } catch(err) { print(err); }
     if (typeof follow === "undefined") { follow = false; }
     if (typeof desk === "undefined") { desk = client.oldDesk; }
@@ -719,6 +720,8 @@ function unreserveClient(client) {
   print("succesfully unreserved " + client.caption);
 }
 
+
+// Finds out which clients of a desktop should be fit
 function fitClients(desk, scr) {
   act = curAct();
   switch(tiles[act][desk][scr].length) {
@@ -734,42 +737,35 @@ function fitClients(desk, scr) {
   }
 }
 
-// TODO: Calculations
+// Adjusts the layout according to the size of a client
 function fitClient(client, desk, scr, action) {
+  // Only fits the vertical size, if a horizontal layout is ever implemented, it needs to be fit instead
+  if (autoSize == 1) { return; }
+
+  // If opposite client is fixed and this one is not, fits it instead in order to shrink it
   var opposite = oppositeClient(client, scr);
-  if (client.fixed !== true && opposite && opposite[0].fixed) {
-    fitClient(opposite[0], desk, scr);
-    return;
-  }
-  var neighbour = neighbourClient(client, scr);
+
   var act = curAct();
-  var i = findClientIndex(client, desk, scr);
-  var tile = tiles[act][desk][scr].layout[i];
-  var x = client.geometry.width - tile.width + gap * 1.5;
-  var y = client.geometry.height - tile.height + gap * 1.5;
-  if (client.fixed && opposite && opposite[0].fixed) {
-    y = 0.5 * (y - (opposite[0].geometry.height - tiles[act][desk][scr].layout[opposite[1]].height + gap * 1.5)); // If client and opposite fixed, center the tiles
-  } else if (client.fixed !== true && client.geometry.height > newTile(scr).height && action !== "resize") {
-    y = newTile(scr).height - tile.height + gap * 1.5; // If client is not fixed and height is larger than half of the screen, reset the height
-  }
+  var tile = tiles[act][desk][scr].layout[findClientIndex(client, desk, scr)];
+
+  var x = client.geometry.width + gap * 1.5 - tile.width;
   if (opposite && opposite[0].width > client.geometry.width) {
-    if (client.fixed && opposite[0].fixed) {
-      var opNe = neighbourClient(opposite[0], scr);
-      if (opNe && opNe[0].fixed) {
-        x = 0.5 * (x - (opNe[0].geometry.width - tiles[act][desk][scr].layout[opNe[1]].width + gap * 1.5)); // If opposite is wider than client, perceive its width, however, if opposite and its neighbor are both fixed, center the tiles
-      }
-    } else if (action !== "resize" && client.fixed) { 
-      if (action === "secondary" && opposite[0].width > newTile(scr).width) {
-        x = newTile(scr).width - tile.width + gap * 1.5; // If a fixed client is moved as a "secondary", don't allow the remaining tile to be larger than a tile
-      } else {
-        x = opposite[0].width - tile.width + gap * 1.5; // If the other client is wider, perceive its width
-      }
+    if (client.fixed || action !== "resize") {
+      x = opposite[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].width; // Preserve the width of the wider tile
     }
-  } else if (client.fixed && neighbour && neighbour[0].fixed) {
-    x = 0.5 * (x - (neighbour[0].geometry.width - tiles[act][desk][scr].layout[neighbour[1]].width + gap * 1.5)); // If client and opposite fixed, center the tiles
-  } else if (client.fixed !== true && client.geometry.width > newTile(scr).width && action !== "resize") {
-    x = newTile(scr).width - tile.width + gap * 1.5;
+  } else if (action === "move" && x > newTile(scr).width - tile.width) {
+    x = newTile(scr).width - tile.width; // If client is not fixed and width is larger than half of the screen, reset the height
   }
+
+  var y = client.geometry.height + gap * 1.5 - tile.height;
+  if (client.fixed !== true && opposite && opposite[0].fixed) {
+    y = -1 * (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height); // If opposite client is fixed, fit to it's height instead
+  } else if (client.fixed && opposite && opposite[0].fixed) {
+    y = 0.5 * (y - (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height)); // If client and opposite fixed, center the tiles
+  } else if (action === "move" && y > newTile(scr).height - tile.height) {
+    y = newTile(scr).height - tile.height; // If client is not fixed and height is larger than half of the screen, reset the height
+  }
+
   adjustClientSize(client, scr, x, y);
 }
 
@@ -1002,8 +998,8 @@ function swapClients(i, j, scrI, scrJ) {
   var temp = tiles[curAct()][desk][scrI][i];
   tiles[curAct()][desk][scrI][i] = tiles[curAct()][desk][scrJ][j];
   tiles[curAct()][desk][scrJ][j] = temp;
-  fitClient(tiles[curAct()][desk][scrJ][j], desk, scrJ);
-  fitClient(tiles[curAct()][desk][scrI][i], desk, scrI, "secondary");
+  fitClient(tiles[curAct()][desk][scrJ][j], desk, scrJ, "move");
+  fitClient(tiles[curAct()][desk][scrI][i], desk, scrI, "move");
   print("successfully swapped clients " + i + " " + j);
 }
 
@@ -1032,7 +1028,7 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
       if (ignoredScreens.indexOf(tScr) > -1) {
         resetClient(client); // If the client is thrown to an ignored screen, reset it
       }
-      fitClient(client, tDesk, tScr);
+      fitClient(client, tDesk, tScr, "move");
       tileClients(fDesk);
       tileClients(tDesk);
       print("successfully thrown" + client.caption + " to desktop " + tDesk + " screen " + tScr);
@@ -1203,8 +1199,8 @@ function resetClient(client, pos, scr) {
   var tile = screenGeo(scr);
   var rect = client.geometry;
   if (client.fixed !== true) {
-    rect.width = newTile(scr).width;
-    rect.height = newTile(scr).height;
+    rect.width = newTile(scr).width - gap * 2;
+    rect.height = newTile(scr).height - gap * 2;
   }
   if (pos === "center") {
     rect.x = tile.x + tile.width * 0.5 - rect.width * 0.5;
@@ -1439,6 +1435,7 @@ function curAct(client) {
   }
 }
 
+// Detects whether a desktop is added or removed, called whenever the number of desktops changes
 function adjustDesktops(desktop) {
   // Checks if a workspace is removed
   if (ws.desktops < desktop) {
@@ -1453,13 +1450,14 @@ function adjustDesktops(desktop) {
   }
 }
 
+// Creates a new desktops
 function createDesktop(act, desk) {
   print("attempting to create desktop " + desk);
   tiles[act][desk] = [];
   for (var i = 0; i < ws.numScreens; i++) {
     tiles[act][desk][i] = [];
     if (ignoredScreens.indexOf(i) > -1) {
-      tiles[act][desk][i].max = Number.MAX_VALUE;
+      tiles[act][desk][i].max = Number.MAX_VALUE; // TODO: Ignored screens to work like desktops and activities
     } else {
       tiles[act][desk][i].max = 4;
     }
@@ -1468,6 +1466,8 @@ function createDesktop(act, desk) {
   print("desktop " + desk + " created");
 }
 
+
+// Removes a desktop
 function removeDesktop(act, desk) {
   print("attempting to remove desktop " + desk);
   for (var i = 0; i < tiles[act][desk].length; i++) {
@@ -1478,6 +1478,7 @@ function removeDesktop(act, desk) {
   print("desktop " + desk + " removed");
 }
 
+// Finds a desktop and a screen with space left for a new client
 function findSpace() {
   print("attempting to find space on existing desktops");
   // Tries the current desktop first
@@ -1505,6 +1506,7 @@ function findSpace() {
   return false;
 }
 
+// Find the desktop with the most clients open
 function findBusy() {
   print("attempting to find a busy desktop");
   var busyDesk = 1;
@@ -1529,8 +1531,8 @@ function newTile(scr) {
   area.y += margins[0];
   area.width -= margins[1] + margins[3];
   area.height -= margins[0] + margins[2];
-  area.height *= 0.5;
   area.width *= 0.5;
+  area.height *= 0.5;
   return area;
 }
 
