@@ -597,7 +597,13 @@ function addClient(client, follow, desk, scr) {
       client.geometry = screenGeo(scr); // Moves the client to the next screen before tileClients() (otherwise a maximized window would get tiled)
       reserveClient(client, desk, scr);
     } else {
-      if (client.fixed !== true) { resetClient(client, "center", scr); }
+      if (client.fixed !== true) { 
+        resetClient(client, "center", scr); 
+      } else if (client.geometry.width > newTile(scr).width) { 
+        var rect = client.geometry;
+        rect.width = newTile(scr).width;
+        client.geometry = rect;
+      }
       fitClient(client, desk, scr, "add");
       tileClients();
     }
