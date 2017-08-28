@@ -734,20 +734,38 @@ function fitClient(client, desk, scr, action) {
 
   // If opposite client is fixed and this one is not, fits it instead in order to shrink it
   var opposite = oppositeClient(client, scr);
+  var neighbour = neighbourClient(client, scr);
 
   var act = curAct();
   var tile = tiles[act][desk][scr].layout[findClientIndex(client, desk, scr)];
+ 
+  var x = 0;
+  if (action === "add" || action === "throw") {  
+    x = client.geometry.width + gap * 1.5 - tile.width;
+    if (client.fixed && neighbour && neighbour[1].fixed) {
+      tile = tiles[act][desk][scr].layout[neighbour[1]];
+      y = 0.5 * (y - (neighbour[0].geometry.height + gap * 1.5 - tile.height)); // If client and opposite fixed, center the tiles
+    } else if (opposite && opposite[0].geometry.width > client.geometry.width) {
+      if (client.fixed || action !== "resize") {
+        tile = tiles[act][desk][scr].layout[opposite[1]];
+        x = opposite[0].geometry.width + gap * 1.5 - tile.width; // Perceive the width of the wider tile
+      }
+    }
+    if (x > newTile(scr).width - tile.width) { 
+      x = newTile(scr).width - tile.width; // Stops a tile from getting too large
+    }
+  }
 
-  y = client.geometry.height + gap * 1.5 - tile.height;
+  var y = client.geometry.height + gap * 1.5 - tile.height;
   if (client.fixed !== true && opposite && opposite[0].fixed) {
     y = -1 * (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height); // If opposite client is fixed, fit to its height instead
   } else if (client.fixed && opposite && opposite[0].fixed) {
     y = 0.5 * (y - (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height)); // If client and opposite fixed, center the tiles
   } else if (action !== "resize" && client.fixed !== true) {
-    y = newTile(scr).height - tile.height;
+    y = newTile(scr).height - tile.height; // Stops a tile from getting too large
   }
 
-  adjustClientSize(client, scr, 0, y);
+  adjustClientSize(client, scr, x, y);
 }
 
 // Calculates the geometries to maintain the layout
