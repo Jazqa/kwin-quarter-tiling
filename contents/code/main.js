@@ -133,9 +133,9 @@ function fixMargins() {
   margins[2] = 1;
 }
 
-var centerTo = readConfig("centerTo", 0); // 0 == Screen, 1 == Tile
+var centerTo = readConfig("centerTo", 1); // 0 == Screen, 1 == Tile
 
-var autoSize = readConfig("autoSize", 1); // 0 == True, 1 == False
+var autoSize = readConfig("autoSize", 0); // 0 == True, 1 == False
 
 // Starts the script
 function init() {

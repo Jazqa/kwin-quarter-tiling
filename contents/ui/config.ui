@@ -204,6 +204,9 @@
        </item>
        <item>
         <widget class="QComboBox" name="kcfg_centerTo">
+         <property name="currentText">
+          <string>Screen</string>
+         </property>
          <item>
           <property name="text">
            <string>Screen</string>
@@ -923,7 +926,7 @@
        <item alignment="Qt::AlignHCenter">
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Small/Large Programs&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Small Programs:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
