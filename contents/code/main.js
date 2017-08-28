@@ -729,12 +729,17 @@ function unreserveClient(client) {
 function fitClients(desk, scr, action) {
   var act = curAct();
   if (tiles[act][desk][scr].length < 2) { return; }
-  fitClient(tiles[act][desk][scr][0], desk, scr, action);
-  fitClient(tiles[act][desk][scr][1], desk, scr, action);
+  if (tiles[act][desk][scr][0].geometry.width > tiles[act][desk][scr][1].geometry.width) {
+    fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
+    fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
+  } else {
+    fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
+    fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
+  }
 }
 
 // Adjusts the layout according to the size of a client
-function fitClient(client, desk, scr, action) {
+function fitClient(client, desk, scr, action, all) {
   // Only fits the vertical size, if a horizontal layout is ever implemented, it needs to be fit instead
   if (autoSize == 1) { return; }
 
@@ -751,7 +756,7 @@ function fitClient(client, desk, scr, action) {
     if (client.fixed && neighbour && neighbour[0].fixed) {
       x = 0.5 * (x - (neighbour[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width)); // If client and opposite fixed, center the tiles
     } else if (opposite && opposite[0].geometry.width > client.geometry.width) {
-      if (client.fixed) {
+      if (client.fixed || all) {
         x = opposite[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width; // Perceive the width of the wider tile
       }
     }
@@ -770,7 +775,7 @@ function fitClient(client, desk, scr, action) {
   }
 
   adjustClientSize(client, scr, x, y);
-  // lineHorizontally(desk, scr);
+  lineHorizontally(desk, scr);
 }
 
 function lineHorizontally(desk, scr) {
