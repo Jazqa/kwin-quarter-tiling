@@ -739,19 +739,16 @@ function fitClient(client, desk, scr, action) {
   var act = curAct();
   var tile = tiles[act][desk][scr].layout[findClientIndex(client, desk, scr)];
 
-  var x = 0;
-  if (action === "add" || action === "throw" || action === "move" ||action === "remove") {
-    x = client.geometry.width + gap * 1.5 - tile.width;
-    if (client.fixed && neighbour && neighbour[1].fixed) {
-      x = 0.5 * (x - (neighbour[0].geometry.width + gap * 1.5 - tile.width)); // If client and opposite fixed, center the tiles
-    } else if (opposite && opposite[0].geometry.width > client.geometry.width) {
-      if (client.fixed) {
-        x = opposite[0].geometry.width + gap * 1.5 - tile.width; // Perceive the width of the wider tile
-      }
+  var x = client.geometry.width + gap * 1.5 - tile.width;
+  if (client.fixed && neighbour && neighbour[0].fixed) {
+    x = 0.5 * (x - (neighbour[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width)); // If client and opposite fixed, center the tiles
+  } else if (opposite && opposite[0].geometry.width > client.geometry.width) {
+    if (client.fixed || action !== "resize") {
+      x = opposite[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width; // Perceive the width of the wider tile
     }
-    if (x > newTile(scr).width - tile.width) { 
-      x = newTile(scr).width - tile.width; // Stops a tile from getting too large
-    }
+  }
+  if (x > newTile(scr).width - tile.width) { 
+    x = newTile(scr).width - tile.width; // Stops a tile from getting too large
   }
 
   var y = client.geometry.height + gap * 1.5 - tile.height;
