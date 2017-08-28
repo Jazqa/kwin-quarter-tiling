@@ -770,7 +770,7 @@ function fitClient(client, desk, scr, action) {
   }
 
   adjustClientSize(client, scr, x, y);
-  lineHorizontally(desk, scr);
+  // lineHorizontally(desk, scr);
 }
 
 function lineHorizontally(desk, scr) {
@@ -1237,8 +1237,8 @@ function resetClient(client, pos, scr) {
   var tile = screenGeo(scr);
   var rect = client.geometry;
   if (client.fixed !== true) {
-    rect.width = newTile(scr).width - gap * 2;
-    rect.height = newTile(scr).height - gap * 2;
+    rect.width = newTile(scr).width - gap * 1.5;
+    rect.height = newTile(scr).height - gap * 1.5;
   }
   if (pos === "center") {
     rect.x = tile.x + tile.width * 0.5 - rect.width * 0.5;
