@@ -750,21 +750,6 @@ function fitClient(client, desk, scr, action, all) {
   var act = curAct();
   var tile = tiles[act][desk][scr].layout[findClientIndex(client, desk, scr)];
 
-  var x = 0;
-  if (action === "move" || action === "throw" || action === "add" || action === "remove") {   
-    x = client.geometry.width + gap * 1.5 - tile.width;
-    if (client.fixed && neighbour && neighbour[0].fixed) {
-      x = 0.5 * (x - (neighbour[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width)); // If client and opposite fixed, center the tiles
-    } else if (opposite && opposite[0].geometry.width > client.geometry.width) {
-      if (client.fixed || all) {
-        x = opposite[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width; // Perceive the width of the wider tile
-      }
-    }
-    if (x > newTile(scr).width - tile.width) { 
-      x = newTile(scr).width - tile.width; // Stops a tile from getting too large
-    }
-  }
-
   var y = client.geometry.height + gap * 1.5 - tile.height;
   if (client.fixed !== true && opposite && opposite[0].fixed) {
     y = -1 * (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height); // If opposite client is fixed, fit to its height instead
@@ -772,6 +757,18 @@ function fitClient(client, desk, scr, action, all) {
     y = 0.5 * (y - (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height)); // If client and opposite fixed, center the tiles
   } else if (action !== "resize" && client.fixed !== true) {
     y = newTile(scr).height - tile.height; // Stops a tile from getting too large
+  }
+  
+  var x = 0;
+  if (action === "move" || action === "throw" || action === "add" || action === "remove") {   
+    x = client.geometry.width + gap * 1.5 - tile.width;
+    if (client.fixed && neighbour && neighbour[0].fixed) {
+      x = 0.5 * (x - (neighbour[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width)); // If client and opposite fixed, center the tiles
+    } else if (opposite && opposite[0].geometry.width > client.geometry.width) {
+      x = opposite[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].width; // Perceive the width of the wider tile
+    } else if (x > newTile(scr).width - tile.width) { 
+      x = newTile(scr).width - tile.width; // Stops a tile from getting too large
+    }
   }
 
   adjustClientSize(client, scr, x, y);
