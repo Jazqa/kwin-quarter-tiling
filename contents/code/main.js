@@ -663,6 +663,7 @@ function removeClient(client, follow, desk, scr) {
     if (tiles[act][desk][scr].length === 0 && follow) {
       ws.currentDesktop = findBusy(); // If follow = true, change the desktop if the removed client was the last one
     }
+    fitClients(desk, scr);
     tileClients();
   } else {
     print(client.caption + " not included");
@@ -733,6 +734,7 @@ function fitClients(desk, scr) {
   }
 }
 
+// TODO: Calculations
 function fitClient(client, desk, scr, action) {
   var opposite = oppositeClient(client, scr);
   if (client.fixed !== true && opposite && opposite[0].fixed) {
@@ -740,10 +742,6 @@ function fitClient(client, desk, scr, action) {
     return;
   }
   var neighbour = neighbourClient(client, scr);
-  if (client.fixed !== true && neighbour && neighbour[0].fixed) {
-    fitClient(neighbour[0], desk, scr);
-    return;
-  }
   var act = curAct();
   var i = findClientIndex(client, desk, scr);
   var tile = tiles[act][desk][scr].layout[i];
@@ -760,7 +758,13 @@ function fitClient(client, desk, scr, action) {
       if (opNe && opNe[0].fixed) {
         x = 0.5 * (x - (opNe[0].geometry.width - tiles[act][desk][scr].layout[opNe[1]].width + gap * 1.5)); // If opposite is wider than client, perceive its width, however, if opposite and its neighbor are both fixed, center the tiles
       }
-    } else if (action !== "resize" || client.fixed) { x = opposite[0].width - tile.width + gap * 1.5; } // If the other client is wider, perceive its width
+    } else if (action !== "resize" && client.fixed) { 
+      if (action === "secondary" && opposite[0].width > newTile(scr).width) {
+        x = newTile(scr).width - tile.width + gap * 1.5; // If a fixed client is moved as a "secondary", don't allow the remaining tile to be larger than a tile
+      } else {
+        x = opposite[0].width - tile.width + gap * 1.5; // If the other client is wider, perceive its width
+      }
+    }
   } else if (client.fixed && neighbour && neighbour[0].fixed) {
     x = 0.5 * (x - (neighbour[0].geometry.width - tiles[act][desk][scr].layout[neighbour[1]].width + gap * 1.5)); // If client and opposite fixed, center the tiles
   } else if (client.fixed !== true && client.geometry.width > newTile(scr).width && action !== "resize") {
@@ -999,7 +1003,7 @@ function swapClients(i, j, scrI, scrJ) {
   tiles[curAct()][desk][scrI][i] = tiles[curAct()][desk][scrJ][j];
   tiles[curAct()][desk][scrJ][j] = temp;
   fitClient(tiles[curAct()][desk][scrJ][j], desk, scrJ);
-  fitClient(tiles[curAct()][desk][scrI][i], desk, scrI);
+  fitClient(tiles[curAct()][desk][scrI][i], desk, scrI, "secondary");
   print("successfully swapped clients " + i + " " + j);
 }
 
