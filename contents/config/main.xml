@@ -31,7 +31,7 @@
     </entry>
     <entry name="centerTo" type="int">
       <label>Tile small clients to the center of the tile instead of the center of the screen</label>
-      <default>0</default>
+      <default>1</default>
     </entry>
     <entry name="mt" type="int">
       <label>Top margin</label>
