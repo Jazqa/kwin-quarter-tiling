@@ -728,14 +728,37 @@ function unreserveClient(client) {
 // Finds out which clients of a desktop should be fit
 function fitClients(desk, scr, action) {
   var act = curAct();
-  if (tiles[act][desk][scr].length < 2) { return; }
-  if (tiles[act][desk][scr][0].geometry.width > tiles[act][desk][scr][1].geometry.width) {
-    fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
-    fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
-  } else {
-    fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
-    fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
+  switch (tiles[act][desk][scr].length) {
+    case 0:
+      return;
+    case 1:
+      return;
+    case 2:
+      fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
+      fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
+      break;
+    case 3:
+      fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
+      if (tiles[act][desk][scr][2].geometry.height > tiles[act][desk][scr][1].geometry.height) {
+        fitClient(tiles[act][desk][scr][2], desk, scr, action, true);
+      } else {
+        fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
+      }
+      break;
+    case 4:
+      if (tiles[act][desk][scr][3].geometry.height > tiles[act][desk][scr][0].geometry.height) {
+        fitClient(tiles[act][desk][scr][3], desk, scr, action, true);
+      } else {
+        fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
+      }
+      if (tiles[act][desk][scr][2].geometry.height > tiles[act][desk][scr][1].geometry.height) {
+        fitClient(tiles[act][desk][scr][2], desk, scr, action, true);
+      } else {
+        fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
+      }
   }
+
+  lineHorizontally(desk, scr);
 }
 
 // Adjusts the layout according to the size of a client
@@ -752,15 +775,16 @@ function fitClient(client, desk, scr, action, all) {
 
   var y = client.geometry.height + gap * 1.5 - tile.height;
   if (client.fixed !== true && opposite && opposite[0].fixed) {
-    y = -1 * (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height); // If opposite client is fixed, fit to its height instead
+    tile = tiles[act][desk][scr].layout[opposite[1]];
+    y = -1 * (opposite[0].geometry.height + gap * 1.5 - tile.height); // If opposite client is fixed, fit to its height instead
   } else if (client.fixed && opposite && opposite[0].fixed) {
     y = 0.5 * (y - (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height)); // If client and opposite fixed, center the tiles
-  } else if (action !== "resize" && client.fixed !== true) {
-    y = newTile(scr).height - tile.height; // Stops a tile from getting too large
+  } else if (action !== "resize" && client.fixed !== true && y > newTile(scr).height * 1.5 - tile.height) {
+    y = newTile(scr).height * 1.5 - tile.height; // Stops a tile from getting too large
   }
-  
+
   var x = 0;
-  if (action === "move" || action === "throw" || action === "add" || action === "remove") {   
+  if (action === "move" || action === "throw" || action === "add" || action === "remove") {   
     x = client.geometry.width + gap * 1.5 - tile.width;
     if (client.fixed && neighbour && neighbour[0].fixed) {
       x = 0.5 * (x - (neighbour[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width)); // If client and opposite fixed, center the tiles
@@ -771,8 +795,11 @@ function fitClient(client, desk, scr, action, all) {
     }
   }
 
+
   adjustClientSize(client, scr, x, y);
-  lineHorizontally(desk, scr);
+  if (all !== true) {
+    lineHorizontally(desk, scr);
+  }
 }
 
 function lineHorizontally(desk, scr) {
@@ -1036,9 +1063,9 @@ function swapClients(i, j, scrI, scrJ) {
   var desk = ws.currentDesktop;
   var temp = tiles[act][desk][scrI][i];
   tiles[act][desk][scrI][i] = tiles[act][desk][scrJ][j];
-  fitClients(desk, scrI, "move");
   tiles[act][desk][scrJ][j] = temp;
-  fitClients(desk, scrJ, "move");
+  fitClients(desk, scrI, "move");
+  if (scrI !== scrJ) { fitClients(desk, scrJ, "move"); }
   print("successfully swapped clients " + i + " " + j);
 }
 
