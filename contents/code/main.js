@@ -1088,15 +1088,16 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
 // Resizes client and alters all tiles accordingly
 function resizeClient(client) {
   print("attempting to resize " + client.caption);
+  var act = curAct();
   var desk = client.desktop;
   var scr = oldScr;
   var i = findClientIndex(client, client.desktop, oldScr);
   var difW, difH, difX, difY;
   if (client.fixed) {
-    difW = client.geometry.width - tiles[curAct()][desk][scr].layout[i].width;
-    difH = client.geometry.height - tiles[curAct()][desk][scr].layout[i].height;
-    difX = client.geometry.x - tiles[curAct()][desk][scr].layout[i].x;
-    difY = client.geometry.y - tiles[curAct()][desk][scr].layout[i].y;
+    difW = client.geometry.width - tiles[act][desk][scr].layout[i].width;
+    difH = client.geometry.height - tiles[act][desk][scr].layout[i].height;
+    difX = client.geometry.x - tiles[act][desk][scr].layout[i].x;
+    difY = client.geometry.y - tiles[act][desk][scr].layout[i].y;
     if (difW < 0) {
       difW = 0;
     }
@@ -1118,62 +1119,62 @@ function resizeClient(client) {
   switch (i) {
     case 0:
       if (difX === 0 && difY === 0) {
-        tiles[curAct()][desk][scr].layout[0].width += difW;
-        tiles[curAct()][desk][scr].layout[1].x += difW;
-        tiles[curAct()][desk][scr].layout[1].width -= difW;
-        tiles[curAct()][desk][scr].layout[2].x += difW;
-        tiles[curAct()][desk][scr].layout[2].width -= difW;
-        tiles[curAct()][desk][scr].layout[3].width += difW;
-        if (tiles[curAct()][desk][scr].length === 4) {
-          tiles[curAct()][desk][scr].layout[0].height += difH;
-          tiles[curAct()][desk][scr].layout[3].height -= difH;
-          tiles[curAct()][desk][scr].layout[3].y += difH;
+        tiles[act][desk][scr].layout[0].width += difW;
+        tiles[act][desk][scr].layout[1].x += difW;
+        tiles[act][desk][scr].layout[1].width -= difW;
+        tiles[act][desk][scr].layout[2].x += difW;
+        tiles[act][desk][scr].layout[2].width -= difW;
+        tiles[act][desk][scr].layout[3].width += difW;
+        if (tiles[act][desk][scr].length === 4) {
+          tiles[act][desk][scr].layout[0].height += difH;
+          tiles[act][desk][scr].layout[3].height -= difH;
+          tiles[act][desk][scr].layout[3].y += difH;
         }
       } // Allows resizing even if Y is dragged above the screen, doesn't alter height
       else if (difX === 0) {
-        tiles[curAct()][desk][scr].layout[0].width += difW;
-        tiles[curAct()][desk][scr].layout[1].x += difW;
-        tiles[curAct()][desk][scr].layout[1].width -= difW;
-        tiles[curAct()][desk][scr].layout[2].x += difW;
-        tiles[curAct()][desk][scr].layout[2].width -= difW;
-        tiles[curAct()][desk][scr].layout[3].width += difW;
+        tiles[act][desk][scr].layout[0].width += difW;
+        tiles[act][desk][scr].layout[1].x += difW;
+        tiles[act][desk][scr].layout[1].width -= difW;
+        tiles[act][desk][scr].layout[2].x += difW;
+        tiles[act][desk][scr].layout[2].width -= difW;
+        tiles[act][desk][scr].layout[3].width += difW;
       }
       break;
     case 1:
-      tiles[curAct()][desk][scr].layout[0].width += difX;
-      tiles[curAct()][desk][scr].layout[1].x += difX;
-      tiles[curAct()][desk][scr].layout[1].width -= difX;
-      tiles[curAct()][desk][scr].layout[2].x += difX;
-      tiles[curAct()][desk][scr].layout[2].width -= difX;
-      tiles[curAct()][desk][scr].layout[3].width += difX;
+      tiles[act][desk][scr].layout[0].width += difX;
+      tiles[act][desk][scr].layout[1].x += difX;
+      tiles[act][desk][scr].layout[1].width -= difX;
+      tiles[act][desk][scr].layout[2].x += difX;
+      tiles[act][desk][scr].layout[2].width -= difX;
+      tiles[act][desk][scr].layout[3].width += difX;
       if (difY === 0) {
-        tiles[curAct()][desk][scr].layout[1].height += difH;
-        tiles[curAct()][desk][scr].layout[2].y += difH;
-        tiles[curAct()][desk][scr].layout[2].height -= difH;
+        tiles[act][desk][scr].layout[1].height += difH;
+        tiles[act][desk][scr].layout[2].y += difH;
+        tiles[act][desk][scr].layout[2].height -= difH;
       }
       break;
     case 2:
-      tiles[curAct()][desk][scr].layout[0].width += difX;
-      tiles[curAct()][desk][scr].layout[1].x += difX;
-      tiles[curAct()][desk][scr].layout[1].width -= difX;
-      tiles[curAct()][desk][scr].layout[1].height += difY;
-      tiles[curAct()][desk][scr].layout[2].x += difX;
-      tiles[curAct()][desk][scr].layout[2].y += difY;
-      tiles[curAct()][desk][scr].layout[2].width -= difX;
-      tiles[curAct()][desk][scr].layout[2].height -= difY;
-      tiles[curAct()][desk][scr].layout[3].width += difX;
+      tiles[act][desk][scr].layout[0].width += difX;
+      tiles[act][desk][scr].layout[1].x += difX;
+      tiles[act][desk][scr].layout[1].width -= difX;
+      tiles[act][desk][scr].layout[1].height += difY;
+      tiles[act][desk][scr].layout[2].x += difX;
+      tiles[act][desk][scr].layout[2].y += difY;
+      tiles[act][desk][scr].layout[2].width -= difX;
+      tiles[act][desk][scr].layout[2].height -= difY;
+      tiles[act][desk][scr].layout[3].width += difX;
       break;
     case 3:
       if (difX === 0) {
-        tiles[curAct()][desk][scr].layout[0].width += difW;
-        tiles[curAct()][desk][scr].layout[0].height += difY;
-        tiles[curAct()][desk][scr].layout[1].x += difW;
-        tiles[curAct()][desk][scr].layout[1].width -= difW;
-        tiles[curAct()][desk][scr].layout[2].x += difW;
-        tiles[curAct()][desk][scr].layout[2].width -= difW;
-        tiles[curAct()][desk][scr].layout[3].y += difY;
-        tiles[curAct()][desk][scr].layout[3].width += difW;
-        tiles[curAct()][desk][scr].layout[3].height -= difY;
+        tiles[act][desk][scr].layout[0].width += difW;
+        tiles[act][desk][scr].layout[0].height += difY;
+        tiles[act][desk][scr].layout[1].x += difW;
+        tiles[act][desk][scr].layout[1].width -= difW;
+        tiles[act][desk][scr].layout[2].x += difW;
+        tiles[act][desk][scr].layout[2].width -= difW;
+        tiles[act][desk][scr].layout[3].y += difY;
+        tiles[act][desk][scr].layout[3].width += difW;
+        tiles[act][desk][scr].layout[3].height -= difY;
       }
       break;
   }
@@ -1185,51 +1186,52 @@ function resizeClient(client) {
 
 // Screen must be carried as a parameter because once a client gets too large, its screen will change
 function adjustClientSize(client, scr, x, y) {
+  var act = curAct(client);
   var desk = client.desktop;
   switch (findClientIndex(client, desk, scr)) {
     case 0:
-      tiles[curAct(client)][desk][scr].layout[0].width += x;
-      tiles[curAct(client)][desk][scr].layout[1].x += x;
-      tiles[curAct(client)][desk][scr].layout[1].width -= x;
-      tiles[curAct(client)][desk][scr].layout[2].x += x;
-      tiles[curAct(client)][desk][scr].layout[2].width -= x;
-      tiles[curAct(client)][desk][scr].layout[3].width += x;
-      tiles[curAct(client)][desk][scr].layout[0].height += y;
-      tiles[curAct(client)][desk][scr].layout[3].y += y;
-      tiles[curAct(client)][desk][scr].layout[3].height -= y;
+      tiles[act][desk][scr].layout[0].width += x;
+      tiles[act][desk][scr].layout[1].x += x;
+      tiles[act][desk][scr].layout[1].width -= x;
+      tiles[act][desk][scr].layout[2].x += x;
+      tiles[act][desk][scr].layout[2].width -= x;
+      tiles[act][desk][scr].layout[3].width += x;
+      tiles[act][desk][scr].layout[0].height += y;
+      tiles[act][desk][scr].layout[3].y += y;
+      tiles[act][desk][scr].layout[3].height -= y;
       break;
     case 1:
-      tiles[curAct(client)][desk][scr].layout[0].width -= x;
-      tiles[curAct(client)][desk][scr].layout[1].x -= x;
-      tiles[curAct(client)][desk][scr].layout[1].width += x;
-      tiles[curAct(client)][desk][scr].layout[2].x -= x;
-      tiles[curAct(client)][desk][scr].layout[2].width += x;
-      tiles[curAct(client)][desk][scr].layout[3].width -= x;
-      tiles[curAct(client)][desk][scr].layout[1].height += y;
-      tiles[curAct(client)][desk][scr].layout[2].y += y;
-      tiles[curAct(client)][desk][scr].layout[2].height -= y;
+      tiles[act][desk][scr].layout[0].width -= x;
+      tiles[act][desk][scr].layout[1].x -= x;
+      tiles[act][desk][scr].layout[1].width += x;
+      tiles[act][desk][scr].layout[2].x -= x;
+      tiles[act][desk][scr].layout[2].width += x;
+      tiles[act][desk][scr].layout[3].width -= x;
+      tiles[act][desk][scr].layout[1].height += y;
+      tiles[act][desk][scr].layout[2].y += y;
+      tiles[act][desk][scr].layout[2].height -= y;
       break;
     case 2:
-      tiles[curAct(client)][desk][scr].layout[0].width -= x;
-      tiles[curAct(client)][desk][scr].layout[1].x -= x;
-      tiles[curAct(client)][desk][scr].layout[1].width += x;
-      tiles[curAct(client)][desk][scr].layout[2].x -= x;
-      tiles[curAct(client)][desk][scr].layout[2].width += x;
-      tiles[curAct(client)][desk][scr].layout[3].width -= x;
-      tiles[curAct(client)][desk][scr].layout[1].height -= y;
-      tiles[curAct(client)][desk][scr].layout[2].y -= y;
-      tiles[curAct(client)][desk][scr].layout[2].height += y;
+      tiles[act][desk][scr].layout[0].width -= x;
+      tiles[act][desk][scr].layout[1].x -= x;
+      tiles[act][desk][scr].layout[1].width += x;
+      tiles[act][desk][scr].layout[2].x -= x;
+      tiles[act][desk][scr].layout[2].width += x;
+      tiles[act][desk][scr].layout[3].width -= x;
+      tiles[act][desk][scr].layout[1].height -= y;
+      tiles[act][desk][scr].layout[2].y -= y;
+      tiles[act][desk][scr].layout[2].height += y;
       break;
     case 3:
-      tiles[curAct(client)][desk][scr].layout[0].width += x;
-      tiles[curAct(client)][desk][scr].layout[1].x += x;
-      tiles[curAct(client)][desk][scr].layout[1].width -= x;
-      tiles[curAct(client)][desk][scr].layout[2].x += x;
-      tiles[curAct(client)][desk][scr].layout[2].width -= x;
-      tiles[curAct(client)][desk][scr].layout[3].width += x;
-      tiles[curAct(client)][desk][scr].layout[0].height -= y;
-      tiles[curAct(client)][desk][scr].layout[3].y -= y;
-      tiles[curAct(client)][desk][scr].layout[3].height += y;
+      tiles[act][desk][scr].layout[0].width += x;
+      tiles[act][desk][scr].layout[1].x += x;
+      tiles[act][desk][scr].layout[1].width -= x;
+      tiles[act][desk][scr].layout[2].x += x;
+      tiles[act][desk][scr].layout[2].width -= x;
+      tiles[act][desk][scr].layout[3].width += x;
+      tiles[act][desk][scr].layout[0].height -= y;
+      tiles[act][desk][scr].layout[3].y -= y;
+      tiles[act][desk][scr].layout[3].height += y;
       break;
   }
 }
