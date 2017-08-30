@@ -587,10 +587,11 @@ function addClient(client, follow, desk, scr) {
     }
     client.desktop = desk;
     ws.activeClient = client;
+    var unshift = false;
     connectClient(client, desk, scr); // Connect client before checking its attributes
     if (autoSize == 0 && tiles[act][desk][scr].length > 0 && tiles[act][desk][scr][0].fixed && client.fixed !== true) {
-      tiles[act][desk][scr].unshift(client)
-      var unshift = true;
+      tiles[act][desk][scr].unshift(client);
+      unshift = true;
     } else {
       tiles[act][desk][scr].push(client); // Normally, just push the client to the end of the array
     }
@@ -668,14 +669,14 @@ function removeClient(client, follow, desk, scr) {
     } else {
       var i = findClientIndex(client, desk, scr);
       tiles[act][desk][scr].splice(i, 1);
+      if (tiles[act][desk][scr].length === 0 && follow) {
+        ws.currentDesktop = findBusy(); // If follow = true, change the desktop if the removed client was the last one
+      } else if (tiles[act][desk][scr].length > i && client.fixed) {
+        fitClient(tiles[act][desk][scr][i], desk, scr, "remove"); // Fits the client filling removed client's spot
+      }
     }
     disconnectClient(client);
     print(client.caption + " removed");
-    if (tiles[act][desk][scr].length === 0 && follow) {
-      ws.currentDesktop = findBusy(); // If follow = true, change the desktop if the removed client was the last one
-    } else if (tiles[act][desk][scr].length > i && client.fixed) {
-      fitClient(tiles[act][desk][scr][i], desk, scr, "remove"); // Fits the client filling removed client's spot
-    }
     fitClients(desk, scr, "remove");
     tileClients();
   } else {
@@ -801,6 +802,9 @@ function fitClient(client, desk, scr, action, all) {
     } else if (x > newTile(scr).width - tile.width) { 
       x = newTile(scr).width - tile.width; // Stops a tile from getting too large
     }
+  }
+  if (action === "move" && x < 0 && client.fixed !== true && tiles[act][desk][scr].length === 3) {
+    x = 0;
   }
 
   adjustClientSize(client, scr, x, y);
@@ -1036,9 +1040,20 @@ function swapClients(i, j, scrI, scrJ) {
   var temp = tiles[act][desk][scrI][i];
   tiles[act][desk][scrI][i] = tiles[act][desk][scrJ][j];
   tiles[act][desk][scrJ][j] = temp;
-  fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move");
-  fitClients(desk, scrI, "move");
-  if (scrI !== scrJ) { fitClients(desk, scrJ, "move"); }
+  if (i === 3 && j === 0 || i === 0 && j === 3 || i === 1 && j === 2 || i === 2 && j === 1) {
+    if (scrI === scrJ) {
+      fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move", true);
+    } else {
+      fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move");
+    }
+  } else {
+    fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move");
+  }
+  fitClients(desk, scrJ, "move");
+  if (scrI !== scrJ) {
+    fitClient(tiles[act][desk][scrI][i], desk, scrI, "move");
+    fitClients(desk, scrI, "move");
+  }
   print("successfully swapped clients " + i + " " + j);
 }
 
@@ -1098,18 +1113,10 @@ function resizeClient(client) {
     difH = client.geometry.height - tiles[act][desk][scr].layout[i].height;
     difX = client.geometry.x - tiles[act][desk][scr].layout[i].x;
     difY = client.geometry.y - tiles[act][desk][scr].layout[i].y;
-    if (difW < 0) {
-      difW = 0;
-    }
-    if (difH < 0) {
-      difH = 0;
-    }
-    if (difX > 0) {
-      difX = 0;
-    }
-    if (difY > 0) {
-      difY = 0;
-    }
+    if (difW < 0) { difW = 0; }
+    if (difH < 0) { difH = 0; }
+    if (difX > 0) { difX = 0; }
+    if (difY > 0) { difY = 0; }
   } else {
     difW = client.geometry.width - oldGeo.width;
     difH = client.geometry.height - oldGeo.height;
@@ -1478,7 +1485,7 @@ function curAct(client) {
   }
 }
 
-// Detects whether a desktop is added or removed, called whenever the number of desktops changes
+// Detects whether a desktop is added or removed
 function adjustDesktops(desktop) {
   // Checks if a workspace is removed
   if (ws.desktops < desktop) {
