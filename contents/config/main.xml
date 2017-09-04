@@ -27,7 +27,7 @@
     </entry>
     <entry name="autoSize" type="int">
       <label>Automatically optimize available space</label>
-      <default>1</default>
+      <default>2</default>
     </entry>
     <entry name="centerTo" type="int">
       <label>Tile small clients to the center of the tile instead of the center of the screen</label>

@@ -135,7 +135,7 @@ function fixMargins() {
 
 var centerTo = readConfig("centerTo", 1); // 0 == Screen, 1 == Tile
 
-var autoSize = readConfig("autoSize", 1); // 0 == All, 1 == Fixed, 2 == Nada
+var autoSize = readConfig("autoSize", 2); // 0 == All, 1 == Fixed, 2 == Nada
 
 // Starts the script
 function init() {
