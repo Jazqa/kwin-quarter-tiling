@@ -813,7 +813,7 @@ function fitClient(client, desk, scr, action, all) {
   }
 
   var x = 0;
-  if (all && client.fixed !== true || "swap" && client.fixed !== true) {
+  if (all && client.fixed !== true || action === "swap" && client.fixed !== true) {
     x = 0;
   } else if (action === "move" || action === "throw" || action === "add" || action === "remove") {   
     x = client.geometry.width + gap * 1.5 - tile.width;
