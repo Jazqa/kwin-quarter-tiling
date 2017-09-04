@@ -135,7 +135,7 @@ function fixMargins() {
 
 var centerTo = readConfig("centerTo", 1); // 0 == Screen, 1 == Tile
 
-var autoSize = readConfig("autoSize", 1); // 0 == True, 1 == False
+var autoSize = readConfig("autoSize", 1); // 0 == All, 1 == Fixed, 2 == Nada
 
 // Starts the script
 function init() {
@@ -771,11 +771,24 @@ function fitClients(desk, scr, action) {
 // Adjusts the layout according to the size of a client
 function fitClient(client, desk, scr, action, all) {
   // Only fits the vertical size, if a horizontal layout is ever implemented, it needs to be fit instead
-  if (autoSize == 1) { return; }
+  if (autoSize == 2) { return; }
 
   // If opposite client is fixed and this one is not, fits it instead in order to shrink it
   var opposite = oppositeClient(client, scr);
   var neighbour = neighbourClient(client, scr);
+
+  // If autoSize = 1, only fixed clients will be fit (note: ugly if-case because opposites and neighbours don't always exist)
+  if (autoSize == 1) {
+    if(client.fixed !== true) {
+      if (opposite && neighbour) {
+        if (opposite[0].fixed !== true && neighbour[0].fixed !== true) { return; }
+      } else if (opposite && neighbour == false) {
+        if (opposite[0].fixed !== true) { return; }
+      } else if (neighbour && opposite == false) {
+        if (neighbour[0].fixed !== true) { return; }
+      }
+    }
+  }
 
   var act = curAct();
   var tile = tiles[act][desk][scr].layout[findClientIndex(client, desk, scr)];
@@ -787,11 +800,20 @@ function fitClient(client, desk, scr, action, all) {
   } else if (client.fixed && opposite && opposite[0].fixed) {
     y = 0.5 * (y - (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height)); // If client and opposite fixed, center the tiles
   } else if (action !== "resize" && client.fixed !== true && y > newTile(scr).height - tile.height) {
-    y = newTile(scr).height - tile.height; // Stops a tile from getting too large
+    if (autoSize == 1) {
+      y = 0;
+    } else {
+      if (all) {
+        // If fitClients() is called, don't adjust the vertical size of previous clients
+        y = 0;
+      } else {
+        y = newTile(scr).height - tile.height; // Stops a tile from getting too large
+      }
+    }
   }
 
   var x = 0;
-  if (all && client.fixed !== true) {
+  if (all && client.fixed !== true || "swap" && client.fixed !== true) {
     x = 0;
   } else if (action === "move" || action === "throw" || action === "add" || action === "remove") {   
     x = client.geometry.width + gap * 1.5 - tile.width;
@@ -800,9 +822,14 @@ function fitClient(client, desk, scr, action, all) {
     } else if (opposite && opposite[0].geometry.width > client.geometry.width) {
       x = opposite[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].width; // Perceive the width of the wider tile
     } else if (x > newTile(scr).width - tile.width) { 
-      x = newTile(scr).width - tile.width; // Stops a tile from getting too large
+      if (autoSize == 1) {
+        x = 0;
+      } else {
+        x = newTile(scr).width - tile.width; // Stops a tile from getting too large
+      }
     }
   }
+  // Plain tile swap if horizontal swap happens when three clients are active
   if (action === "move" && x < 0 && client.fixed !== true && tiles[act][desk][scr].length === 3) {
     x = 0;
   }
@@ -1042,7 +1069,11 @@ function swapClients(i, j, scrI, scrJ) {
   tiles[act][desk][scrJ][j] = temp;
   if (i === 3 && j === 0 || i === 0 && j === 3 || i === 1 && j === 2 || i === 2 && j === 1) {
     if (scrI === scrJ) {
-      fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move", true);
+      if (tiles[act][desk][scrJ][j].geometry.height < tiles[act][desk][scrI][i].geometry.width) {
+        fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "swap");
+      } else {
+        fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move", true);
+      }
     } else {
       fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move");
     }

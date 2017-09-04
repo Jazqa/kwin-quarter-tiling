@@ -172,12 +172,17 @@
         <widget class="QComboBox" name="kcfg_autoSize">
          <item>
           <property name="text">
-           <string>True</string>
+           <string>All Programs</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>False</string>
+           <string>Small Programs</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Disabled</string>
           </property>
          </item>
         </widget>
