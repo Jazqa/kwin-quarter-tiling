@@ -1134,6 +1134,7 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
 // Resizes client and alters all tiles accordingly
 function resizeClient(client) {
   print("attempting to resize " + client.caption);
+  if (isMaxed(client)) { return; }
   var act = curAct();
   var desk = client.desktop;
   var scr = oldScr;
@@ -1296,14 +1297,14 @@ function resetClient(client, pos, scr) {
 }
 
 function minimizeClient(client) {
-  if (client.fullScreen ||  isMaxed(client)) {
+  if (client.fullScreen || isMaxed(client)) {
     tiles[curAct(client)][client.desktop][client.screen].blocked = false;
   }
   reserveClient(client, client.desktop, client.screen);
 }
 
 function unminimizeClient(client) {
-  if (client.fullScreen ||  isMaxed(client)) {
+  if (client.fullScreen || isMaxed(client)) {
     tiles[curAct(client)][client.desktop][client.screen].blocked = true;
   }
   unreserveClient(client, client.desktop, client.screen);
@@ -1338,7 +1339,6 @@ var oldGeo;
 var oldScr;
 // Saves the pre-movement position when called
 function saveClientGeo(client) {
-  print("saving " + client.caption + "'s geometry");
   oldGeo = client.geometry;
   oldScr = client.screen;
 }
