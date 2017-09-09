@@ -57,9 +57,9 @@ if (readConfig("ignoredCaptions", "") != "") {
   ignoredCaptions = ignoredCaptions.concat(readConfig("ignoredCaptions", "").toString().split(', '));
 }
 
+// Activities that will be ignored by the script
 var ignoredActivities = [];
 function readIgnoredActs() {
-  // Activities that will be ignored by the script
   ignoredActivities = readConfig("ignoredActivities", "").toString().split(', ');
   if (ignoredActivities != "") {
     for (var i = 0; i < ignoredActivities.length; i++) {
@@ -109,7 +109,7 @@ if (ignoredScreens != "") {
 
 var gap = readConfig("gap", 8);
 
-// Negative gaps are not allowed because of isMaxed()
+// Negative gaps are not allowed (difficulty recognizing maxed, overlapping x < 0 changes screen)
 if (gap < 0) {
   gap = 0;
 }
@@ -130,7 +130,7 @@ function fixMargins() {
       return;
     }
   }
-  margins[2] = 1;
+  margins[2] = 1; // Bottom is used because it's the least noticable and needed
 }
 
 var centerTo = readConfig("centerTo", 1); // 0 == Screen, 1 == Tile
@@ -167,6 +167,7 @@ function registerKeys() {
     "Quarter: Float/Tile Desktop",
     "Meta+Esc",
     function() {
+      // Floats the whole desktop and aligns windows to the middle
       var clients = ws.clientList();
       var client;
       var desk = ws.currentDesktop;
@@ -183,19 +184,15 @@ function registerKeys() {
         ignoredDesktops.push(desk);
         var scrs = [];
         for (var l = 0; l < ws.numScreens; l++) {
-          scrs[l] = 1;
+          scrs[l] = 1; // Align each screen separately
         }
         for (var j = 0; j < clients.length; j++) {
           client = clients[j];
-          if (client.desktop == desk && client.included && client != ws.activeClient) {
+          if (client.desktop === desk && client.included) {
             removeClient(client, false, client.desktop, client.screen);
             resetClient(client, scrs[client.screen]);
             scrs[client.screen] += 1;
           }
-        }
-        client = ws.activeClient;
-        if (client.desktop == desk && client.included) {
-          removeClient(client, false, client.desktop, client.screen);
         }
       }
     });
@@ -216,31 +213,27 @@ function registerKeys() {
     "Quarter: Move Up",
     "Meta+K",
     function() {
+      var scr = ws.activeScreen;
       var client = ws.activeClient;
       if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
-        var i = findClientIndex(client, ws.currentDesktop, ws.activeScreen);
+        var i = findClientIndex(client, ws.currentDesktop, scr);
         if (i === 2) {
-          swapClients(i, 1, ws.activeScreen, ws.activeScreen);
+          swapClients(i, 1, scr, scr);
         } else if (i === 3) {
-          swapClients(i, 0, ws.activeScreen, ws.activeScreen);
+          swapClients(i, 0, scr, scr);
         } else {
           return;
         }
         tileClients();
       } else {
-        var tile = screenGeo(ws.activeScreen);
+        var tile = screenGeo(scr);
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
         rect.y = tile.y + gap + margins[0];
         rect.width = tile.width - gap * 2 - margins[1] - margins[3];
         rect.height = tile.height * 0.5 - gap - margins[0];
         if (client.geometry.x == rect.x && client.geometry.y == rect.y && client.geometry.width == rect.width && client.geometry.height == rect.height) {
-          rect = tile;
-          rect.x += gap + margins[1];
-          rect.y += gap + margins[0];
-          rect.width -= gap * 2 + margins[1] + margins[3];
-          rect.height -= gap * 2 + margins[0] + margins[2];
-          client.geometry = rect;
+          client.geometry = screenGeo(scr, true);
         } else {
           client.geometry = rect;
         }
@@ -251,19 +244,22 @@ function registerKeys() {
     "Quarter: Move Down",
     "Meta+J",
     function() {
+      var act = curAct();
+      var desk = ws.currentDesktop;
+      var scr = ws.activeScreen;
       var client = ws.activeClient;
       if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
-        var i = findClientIndex(client, ws.currentDesktop, ws.activeScreen);
-        if (i === 0 && tiles[curAct()][ws.currentDesktop][ws.activeScreen].length === 4) {
-          swapClients(i, 3, ws.activeScreen, ws.activeScreen);
-        } else if (i === 1 && tiles[curAct()][ws.currentDesktop][ws.activeScreen].length >= 3) {
-          swapClients(i, 2, ws.activeScreen, ws.activeScreen);
+        var i = findClientIndex(client, desk, scr);
+        if (i === 0 && tiles[act][desk][scr].length === 4) {
+          swapClients(i, 3, scr, scr);
+        } else if (i === 1 && tiles[act][desk][scr].length >= 3) {
+          swapClients(i, 2, scr, scr);
         } else {
           return;
         }
         tileClients();
       } else {
-        var tile = screenGeo(ws.activeScreen);
+        var tile = screenGeo(scr);
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
         rect.y = tile.y + gap + margins[0];
@@ -271,12 +267,7 @@ function registerKeys() {
         rect.height = tile.height * 0.5 - gap - margins[2];
         rect.y += rect.height;
         if (client.geometry.x == rect.x && client.geometry.y == rect.y && client.geometry.width == rect.width && client.geometry.height == rect.height) {
-          rect = tile;
-          rect.x += gap + margins[1];
-          rect.y += gap + margins[0];
-          rect.width -= gap * 2 + margins[1] + margins[3];
-          rect.height -= gap * 2 + margins[0] + margins[2];
-          client.geometry = rect;
+          client.geometry = screenGeo(scr, true);
         } else {
           client.geometry = rect;
         }
@@ -287,33 +278,31 @@ function registerKeys() {
     "Quarter: Move Left",
     "Meta+H",
     function() {
+      var act = curAct();
+      var desk = ws.currentDesktop;
+      var scr = ws.activeScreen;
       var client = ws.activeClient;
       if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
-        var i = findClientIndex(client, ws.currentDesktop, ws.activeScreen);
+        var i = findClientIndex(client, desk, scr);
         if (i === 1) {
-          swapClients(i, 0, ws.activeScreen, ws.activeScreen);
-        } else if (i === 2 && tiles[curAct()][ws.currentDesktop][ws.activeScreen].length === 4) {
-          swapClients(i, 3, ws.activeScreen, ws.activeScreen);
+          swapClients(i, 0, scr, scr);
+        } else if (i === 2 && tiles[act][desk][scr].length === 4) {
+          swapClients(i, 3, scr, scr);
         } else if (i === 2) {
-          swapClients(i, 0, ws.activeScreen, ws.activeScreen);
+          swapClients(i, 0, scr, scr);
         } else {
           return;
         }
         tileClients();
       } else {
-        var tile = screenGeo(ws.activeScreen);
+        var tile = screenGeo(scr);
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
         rect.y = tile.y + gap + margins[0];
         rect.width = tile.width * 0.5 - gap - margins[1];
         rect.height = tile.height - gap * 2 - margins[0] - margins[2];
         if (client.geometry.x == rect.x && client.geometry.y == rect.y && client.geometry.width == rect.width && client.geometry.height == rect.height) {
-          rect = tile;
-          rect.x += gap + margins[1];
-          rect.y += gap + margins[0];
-          rect.width -= gap * 2 + margins[1] + margins[3];
-          rect.height -= gap * 2 + margins[0] + margins[2];
-          client.geometry = rect;
+          client.geometry = screenGeo(scr, true);
         } else {
           client.geometry = rect;
         }
@@ -324,19 +313,22 @@ function registerKeys() {
     "Quarter: Move Right",
     "Meta+L",
     function() {
+      var act = curAct();
+      var desk = ws.currentDesktop;
+      var scr = ws.activeScreen;
       var client = ws.activeClient;
       if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
-        var i = findClientIndex(client, ws.currentDesktop, ws.activeScreen);
-        if (i === 0 && tiles[curAct()][ws.currentDesktop][ws.activeScreen].length > 1) {
-          swapClients(i, 1, ws.activeScreen, ws.activeScreen);
+        var i = findClientIndex(client, desk, scr);
+        if (i === 0 && tiles[act][desk][scr].length > 1) {
+          swapClients(i, 1, scr, scr);
         } else if (i === 3) {
-          swapClients(i, 2, ws.activeScreen, ws.activeScreen);
+          swapClients(i, 2, scr, scr);
         } else {
           return;
         }
         tileClients();
       } else {
-        var tile = screenGeo(ws.activeScreen);
+        var tile = screenGeo(scr);
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
         rect.y = tile.y + gap + margins[0];
@@ -344,12 +336,7 @@ function registerKeys() {
         rect.height = tile.height - gap * 2 - margins[0] - margins[2];
         rect.x += rect.width;
         if (client.geometry.x == rect.x && client.geometry.y == rect.y && client.geometry.width == rect.width && client.geometry.height == rect.height) {
-          rect = tile;
-          rect.x += gap + margins[1];
-          rect.y += gap + margins[0];
-          rect.width -= gap * 2 + margins[1] + margins[3];
-          rect.height -= gap * 2 + margins[0] + margins[2];
-          client.geometry = rect;
+          client.geometry = screenGeo(scr, true);
         } else {
           client.geometry = rect;
         }
@@ -386,7 +373,7 @@ function registerKeys() {
     "Quarter: + Window Size",
     "Meta+Y",
     function() {
-      // TODO: Fix for fixed clients
+      // TODO: Implement for fixed clients
       var client = ws.activeClient;
       if (client.fixed) {
         return;
@@ -413,7 +400,7 @@ function registerKeys() {
     "Quarter: - Window Size",
     "Meta+N",
     function() {
-      // TODO: Fix for fixed clients
+      // TODO: Implement for fixed clients
       var client = ws.activeClient;
       if (client.fixed) {
         return;
@@ -458,7 +445,8 @@ function registerKeys() {
             return;
           }
         }
-        gap = 1;
+        gap = 1; /* If margins are set to zero, gaps can't be zero
+                    or the last window will be recognized as maximized */
       }
       tileClients();
     });
@@ -559,8 +547,9 @@ function addClient(client, follow, desk, scr) {
     // If tiles.length exceeds the maximum amount, moves to another screen or another desktop
     if (tiles[act][desk][scr].length === tiles[act][desk][scr].max || tiles[act][desk][scr].length === 4 ||  tiles[act][desk][scr].blocked) {
       if (tiles[act][desk][scr].length === 4) {
+        // Fixes a bug that makes the maximum go over 4 when removing virtual desktops
         tiles[act][desk][scr].max = 4;
-      } // Fixes a bug that makes the maximum go over 4 when removing virtual desktops
+      }
       var freeTile = findSpace(); // Looks for a free space on existing desktops
       if (freeTile) {
         desk = freeTile[0];
@@ -583,7 +572,6 @@ function addClient(client, follow, desk, scr) {
     } else {
       tiles[act][desk][scr].push(client); // Normally, just push the client to the end of the array
     }
-    print(client.caption + " added on desktop " + desk + " screen " + scr); // Client is already added here, just space optimization and/or maximization/minimization left
     if (client.minimized) {
       reserveClient(client, desk, scr);
     } else if (client.fullScreen || isMaxed(client)) {
@@ -602,6 +590,7 @@ function addClient(client, follow, desk, scr) {
       if (unshift) { fitClient(tiles[act][desk][scr][1], desk, scr, "add"); }
       tileClients();
     }
+    print(client.caption + " added on desktop " + desk + " screen " + scr);
   }
 }
 
@@ -673,9 +662,8 @@ function removeClient(client, follow, desk, scr) {
   }
 }
 
-// Disconnects the signals from removed clients
-// So they will not trigger when a manually floated client is interacted with
-// Or when a client is removed & added between desktops
+/* Disconnects the signals from removed clients,
+   so they will not trigger when a manually floated client is interacted with */
 function disconnectClient(client) {
   client.included = false;
   client.clientStartUserMovedResized.disconnect(startMove);
@@ -808,9 +796,11 @@ function fitClient(client, desk, scr, action, all) {
   } else if (action === "move" || action === "throw" || action === "add" || action === "remove" || client.fixed && action === "resize") {
     x = client.geometry.width + gap * 1.5 - tile.width;
     if (client.fixed && neighbour && neighbour[0].fixed) {
-      x = 0.5 * (x - (neighbour[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width)); // If client and opposite fixed, center the tiles
+      // If client and opposite fixed, center the tiles
+      x = 0.5 * (x - (neighbour[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[neighbour[1]].width));
     } else if (opposite && opposite[0].geometry.width > client.geometry.width) {
-      x = opposite[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].width; // Perceive the width of the wider tile
+      // Perceive the width of the wider tile
+      x = opposite[0].geometry.width + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].width;
     } else if (x > newTile(scr).width - tile.width) { 
       if (autoSize == 1) {
         x = 0;
@@ -828,16 +818,10 @@ function fitClient(client, desk, scr, action, all) {
   resizeClient(client, scr, x, y);
 }
 
-// Calculates the geometries to maintain the layout
-// Geometry calculation is a mess and pre-existing client geometries should NEVER be used
-// Layout is always the fullscreen - no plasma and no gaps layout
-// Plasma is impossible to calculate on init() so it has to be calculated repeatedly
+// Aligns clients to the layout
 function tileClients(desk) {
-  // Let's just pretend this doesn't exist, okay?
-  // Calculating the gaps and plasma each time something moves is the best and least buggy approach
-  // Believe me, I've tried EVERYTHING
-  // Since it's just four, switch is also the easiest approach
-  // TODO: Clean this up, big time
+  /* Let's just pretend this doesn't exist, okay?
+     TODO: Clean this up */
   var act = curAct();
   if (typeof tiles[act] === "undefined") { return; } // Don't tile ignored activities
   if (typeof desk === "undefined") { desk = ws.currentDesktop; }
@@ -846,120 +830,126 @@ function tileClients(desk) {
       // Don't tile ignored screens
     } else if (typeof tiles[act][desk][i] !== "undefined") {
       print("attempting to tile desktop " + desk + " screen " + i);
-      var adjusted = [];
-      if (tiles[act][desk][i].length === 1) {
-        adjusted[0] = {};
-        adjusted[0].x = tiles[act][desk][i].layout[0].x + gap;
-        adjusted[0].y = tiles[act][desk][i].layout[0].y + gap;
-        adjusted[0].width = tiles[act][desk][i].layout[0].width + tiles[act][desk][i].layout[1].width - gap * 2;
-        adjusted[0].height = tiles[act][desk][i].layout[0].height + tiles[act][desk][i].layout[3].height - gap * 2;
-      } else if (tiles[act][desk][i].length === 2) {
-        adjusted[0] = {};
-        adjusted[0].x = tiles[act][desk][i].layout[0].x + gap;
-        adjusted[0].y = tiles[act][desk][i].layout[0].y + gap;
-        adjusted[0].width = tiles[act][desk][i].layout[0].width - gap * 1.5;
-        adjusted[0].height = tiles[act][desk][i].layout[0].height + tiles[act][desk][i].layout[3].height - gap * 2;
+      var t = tiles[act][desk][i];
+      var adj = [];
+      switch (t.length) {
+        case 1:
+          adj[0] = {};
+          adj[0].x = t.layout[0].x + gap;
+          adj[0].y = t.layout[0].y + gap;
+          adj[0].width = t.layout[0].width + t.layout[1].width - gap * 2;
+          adj[0].height = t.layout[0].height + t.layout[3].height - gap * 2;
+          break;
+        case 2:
+          adj[0] = {};
+          adj[0].x = t.layout[0].x + gap;
+          adj[0].y = t.layout[0].y + gap;
+          adj[0].width = t.layout[0].width - gap * 1.5;
+          adj[0].height = t.layout[0].height + t.layout[3].height - gap * 2;
 
-        adjusted[1] = {};
-        adjusted[1].x = tiles[act][desk][i].layout[1].x + gap * 0.5;
-        adjusted[1].y = tiles[act][desk][i].layout[1].y + gap;
-        adjusted[1].width = tiles[act][desk][i].layout[1].width - gap * 1.5;
-        adjusted[1].height = tiles[act][desk][i].layout[1].height + tiles[act][desk][i].layout[2].height - gap * 2;
-      } else if (tiles[act][desk][i].length === 3) {
-        adjusted[0] = {};
-        adjusted[0].x = tiles[act][desk][i].layout[0].x + gap;
-        adjusted[0].y = tiles[act][desk][i].layout[0].y + gap;
-        adjusted[0].width = tiles[act][desk][i].layout[0].width - gap * 1.5;
-        adjusted[0].height = tiles[act][desk][i].layout[0].height + tiles[act][desk][i].layout[3].height - gap * 2;
+          adj[1] = {};
+          adj[1].x = t.layout[1].x + gap * 0.5;
+          adj[1].y = t.layout[1].y + gap;
+          adj[1].width = t.layout[1].width - gap * 1.5;
+          adj[1].height = t.layout[1].height + t.layout[2].height - gap * 2;
+          break;
+        case 3:
+          adj[0] = {};
+          adj[0].x = t.layout[0].x + gap;
+          adj[0].y = t.layout[0].y + gap;
+          adj[0].width = t.layout[0].width - gap * 1.5;
+          adj[0].height = t.layout[0].height + t.layout[3].height - gap * 2;
 
-        adjusted[1] = {};
-        adjusted[1].x = tiles[act][desk][i].layout[1].x + gap * 0.5;
-        adjusted[1].y = tiles[act][desk][i].layout[1].y + gap;
-        adjusted[1].width = tiles[act][desk][i].layout[1].width - gap * 1.5;
-        adjusted[1].height = tiles[act][desk][i].layout[1].height - gap * 1.5;
+          adj[1] = {};
+          adj[1].x = t.layout[1].x + gap * 0.5;
+          adj[1].y = t.layout[1].y + gap;
+          adj[1].width = t.layout[1].width - gap * 1.5;
+          adj[1].height = t.layout[1].height - gap * 1.5;
 
-        adjusted[2] = {};
-        adjusted[2].x = tiles[act][desk][i].layout[2].x + gap * 0.5;
-        adjusted[2].y = tiles[act][desk][i].layout[2].y + gap * 0.5;
-        adjusted[2].width = tiles[act][desk][i].layout[2].width - gap * 1.5;
-        adjusted[2].height = tiles[act][desk][i].layout[2].height - gap * 1.5;
-      } else if (tiles[act][desk][i].length === 4) {
-        adjusted[0] = {};
-        adjusted[0].x = tiles[act][desk][i].layout[0].x + gap;
-        adjusted[0].y = tiles[act][desk][i].layout[0].y + gap;
-        adjusted[0].width = tiles[act][desk][i].layout[0].width - gap * 1.5;
-        adjusted[0].height = tiles[act][desk][i].layout[0].height - gap * 1.5;
+          adj[2] = {};
+          adj[2].x = t.layout[2].x + gap * 0.5;
+          adj[2].y = t.layout[2].y + gap * 0.5;
+          adj[2].width = t.layout[2].width - gap * 1.5;
+          adj[2].height = t.layout[2].height - gap * 1.5;
+          break;
+        case 4:
+          adj[0] = {};
+          adj[0].x = t.layout[0].x + gap;
+          adj[0].y = tiles[act][desk][i].layout[0].y + gap;
+          adj[0].width = t.layout[0].width - gap * 1.5;
+          adj[0].height = t.layout[0].height - gap * 1.5;
 
-        adjusted[1] = {};
-        adjusted[1].x = tiles[act][desk][i].layout[1].x + gap * 0.5;
-        adjusted[1].y = tiles[act][desk][i].layout[1].y + gap;
-        adjusted[1].width = tiles[act][desk][i].layout[1].width - gap * 1.5;
-        adjusted[1].height = tiles[act][desk][i].layout[1].height - gap * 1.5;
+          adj[1] = {};
+          adj[1].x = t.layout[1].x + gap * 0.5;
+          adj[1].y = t.layout[1].y + gap;
+          adj[1].width = t.layout[1].width - gap * 1.5;
+          adj[1].height = t.layout[1].height - gap * 1.5;
 
-        adjusted[2] = {};
-        adjusted[2].x = tiles[act][desk][i].layout[2].x + gap * 0.5;
-        adjusted[2].y = tiles[act][desk][i].layout[2].y + gap * 0.5;
-        adjusted[2].width = tiles[act][desk][i].layout[2].width - gap * 1.5;
-        adjusted[2].height = tiles[act][desk][i].layout[2].height - gap * 1.5;
+          adj[2] = {};
+          adj[2].x = t.layout[2].x + gap * 0.5;
+          adj[2].y = t.layout[2].y + gap * 0.5;
+          adj[2].width = t.layout[2].width - gap * 1.5;
+          adj[2].height = t.layout[2].height - gap * 1.5;
 
-        adjusted[3] = {};
-        adjusted[3].x = tiles[act][desk][i].layout[3].x + gap;
-        adjusted[3].y = tiles[act][desk][i].layout[3].y + gap * 0.5;
-        adjusted[3].width = tiles[act][desk][i].layout[3].width - gap * 1.5;
-        adjusted[3].height = tiles[act][desk][i].layout[3].height - gap * 1.5;
+          adj[3] = {};
+          adj[3].x = t.layout[3].x + gap;
+          adj[3].y = t.layout[3].y + gap * 0.5;
+          adj[3].width = t.layout[3].width - gap * 1.5;
+          adj[3].height = t.layout[3].height - gap * 1.5;
+          break;
       }
-      for (var j = 0; j < adjusted.length; j++) {
+      for (var j = 0; j < adj.length; j++) {
         if (tiles[act][desk][i][j].fixed) {
           var rect = tiles[act][desk][i][j].geometry;
-          // Tiles the "free clients" to the edge of the tile
-          // The code looks ugly but works wonders
           if (centerTo == 1) {
-            rect.x = adjusted[j].x + adjusted[j].width * 0.5 - rect.width * 0.5;
-            rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
+            // If centerTo == 1, tiles clients to the center of the tile
+            rect.x = adj[j].x + adj[j].width * 0.5 - rect.width * 0.5;
+            rect.y = adj[j].y + adj[j].height * 0.5 - rect.height * 0.5;
           } else {
+            // If centerTo == 2, tiles clients to the center of the screen
             switch (j) {
               case 0:
-                if (adjusted.length === 1) {
-                  rect.x = adjusted[j].x + adjusted[j].width * 0.5 - rect.width * 0.5;
-                  rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
-                } else if (adjusted.length == 2 || adjusted.length == 3) {
-                  rect.x = adjusted[j].x + adjusted[j].width - rect.width;
-                  rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
+                if (adj.length === 1) {
+                  rect.x = adj[j].x + adj[j].width * 0.5 - rect.width * 0.5;
+                  rect.y = adj[j].y + adj[j].height * 0.5 - rect.height * 0.5;
+                } else if (adj.length == 2 || adj.length == 3) {
+                  rect.x = adj[j].x + adj[j].width - rect.width;
+                  rect.y = adj[j].y + adj[j].height * 0.5 - rect.height * 0.5;
                 } else {
-                  rect.x = adjusted[j].x + adjusted[j].width - rect.width;
-                  rect.y = adjusted[j].y + adjusted[j].height - rect.height;
+                  rect.x = adj[j].x + adj[j].width - rect.width;
+                  rect.y = adj[j].y + adj[j].height - rect.height;
                 }
                 break;
               case 1:
-                if (adjusted.length === 2) {
-                  rect.x = adjusted[j].x;
-                  rect.y = adjusted[j].y + adjusted[j].height * 0.5 - rect.height * 0.5;
+                if (adj.length === 2) {
+                  rect.x = adj[j].x;
+                  rect.y = adj[j].y + adj[j].height * 0.5 - rect.height * 0.5;
                 } else {
-                  rect.x = adjusted[j].x;
-                  rect.y = adjusted[j].y + adjusted[j].height - rect.height;
+                  rect.x = adj[j].x;
+                  rect.y = adj[j].y + adj[j].height - rect.height;
                 }
                 break;
               case 2:
-                rect.x = adjusted[j].x;
-                rect.y = adjusted[j].y;
+                rect.x = adj[j].x;
+                rect.y = adj[j].y;
                 break;
               case 3:
-                rect.x = adjusted[j].x + adjusted[j].width - rect.width;
-                rect.y = adjusted[j].y;
+                rect.x = adj[j].x + adj[j].width - rect.width;
+                rect.y = adj[j].y;
                 break;
             }
           }
-          if (rect.width > adjusted[j].width) {
-            rect.x = adjusted[j].x;
-            rect.width = adjusted[j].width;
+          if (rect.width > adj[j].width) {
+            rect.x = adj[j].x;
+            rect.width = adj[j].width;
           }
-          if (rect.height > adjusted[j].height) {
-            rect.y = adjusted[j].y;
-            rect.height = adjusted[j].height;
+          if (rect.height > adj[j].height) {
+            rect.y = adj[j].y;
+            rect.height = adj[j].height;
           }
           tiles[act][desk][i][j].geometry = rect;
         } else {
-          tiles[act][desk][i][j].geometry = adjusted[j];
+          tiles[act][desk][i][j].geometry = adj[j];
         }
       }
       print("desktop " + desk + " screen " + i + " tiled");
@@ -1003,8 +993,8 @@ function moveClient(client) {
   geometries[0].index = index;
   // Adds all the existing clients to the geometries[]...
   for (var i = 0; i < tiles[act][desk][scr].length; i++) {
-    // ...except for the client being moved
-    // (it's off the grid and needs to be snapped back to the old tile)
+    /* ...except for the client being moved
+       (it's off the grid and needs to be snapped back to the old tile) */
     if (i !== index) {
       geometries.push(tiles[act][desk][scr].layout[i]);
       geometries[geometries.length - 1].index = i;
@@ -1226,8 +1216,8 @@ function startMove(client) {
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
   print("checking " + client.caption);
-  // If a client is a "dialog", tiles all clients before returning false
-  // Most noticeable on confirmation windows, which usually break tiling momentarily
+  /* If a client is a "dialog", tiles all clients before returning false
+     Most noticeable on confirmation windows, which usually break tiling momentarily */
   if (client.dialog) {
     if (started) {
       tileClients();
@@ -1260,7 +1250,8 @@ function checkClient(client) {
       // ignoredCaptions.indexOf(client.caption.toString()) would be exact match, while this solution is a substring match (#25)
       var caption = client.caption.toString();
       if (caption.indexOf(ignoredCaptions[i]) > -1 && client.included !== true) {
-        // client.included === "undefined" to avoid ignoring a caption "Blahblah" to also ignore Spotify while listening to a song called "Blahblah" and Firefox while googling "Blahblah"
+        /* if a client is already included, don't re-check to avoid ignoring already added clients such as Spotify or Firefox
+           f.ex. if a caption "Blahblah" is ignored and a song called "Blahblah" is listened to on Spotify */
         print(client.caption + " not suitable");
         return false;
       }
@@ -1312,8 +1303,9 @@ function findClientIndex(client, desk, scr) {
 // Finds tiles[desktop][ws.activeScreen] index by geometry
 function findGeometryIndex(geo, desk, scr) {
   print("attempting to find geometry on desktop " + desk + " screen " + scr);
-  for (i = 0; i < tiles[curAct()][desk][scr].length; i++) {
-    if (sameGeometry(tiles[curAct()][desk][scr][i], geo)) {
+  var act = curAct();
+  for (i = 0; i < tiles[act][desk][scr].length; i++) {
+    if (sameGeometry(tiles[act][desk][scr][i], geo)) {
       print("found geometry on " + desk + " screen " + scr);
       return i;
     }
@@ -1383,7 +1375,6 @@ function createActivity(act) {
   print("activitiy " + act.toString() + " created");
 }
 
-// Returns the client's current act if a parameter is given, otherwise returns the workspace's current act
 function curAct(client) {
   if (client) {
     if (client.activities[0]) {
@@ -1398,12 +1389,11 @@ function curAct(client) {
 
 // Detects whether a desktop is added or removed
 function adjustDesktops(desktop) {
-  // Checks if a workspace is removed
   if (ws.desktops < desktop) {
+    // Desktop added
     tileClients();
-  }
-  // Checks if a workspace is added
-  else if (ws.desktops > desktop) {
+  } else if (ws.desktops > desktop) {
+    // Desktop removed
     for (var i = 0; i < ws.activities.length; i++) {
       createDesktop(ws.activities[i].toString(), ws.desktops);
     }
@@ -1418,7 +1408,8 @@ function createDesktop(act, desk) {
   for (var i = 0; i < ws.numScreens; i++) {
     tiles[act][desk][i] = [];
     if (ignoredScreens.indexOf(i) > -1) {
-      tiles[act][desk][i].max = Number.MAX_VALUE; // TODO: Ignored screens to work like desktops and activities
+      // TODO: Ignored screens to work like desktops and activities
+      tiles[act][desk][i].max = Number.MAX_VALUE;
     } else {
       tiles[act][desk][i].max = 4;
     }
@@ -1535,8 +1526,16 @@ function newLayout(scr) {
   return layout;
 }
 
-function screenGeo(scr) {
-  return ws.clientArea(0, scr, 0);
+// Returns the screen geometry, with or without gaps
+function screenGeo(scr, gaps) {
+  var area = ws.clientArea(0, scr, 0);
+  if (gaps) {
+    area.x += gap + margins[1];
+    area.y += gap + margins[0];
+    area.width -= gap * 2 + margins[1] + margins[3];
+    area.height -= gap * 2 + margins[0] + margins[2];
+  }
+  return area;
 }
 
 function screenWidth(scr) {
@@ -1571,10 +1570,9 @@ function instantInit() {
   return false;
 }
 
-// Hack: Waits for client connections, then attempts to initiate the script
-// If client is valid for the script, the script is initiated
-// The most reliable way to start the script thus far
-// TODO: Find a better and more reliable way to start the script
+/* Hack: Waits for client connections, then attempts to initiate the script:
+   if client is valid for the script, the script is initiated
+   TODO: Find a better and more reliable way to start the script */
 function wait(client) {
   if (opt.useCompositing) {
     client.windowShown.connect(check);
