@@ -2,8 +2,8 @@
 // KWin - Quarter Tiling: A Tiling Script for the KWin Window Manager
 // -----------------------------------------------------------------
 
-var ws = workspace;
 var opt = options;
+var ws = workspace;
 
 var tiles = [];
 
@@ -601,7 +601,9 @@ function addClient(client, follow, desk, scr) {
         client.geometry = rect;
       }
       fitClient(client, desk, scr, "add");
-      if (unshift) { fitClient(tiles[act][desk][scr][1], desk, scr, "add"); }
+      if (unshift) {
+        fitClient(tiles[act][desk][scr][1], desk, scr, "add");
+      }
       tileClients();
     }
     print(client.caption + " added on desktop " + desk + " screen " + scr);
@@ -635,6 +637,7 @@ function connectClient(client, desk, scr) {
       fixedClients.indexOf(client.resourceClass.toString()) > -1) {
     client.fixed = true;
   }
+  client.originalGeo = client.geometry;
   client.included = true;
   client.reserved = false;
   client.oldAct = curAct(client);
@@ -649,7 +652,7 @@ function removeClient(client, follow, desk, scr) {
   print("attempting to remove " + client.caption);
   if (client.included) {
 
-    try { resetClient(client, "center"); } catch(err) { print(err); }
+    resetClient(client, "center");
     if (typeof follow === "undefined") { follow = false; }
     if (typeof desk === "undefined") { desk = client.oldDesk; }
     if (typeof scr === "undefined") { scr = client.oldScr; }
@@ -662,9 +665,13 @@ function removeClient(client, follow, desk, scr) {
     } else {
       var i = findClientIndex(client, desk, scr);
       tiles[act][desk][scr].splice(i, 1);
-      if (tiles[act][desk][scr].length === 0 && follow) {
-        // If follow = true, change the desktop if the removed client was the last one
-        ws.currentDesktop = findBusy();
+      for (j = 0; j < tiles[act][desk].length; j++) {
+        if (tiles[act][desk][j].length > 0) { 
+          follow = false; 
+          break;
+        }
+      } if(follow) {
+          ws.currentDesktop = findBusy();
       } else if (tiles[act][desk][scr].length > i && client.fixed) {
         // Fits the client filling removed client's spot
         fitClient(tiles[act][desk][scr][i], desk, scr, "remove");
@@ -697,9 +704,10 @@ function closeWindow(client) {
 function reserveClient(client, desk, scr) {
   print("attempting to reserve " + client.caption);
   if (client.included && client.reserved === false && ignoredScreens.indexOf(scr) === -1) {
+    var act = curAct(client);
     var i = findClientIndex(client, desk, scr);
-    tiles[curAct(client)][desk][scr].max -= 1;
-    tiles[curAct(client)][desk][scr].splice(i, 1);
+    tiles[act][desk][scr].max -= 1;
+    tiles[act][desk][scr].splice(i, 1);
     client.oldIndex = i;
     client.oldDesk = desk;
     client.oldScr = scr;
@@ -731,33 +739,34 @@ function unreserveClient(client) {
 // Finds out which clients of a desktop should be fit
 function fitClients(desk, scr, action) {
   var act = curAct();
-  switch (tiles[act][desk][scr].length) {
+  var t = tiles[act][desk][scr];
+  switch (t.length) {
     case 0:
       return;
     case 1:
       return;
     case 2:
-      fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
-      fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
+      fitClient(t[0], desk, scr, action, true);
+      fitClient(t[1], desk, scr, action, true);
       break;
     case 3:
-      fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
-      if (tiles[act][desk][scr][2].geometry.height > tiles[act][desk][scr][1].geometry.height) {
-        fitClient(tiles[act][desk][scr][2], desk, scr, action, true);
+      fitClient(t[0], desk, scr, action, true);
+      if (t[2].geometry.height > t[1].geometry.height) {
+        fitClient(t[2], desk, scr, action, true);
       } else {
-        fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
+        fitClient(t[1], desk, scr, action, true);
       }
       break;
     case 4:
-      if (tiles[act][desk][scr][3].geometry.height > tiles[act][desk][scr][0].geometry.height) {
-        fitClient(tiles[act][desk][scr][3], desk, scr, action, true);
+      if (t[3].geometry.height > t[0].geometry.height) {
+        fitClient(t[3], desk, scr, action, true);
       } else {
-        fitClient(tiles[act][desk][scr][0], desk, scr, action, true);
+        fitClient(t[0], desk, scr, action, true);
       }
-      if (tiles[act][desk][scr][2].geometry.height > tiles[act][desk][scr][1].geometry.height) {
-        fitClient(tiles[act][desk][scr][2], desk, scr, action, true);
+      if (t[2].geometry.height > t[1].geometry.height) {
+        fitClient(t[2], desk, scr, action, true);
       } else {
-        fitClient(tiles[act][desk][scr][1], desk, scr, action, true);
+        fitClient(t[1], desk, scr, action, true);
       }
   }
 }
@@ -1444,7 +1453,9 @@ function adjustDesktops(desktop) {
   } else if (ws.desktops > desktop) {
     // Desktop removed
     for (var i = 0; i < ws.activities.length; i++) {
-      createDesktop(ws.activities[i].toString(), ws.desktops);
+      if (ignoredActivities.indexOf(ws.activities[i].toString()) === -1) {
+        createDesktop(ws.activities[i].toString(), ws.desktops);
+      }
     }
     tileClients();
   }
