@@ -635,8 +635,50 @@ function addClient(client, follow, desk, scr) {
 // Adds all the clients that existed before the script was executed
 function addClients() {
   var clients = ws.clientList();
-  for (var i = 0; i < clients.length; i++) {
-    addClient(clients[i], false, clients[i].desktop, clients[i].screen);
+
+  // Count valid clients
+  var valid = 0;
+  for (var k = 0; k < clients.length; k++) {
+    if (checkClient(clients[k])) { valid++; }
+  }
+
+  if (valid > 1) {
+    // Sorts clients by their y-coordinate
+    clients.sort(function(a, b) {
+      return a.geometry.y - b.geometry.y;
+    });
+
+    // Split the sorted list in half (two rows)
+    var upperClients = [];
+    var lowerClients = [];
+    for (var i = 0; i < Math.max(clients.length * 0.5); i++) {
+      upperClients[i] = clients[i];
+    }
+    var j = 0;
+    for (i = clients.length - 1; i > Math.min(clients.length * 0.5); i--) {
+      lowerClients[j] = clients[i];
+      j++
+    }
+
+    // Sort the split lists by x-coordinate
+    upperClients.sort(function(a, b) {
+      return a.geometry.x - b.geometry.x;
+    });
+    lowerClients.sort(function(a, b) {
+      return (-1 * a.geometry.x) - (-1 * b.geometry.x);
+    });
+
+    // Add the clients in proper order
+    for (i = 0; i < upperClients.length; i++) {
+      addClient(upperClients[i], false, upperClients[i].desktop, upperClients[i].screen);
+    }
+    for (i = 0; i < lowerClients.length; i++) {
+      addClient(lowerClients[i], false, lowerClients[i].desktop, lowerClients[i].screen);
+    }
+  } else {
+    for (l = 0; l < clients.length; l++) {
+      addClient(clients[l], false, clients[l].desktop, clients[l].screen);
+    }
   }
 }
 
