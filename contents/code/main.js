@@ -12,8 +12,6 @@ var cAct;
 // Array for included clients
 var tiles = [];
 
-var started = false;
-
 // KWin client.resourceClasses & client.resourceNames that are not tiled
 var ignoredClients = [
   "albert",
@@ -148,7 +146,6 @@ var autoSize = readConfig("autoSize", 2); // 0 == All, 1 == Fixed, 2 == Nada
 
 // Starts the script
 function init() {
-  started = true;
   cAct = ws.currentActivity.toString();
   registerKeys();
   var desks = readConfig("numDesks", 2);
@@ -226,7 +223,6 @@ function registerKeys() {
     "Meta+K",
     function() {
       var client = ws.activeClient;
-      var act = client.act;
       var desk = client.desktop;
       var scr = client.screen;
       if (cAct !== client.act) {
@@ -418,8 +414,6 @@ function registerKeys() {
       if (client.fixed) {
         return;
       }
-      var act = client.act;
-      var desk = client.desktop;
       var scr = client.screen;
       var x = Math.round(screenWidth(scr) * 0.01);
       var y = Math.round(screenHeight(scr) * 0.01);
@@ -446,8 +440,6 @@ function registerKeys() {
       if (client.fixed) {
         return;
       }
-      var act = client.act;
-      var desk = client.desktop;
       var scr = client.screen;
       var x = Math.round(screenWidth(scr) * 0.01);
       var y = Math.round(screenHeight(scr) * 0.01);
@@ -586,7 +578,7 @@ function connectWorkspace() {
 // Runs an ignore-check and if it passes, adds a client to tiles[]
 function addClient(client, follow, desk, scr) {
   if (checkClient(client)) {
-    print("attempting to add " + client.caption);
+    print("START: addClient(" + client + ", " + follow + ", " + desk + ", " + scr + ")");
     var act = cAct;
 
     // If tiles.length exceeds the maximum amount, moves to another screen or another desktop
@@ -644,7 +636,7 @@ function addClient(client, follow, desk, scr) {
       }
       tileClients();
     }
-    print(client.caption + " added on desktop " + desk + " screen " + scr);
+    print("END: addClient(" + client + ", " + follow + ", " + desk + ", " + scr + ")");
   }
 }
 
@@ -720,7 +712,7 @@ function connectClient(client, desk, scr) {
 
 // Removes the closed client from tiles[]
 function removeClient(client, follow, desk, scr) {
-  print("attempting to remove " + client.caption);
+  print("START: removeClient(" + client + ", " + follow + ", " + desk + ", " + scr + ")");
   if (client.included) {
     resetClient(client, "center");
     if (typeof follow === "undefined") { follow = false; }
@@ -736,7 +728,7 @@ function removeClient(client, follow, desk, scr) {
     } else {
       var i = findClientIndex(client, desk, scr);
       tiles[act][desk][scr].splice(i, 1);
-      for (j = 0; j < tiles[act][desk].length; j++) {
+      for (var j = 0; j < tiles[act][desk].length; j++) {
         if (tiles[act][desk][j].length > 0) { 
           follow = false; 
           break;
@@ -750,11 +742,11 @@ function removeClient(client, follow, desk, scr) {
     }
 
     disconnectClient(client);
-    print(client.caption + " removed");
+    print("END: removeClient(" + client + ", " + follow + ", " + desk + ", " + scr + ")");
     fitClients(act, desk, scr, "remove");
     tileClients();
   } else {
-    print(client.caption + " not included");
+    print("END: removeClient() " + client + " NOT INCLUDED");
   }
 }
 
@@ -767,14 +759,9 @@ function disconnectClient(client) {
   client.clientFinishUserMovedResized.disconnect(endMove);
 }
 
-// Closes the client, triggering the removal signal
-function closeWindow(client) {
-  client.closeWindow();
-}
-
 // "Reserves" a spot for client on its current desktop and screen
 function reserveClient(client, desk, scr) {
-  print("attempting to reserve " + client.caption);
+  print("START: reserveClient(" + client + ", " + desk + ", " + scr + ")");
   var act = client.act;
   if (client.included && client.reserved === false && ignoredScreens.indexOf(scr) === -1) {
     var i = findClientIndex(client, desk, scr);
@@ -786,12 +773,12 @@ function reserveClient(client, desk, scr) {
     client.reserved = true;
     tileClients();
   }
-  print("succesfully reserved " + client.caption);
+  print("END: reserveClient(" + client + ", " + desk + ", " + scr + ")");
 }
 
 // "Adds" a client back to the desktop on its reserved tile
 function unreserveClient(client) {
-  print("attempting to unreserve " + client.caption);
+  print("START: unreserveClient(" + client + ")");
   if (client.included && client.reserved && ignoredScreens.indexOf(client.screen) === -1) {
     var act = cAct;
     ws.currentDesktop = client.oldDesk;
@@ -804,7 +791,7 @@ function unreserveClient(client) {
     }
     tileClients();
   }
-  print("succesfully unreserved " + client.caption);
+  print("END: unreserveClient(" + client + ")");
 }
 
 
@@ -841,7 +828,8 @@ function fitClients(act, desk, scr, action) {
 
 // Adjusts the layout according to the size of a client
 function fitClient(client, desk, scr, action, all) {
-  print("attempting to fit client " + client.caption);
+  print("START: fitClient(" + client + ", " + desk + ", " +
+        scr + ", " + action + ", " + all + ")");
 
   // Cases where autosizing does not happen
   if (autoSize == 2 || client.reserved ||
@@ -926,8 +914,8 @@ function fitClient(client, desk, scr, action, all) {
       tiles[act][desk][scr].length === 3) {
     x = 0;
   }
-
-  print(client.caption + " fit");
+  print("END: fitClient(" + client + ", " + desk + ", " +
+        scr + ", " + action + ", " + all + ")");
   resizeClient(client, scr, x, y);
 }
 
@@ -937,11 +925,11 @@ function tileClients(desk) {
   if (ignoredActivities.indexOf(act) > -1) { return; }
   if (typeof desk === "undefined") { desk = ws.currentDesktop; }
 
+  print("START: tileClients(" + desk + ")");
   for (var i = 0; i < ws.numScreens; i++) {
     if (ignoredScreens.indexOf(i) > -1) {
       // Don't tile ignored screens
     } else if (typeof tiles[act][desk][i] !== "undefined") {
-      print("attempting to tile desktop " + desk + " screen " + i);
       var t = tiles[act][desk][i];
       var adj = [];
 
@@ -1073,9 +1061,8 @@ function tileClients(desk) {
           tiles[act][desk][i][j].geometry = adj[j];
         }
       }
-
-      print("desktop " + desk + " screen " + i + " tiled");
     }
+    print("END: tileClients(" + desk + ")");
   }
 }
 
@@ -1102,7 +1089,7 @@ function endMove(client) {
 
 // Moves clients (switches places within the layout)
 function moveClient(client) {
-  print("attempting to move " + client.caption);
+  print("START: moveClient(" + client + ")");
   if (client.fullScreen) { return; }
   var act = client.act;
   var desk = client.desktop;
@@ -1138,13 +1125,13 @@ function moveClient(client) {
   }
 
   tileClients();
-  print(client.caption + " moved");
+  print("END: moveClient(" + client + ")");
 }
 
 /* Swaps tiles[desktop][ws.activeScreen][i] and tiles[desktop][ws.activeScreen][j]
    TODO: Deprecate switching between screens (new: swapClients(i, j)) */
 function swapClients(i, j, scrI, scrJ) {
-  print("attempting to swap clients " + i + " " + j);
+  print("START: swapClients(" + i +  ", " + j + ")");
   var act = cAct;
   var desk = ws.currentDesktop;
   var temp = tiles[act][desk][scrI][i];
@@ -1177,13 +1164,13 @@ function swapClients(i, j, scrI, scrJ) {
     fitClient(tiles[act][desk][scrI][i], desk, scrI, "move");
     fitClients(act, desk, scrI, "move");
   }
-
-  print("successfully swapped clients " + i + " " + j);
+  print("END: swapClients(" + i +  ", " + j + ")");
 }
 
 // Moves client between desktops and screens (TODO: activities)
 function throwClient(client, fDesk, fScr, tDesk, tScr) {
-  print("attempting to throw " + client.caption + " to desktop " + tDesk + " screen " + tScr);
+  print("START: throwClient(" + client + ", " + fDesk + ", " +
+        fScr + ", " + tDesk + ", " + tScr + ")");
   var act = client.act;
   if (client.included) {
     if (tiles[act][tDesk][tScr].length < tiles[act][tDesk][tScr].max && 
@@ -1216,7 +1203,6 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
       fitClients(act, fDesk, fScr, "throw");
       tileClients(fDesk);
       tileClients(tDesk);
-      print("successfully thrown" + client.caption + " to desktop " + tDesk + " screen " + tScr);
     } else {
       removeClient(client, false, fDesk, fScr);
       resetClient(client, "center", tScr);
@@ -1229,6 +1215,8 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
       addClient(client, false, tDesk, tScr);
     }
   }
+  print("END: throwClient(" + client + ", " + fDesk + ", " +
+        fScr + ", " + tDesk + ", " + tScr + ")");
 }
 
 // Scr must be carried as a parameter because x < 0 means client.screen changes
@@ -1377,14 +1365,15 @@ function startMove(client) {
 
 // Ignore-check to see if the client is valid for the script
 function checkClient(client) {
-  print("checking " + client.caption);
+  print("START: checkClient(" + client + ")");
   /* Dialogs tend to break tiling momentarily,
      but calling tileClients() after solves the issue */
   if (client.dialog) {
-    if (started) {
+    // If cAct is a string, the script has been initialized
+    if (typeof cAct === "string") {
       tileClients();
     }
-    print(client.caption + " not suitable");
+    print("END: checkClient(" + client + ")" + "RETURN: false");
     return false;
   }
   if (client.comboBox ||
@@ -1405,7 +1394,7 @@ function checkClient(client) {
       ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
       ignoredActivities.indexOf(curAct()) > -1 ||
       ignoredDesktops.indexOf(client.desktop) > -1) {
-    print(client.caption + " not suitable");
+    print("END: checkClient(" + client + ")" + "RETURN: false");
     return false;
   } else {
     for (var i = 0; i < ignoredCaptions.length; i++) {
@@ -1414,11 +1403,11 @@ function checkClient(client) {
       if (caption.indexOf(ignoredCaptions[i]) > -1 && client.included !== true) {
         /* don't re-check already included clients in order to avoid ignoring clients such as Firefox
            when a website including a substring of an ignored caption is browsed */
-        print(client.caption + " not suitable");
+    print("END: checkClient(" + client + ")" + "RETURN: false");
         return false;
       }
     }
-    print(client.caption + " passed");
+    print("END: checkClient(" + client + ")" + "RETURN: true");
     return true;
   }
 }
@@ -1441,37 +1430,17 @@ function sameClient(client1, client2) {
   }
 }
 
-// Compare two geometries without unnecessary type conversion
-function sameGeometry(geo1, geo2) {
-  if (geo1.x === geo2.x && geo1.y === geo2.y) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 // Finds tiles[desktop][ws.activeScreen] index of a client
 function findClientIndex(client, desk, scr) {
-  print("attempting to find " + client.caption + " index on desktop " + desk + " screen " + scr);
+  print("START: findClientIndex(" + client + ", " + desk + ", " + scr + ")");
   var act = client.act;
   for (var i = 0; i < tiles[act][desk][scr].length; i++) {
     if (sameClient(tiles[act][desk][scr][i], client)) {
-      print("found " + client.caption + " index on desktop " + desk + " screen " + scr);
+      print("END: findClientIndex(" + client + ", " + desk + ", " + scr + ")");
       return i;
     }
   }
-}
-
-// Finds tiles[desktop][ws.activeScreen] index by geometry
-function findGeometryIndex(geo, desk, scr) {
-  print("attempting to find geometry on desktop " + desk + " screen " + scr);
-  var act = cAct;
-  for (i = 0; i < tiles[act][desk][scr].length; i++) {
-    if (sameGeometry(tiles[act][desk][scr][i], geo)) {
-      print("found geometry on " + desk + " screen " + scr);
-      return i;
-    }
-  }
+  print("FAIL: findClientIndex(" + client + ", " + desk + ", " + scr + ")");
 }
 
 // Returns the vertical opposite index
@@ -1531,12 +1500,12 @@ function neighbourClient(client, scr) {
 // ------------------------
 
 function createActivity(act) {
-  print("attempting to create activity " + act);
+  print("START: createActivity(" + act + ")");
   tiles[act.toString()] = [];
   for (var i = 1; i <= ws.desktops; i++) {
     createDesktop(act.toString(), i);
   }
-  print("activitiy " + act.toString() + " created");
+  print("END: createActivity(" + act + ")");
 }
 
 function curAct() {
@@ -1561,7 +1530,7 @@ function adjustDesktops(desktop) {
 
 // Creates a new desktops
 function createDesktop(act, desk) {
-  print("attempting to create desktop " + desk);
+  print("START: createDesktop(" + act + ", " + desk + ")");
   tiles[act][desk] = [];
   for (var i = 0; i < ws.numScreens; i++) {
     tiles[act][desk][i] = [];
@@ -1573,24 +1542,12 @@ function createDesktop(act, desk) {
     }
     tiles[act][desk][i].layout = newLayout(i);
   }
-  print("desktop " + desk + " created");
-}
-
-
-// Removes a desktop
-function removeDesktop(act, desk) {
-  print("attempting to remove desktop " + desk);
-  for (var i = 0; i < tiles[act][desk].length; i++) {
-    for (var j = 0; j < tiles[act][desk][i].length; j++) {
-      closeWindow(tiles[act][desk][i][j]);
-    }
-  }
-  print("desktop " + desk + " removed");
+  print("END: createDesktop(" + act + ", " + desk + ")");
 }
 
 // Finds a desktop and a screen with space left for a new client
 function findSpace() {
-  print("attempting to find space on existing desktops");
+  print("START: findSpace()");
   var act = cAct;
   var desk = ws.currentDesktop; 
 
@@ -1599,7 +1556,7 @@ function findSpace() {
     if (ignoredScreens.indexOf(k) === -1) {
       if (tiles[act][desk][k].length < tiles[act][desk][k].max &&
           tiles[act][desk][k].blocked !== true) {
-        print("found space on desktop " + desk + " screen " + k);
+        print("END: findSpace() RETURN: " + desk + ", " + k);
         return [desk, k];
       }
     }
@@ -1612,7 +1569,7 @@ function findSpace() {
         if (ignoredScreens.indexOf(j) === -1) {
           if (tiles[act][i][j].length < tiles[act][i][j].max && 
               tiles[act][i][j].blocked !== true) {
-            print("found space on desktop " + i + " screen " + j);
+            print("END: findSpace() RETURN: " + i + ", " + j);
             return [i, j];
           }
         }
@@ -1620,13 +1577,13 @@ function findSpace() {
     }
   }
 
-  print("no space found");
+  print("FAILED: findSpace() RETURN: false");
   return false;
 }
 
 // Find the desktop with the most clients open
 function findBusy() {
-  print("attempting to find a busy desktop");
+  print("START: findBusy()");
   var busyDesk = 1;
   var busyTotal = 0;
 
@@ -1641,7 +1598,7 @@ function findBusy() {
     }
   }
 
-  print("busiest desktop: " + busyDesk);
+  print("END: findBusy() RETURN: " + busyDesk);
   return busyDesk;
 }
 
@@ -1723,7 +1680,7 @@ function screenHeight(scr) {
 // ----
 
 if (instantInit()) {
-  print("instant init");
+  print("instantInit()");
   init();
 } else {
   ws.clientAdded.connect(wait);
@@ -1757,14 +1714,14 @@ function check(client) {
       ws.clientAdded.disconnect(wait);
       client.windowShown.disconnect(check);
       init();
-      print("script initiated with " + client.caption);
+      print("init() CAUSED BY: " + client.caption);
     } else client.windowShown.disconnect(check);
   } else {
     if (client != null) {
       if (checkClient(client)) {
         ws.clientActivated.disconnect(check);
         init();
-        print("script initiated with " + client.caption);
+        print("init() CAUSED BY: " + client.caption);
       }
     }
   }
