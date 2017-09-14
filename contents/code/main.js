@@ -1062,8 +1062,8 @@ function tileClients(desk) {
         }
       }
     }
-    print("END: tileClients(" + desk + ")");
   }
+  print("END: tileClients(" + desk + ")");
 }
 
 // Decides if a client is moved or resized
@@ -1148,7 +1148,7 @@ function swapClients(i, j, scrI, scrJ) {
           tiles[act][desk][scrI][i].geometry.width) {
         fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "swap");
       } else {
-        fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move", true);
+        fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "swap");
       }
     } else {
       fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move");
@@ -1173,6 +1173,13 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
         fScr + ", " + tDesk + ", " + tScr + ")");
   var act = client.act;
   if (client.included) {
+
+    // Safety net to avoid empty tiles
+    if (findClientIndex(client, tDesk, tScr) !== false) {
+      tileClients();
+      return;
+    }
+
     if (tiles[act][tDesk][tScr].length < tiles[act][tDesk][tScr].max && 
         tiles[act][tDesk][tScr].blocked !== true) {
 
@@ -1441,6 +1448,7 @@ function findClientIndex(client, desk, scr) {
     }
   }
   print("FAIL: findClientIndex(" + client + ", " + desk + ", " + scr + ")");
+  return false;
 }
 
 // Returns the vertical opposite index
