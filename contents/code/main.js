@@ -785,7 +785,6 @@ function unreserveClient(client) {
   print("START: unreserveClient(" + client + ")");
   if (client.included && client.reserved && ignoredScreens.indexOf(client.oldScr) === -1) {
     var act = cAct;
-    ws.currentDesktop = client.oldDesk;
     client.reserved = false;
     tiles[act][client.oldDesk][client.oldScr].max += 1;
     if (client.oldIndex >= 0) {
@@ -793,6 +792,8 @@ function unreserveClient(client) {
     } else {
       tiles[act][client.oldDesk][client.oldScr].push(client);
     }
+    client.desktop = client.oldDesk;
+    ws.currentDesktop = client.oldDesk;
   }
   tileClients();
   print("END: unreserveClient(" + client + ")");
