@@ -178,28 +178,27 @@ function registerKeys() {
       var clients = ws.clientList();
       var client;
       var desk = ws.currentDesktop;
-      var i = ignoredDesktops.indexOf(desk);
-      if (i > -1) {
+      if (ignoredDesktops.indexOf(desk) > -1) {
         ignoredDesktops.splice(i, 1);
-        for (var k = 0; k < clients.length; k++) {
-          client = clients[k];
+        for (var i = 0; i < clients.length; i++) {
+          client = clients[i];
           if (client.desktop == desk && client.included !== true) {
             addClient(client, true, client.desktop, client.screen);
           }
         }
       } else {
         ignoredDesktops.push(desk);
-        var scrs = [];
-        for (var l = 0; l < ws.numScreens; l++) {
-          scrs[l] = 1; // Align each screen separately
-        }
+        var removedClients = [];
         for (var j = 0; j < clients.length; j++) {
           client = clients[j];
           if (client.desktop === desk && client.included) {
-            removeClient(client, false, client.desktop, client.screen);
-            resetClient(client, scrs[client.screen] * 10);
-            scrs[client.screen] += 1;
+            removedClients.push([client, client.geometry]);
           }
+        }
+        for (j = 0; j < removedClients.length; j++) {
+          client = removedClients[j][0];
+          removeClient(client, false, client.desktop, client.screen);
+          client.geometry = removedClients[j][1];
         }
       }
     });
@@ -702,9 +701,6 @@ function connectClient(client, desk, scr) {
       fixedClients.indexOf(client.resourceName.toString()) > -1) {
     client.fixed = true;
   }
-  // Note: oriGeo and oldGeo are both needed, oldGeo gets replaced on move event
-  client.oriGeo = client.geometry;
-  client.oriScreen = client.screen;
   client.included = true;
   client.reserved = false;
   client.act = cAct;
@@ -1328,18 +1324,6 @@ function resetClient(client, pos, scr) {
       rect.x = Math.floor((Math.random() * (tile.width - rect.width)) + tile.x);
       rect.y = Math.floor((Math.random() * (tile.height - rect.height)) + tile.y);
       break;
-    default:
-      pos *= 0.1;
-      // Default tile size & count position
-      if (client.fixed) {
-        rect = client.geometry;
-      } else {
-        rect = newTile(scr);
-        rect.width -= gap * 1.5;
-        rect.height -= gap * 1.5;
-      }
-      rect.x = tile.x + pos * (tile.width * 0.1);
-      rect.y = tile.y + pos * (tile.height * 0.1);
   }
 
   client.geometry = rect;
