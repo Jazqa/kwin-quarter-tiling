@@ -596,6 +596,8 @@ function addClient(client, follow, desk, scr) {
         ws.desktops += 1;
         desk = ws.desktops;
       }
+    } else if (tiles[act][desk][scr].length === 0) {
+	  tiles[act][desk][scr].layout = newLayout(scr);
     }
 
     if (follow) {
