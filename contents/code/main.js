@@ -1099,10 +1099,10 @@ function endMove(client) {
     var x = client.geometry.width - client.oldGeo.width;
     var y = client.geometry.height - client.oldGeo.height;
 	if (client.fixed) {
-	  if (client.geometry.width < tiles[client.act][client.oldDesk][client.oldScr].layout[i].width + gap * 1.5) {
+	  if (client.geometry.width < tiles[client.act][client.oldDesk][client.oldScr].layout[i].width + gap * 1.5 && x > 0) {
 		  x = 0;
 	  }
-	  if (client.geometry.height < tiles[client.act][client.oldDesk][client.oldScr].layout[i].height + gap * 1.5) {
+	  if (client.geometry.height < tiles[client.act][client.oldDesk][client.oldScr].layout[i].height + gap * 1.5 && y > 0) {
 		  y = 0;
 	  }
 	}
