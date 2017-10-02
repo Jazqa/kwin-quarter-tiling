@@ -610,7 +610,9 @@ function addClient(client, follow, desk, scr) {
 
     // Fixed clients make space for regular ones
     if (autoSize == 0 && tiles[act][desk][scr].length > 0 && 
-        tiles[act][desk][scr][0].fixed && client.fixed !== true) {
+        tiles[act][desk][scr][0].fixed && client.fixed !== true ||
+        autoSize == 1 && tiles[act][desk][scr].length > 0 &&
+        tiles[act][desk][scr][0].fixed && client.fixed !== true ) {
       tiles[act][desk][scr].unshift(client);
       unshift = true;
     } else {
@@ -1087,10 +1089,15 @@ function endMove(client) {
     moveClient(client);
   } else if (client.reserved !== true) {
     var i = findClientIndex(client, client.oldDesk, client.oldScr);
+    var x
+    /*
     var x = client.geometry.width - 
             tiles[client.act][client.oldDesk][client.oldScr].layout[i].width + gap * 1.5;
     var y = client.geometry.height - 
             tiles[client.act][client.oldDesk][client.oldScr].layout[i].height + gap * 1.5;
+    */
+    var x = client.geometry.width - client.oldGeo.width;
+    var y = client.geometry.height - client.oldGeo.height;
     resizeClient(client, client.oldScr, x, y);
     fitClient(client, client.desktop, client.oldScr, "resize");
     tileClients();
