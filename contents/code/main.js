@@ -862,10 +862,16 @@ function fitClient(client, desk, scr, action, all) {
 
   // Vertical adjustment
   var y = client.geometry.height + gap * 1.5 - tile.height;
-  if (client.fixed !== true && opposite && opposite[0].fixed) {
+  if (client.fixed !== true && opposite && opposite[0].fixed &&
+	  opposite[0].geometry.height < client.geometry.height) {
     tile = tiles[act][desk][scr].layout[opposite[1]];
-    // If opposite client is fixed, fit to its height instead
+    // If opposite client is fixed (#33 and vertically smaller than the client), fit to its height instead
     y = -1 * (opposite[0].geometry.height + gap * 1.5 - tile.height);
+  } else if (client.fixed && opposite && opposite[0].fixed !== true &&
+             client.geometry.height > newTile(scr).height &&
+             action !== "resize") {
+    // #33, stop fixed clients from getting too large and shrinking other clients
+	y = newTile(scr).height - tile.height;
   } else if (client.fixed && opposite && opposite[0].fixed) {
     // If client and opposite fixed, center the tiles
     y = 0.5 * (y - (opposite[0].geometry.height + gap * 1.5 - 
@@ -917,6 +923,7 @@ function fitClient(client, desk, scr, action, all) {
       tiles[act][desk][scr].length === 3) {
     x = 0;
   }
+
   print("END: fitClient(" + client + ", " + desk + ", " +
         scr + ", " + action + ", " + all + ")");
   resizeClient(client, scr, x, y);
