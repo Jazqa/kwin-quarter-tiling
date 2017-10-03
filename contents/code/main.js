@@ -1089,20 +1089,13 @@ function endMove(client) {
     moveClient(client);
   } else if (client.reserved !== true) {
     var i = findClientIndex(client, client.oldDesk, client.oldScr);
-    var x
-    /*
-    var x = client.geometry.width - 
-            tiles[client.act][client.oldDesk][client.oldScr].layout[i].width + gap * 1.5;
-    var y = client.geometry.height - 
-            tiles[client.act][client.oldDesk][client.oldScr].layout[i].height + gap * 1.5;
-    */
-    var x = client.geometry.width - client.oldGeo.width;
-    var y = client.geometry.height - client.oldGeo.height;
+    var x = client.geometry.width - tiles[client.act][client.oldDesk][client.oldScr].layout[i].width + gap * 1.5
+    var y = client.geometry.height - tiles[client.act][client.oldDesk][client.oldScr].layout[i].height + gap * 1.5
 	if (client.fixed) {
-	  if (client.geometry.width < tiles[client.act][client.oldDesk][client.oldScr].layout[i].width + gap * 1.5 && x > 0) {
+	  if (x > 0) {
 		  x = 0;
 	  }
-	  if (client.geometry.height < tiles[client.act][client.oldDesk][client.oldScr].layout[i].height + gap * 1.5 && y > 0) {
+	  if (y > 0) {
 		  y = 0;
 	  }
 	}
