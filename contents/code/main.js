@@ -832,14 +832,20 @@ function fitClient(client, desk, scr, action, all) {
       // If both are fixed, center
       y = client.geometry.height + gap * 1.5 - tile.height;
       y = 0.5 * (y - (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height));
-    } else if (client.fixed !== true && opposite[0].fixed && action !== "add") {
+    } else if (client.fixed !== true && opposite[0].fixed) {
       // If only opposite is fixed, fit accordingly
       y = -1 * (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height);
+      if (action == "add") {
+        if (y < newTile(scr).height - tile.height) {
+          // New windows can't be larger than a default tile (TODO: Add an option for this)
+          y = newTile(scr).height - tile.height;
+        }
+      }
     } else if (client.fixed || action !== "swap") {
       y = client.geometry.height + gap * 1.5 - tile.height;
-      // OPTIONALLY: WINDOWS CANT OUTFIT A DEFAULT TILE
       if (action == "add") {
         if (y > newTile(scr).height - tile.height) {
+          // New windows can't be larger than a default tile (TODO: Add an option for this)
           y = newTile(scr).height - tile.height;
         }
       }
