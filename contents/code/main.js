@@ -830,12 +830,19 @@ function fitClient(client, desk, scr, action, all) {
   if (opposite) {
     if (client.fixed && opposite[0].fixed) {
       // If both are fixed, center
+      y = client.geometry.height + gap * 1.5 - tile.height;
       y = 0.5 * (y - (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height));
-    } else if (client.fixed !== true && opposite[0].fixed) {
+    } else if (client.fixed !== true && opposite[0].fixed && action !== "add") {
       // If only opposite is fixed, fit accordingly
       y = -1 * (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height);
-    } else if (client.fixed) {
+    } else if (client.fixed || action !== "swap") {
       y = client.geometry.height + gap * 1.5 - tile.height;
+      // OPTIONALLY: WINDOWS CANT OUTFIT A DEFAULT TILE
+      if (action == "add") {
+        if (y > newTile(scr).height - tile.height) {
+          y = newTile(scr).height - tile.height;
+        }
+      }
     }
   }
 
@@ -1074,18 +1081,18 @@ function swapClients(i, j, scrI, scrJ) {
         fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "swap");
       }
     } else {
-      fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move");
+      fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "swap");
     }
   } else {
-    fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "move");
+    fitClient(tiles[act][desk][scrJ][j], desk, scrJ, "swap");
   }
-  fitClients(act, desk, scrJ, "move");
+  fitClients(act, desk, scrJ, "swap");
 
   /* If the clients were swapped between screens,
      the other screen must be fit as well */
   if (scrI !== scrJ) {
-    fitClient(tiles[act][desk][scrI][i], desk, scrI, "move");
-    fitClients(act, desk, scrI, "move");
+    fitClient(tiles[act][desk][scrI][i], desk, scrI, "swap");
+    fitClients(act, desk, scrI, "swap");
   }
   print("END: swapClients(" + i +  ", " + j + ")");
 }
