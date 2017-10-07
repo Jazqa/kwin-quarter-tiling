@@ -835,17 +835,19 @@ function fitClient(client, desk, scr, action, all) {
     } else if (client.fixed !== true && opposite[0].fixed) {
       // If only opposite is fixed, fit accordingly
       y = -1 * (opposite[0].geometry.height + gap * 1.5 - tiles[act][desk][scr].layout[opposite[1]].height);
+      // TODO: This will be an option
       if (action == "add") {
         if (y < newTile(scr).height - tile.height) {
-          // New windows can't be larger than a default tile (TODO: Add an option for this)
+          // New windows can't be larger than a default tile
           y = newTile(scr).height - tile.height;
         }
       }
     } else if (client.fixed || action !== "swap") {
       y = client.geometry.height + gap * 1.5 - tile.height;
+      // TODO: This will be an option
       if (action == "add") {
         if (y > newTile(scr).height - tile.height) {
-          // New windows can't be larger than a default tile (TODO: Add an option for this)
+          // New windows can't be larger than a default tile
           y = newTile(scr).height - tile.height;
         }
       }
@@ -1017,6 +1019,20 @@ function endMove(client) {
   } else if (client.reserved !== true) {
     var x = client.geometry.width - client.oldGeo.width;
     var y = client.geometry.height - client.oldGeo.height;
+    if (client.fixed) {
+      var opposite = oppositeClient(client, client.screen);
+      if (opposite && opposite[0].geometry.width > client.geometry.width) {
+        x = 0;
+      } else {
+        var tile = tiles[client.act][client.desktop][client.screen].layout[findClientIndex(client, client.desktop, client.screen)];
+        if (client.geometry.width > client.oldGeo.width && client.geometry.width < tile.width) {
+          x = 0;
+        }
+        if (client.geometry.height > client.oldGeo.height && client.geometry.height < tile.height) {
+          y = 0;
+        }
+      }
+    }
     resizeClient(client, client.oldScr, x, y);
     fitClient(client, client.desktop, client.oldScr, "resize");
     tileClients();
