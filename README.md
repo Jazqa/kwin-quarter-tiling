@@ -8,7 +8,7 @@
 
 ## Preview
 
-[GFYCAT](https://gfycat.com/TintedRepentantKawala)
+[gfycat](https://gfycat.com/TintedRepentantKawala)
 
 Preview gifs got taken down, so I'm using gfycat as a placeholder until I can record new gifs.
 
