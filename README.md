@@ -8,10 +8,10 @@
 
 ## Preview
 **Basics**
-![Imgur](http://i.imgur.com/knyoWe6.gif)
+(VIDEO TAKEN DOWN DUE TO A DMCA NOTICE CAUSED BY THE WALLPAPER)
 
 **Resizing**
-![Imgur](http://i.imgur.com/uc5FdxW.gif)
+(VIDEO TAKEN DOWN DUE TO A DMCA NOTICE CAUSED BY THE WALLPAPER)
 
 ## Installing
 
