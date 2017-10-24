@@ -7,10 +7,15 @@
 - Supports mouse and [keyboard](https://github.com/Jazqa/kwin-quarter-tiling/wiki/Keybindings)
 
 ## Preview
+
+[PLACEHOLDER GFYCAT (NEW GIFS COMING SOON)]
+
 **Basics**
+
 (VIDEO TAKEN DOWN DUE TO A DMCA NOTICE CAUSED BY THE WALLPAPER)
 
 **Resizing**
+
 (VIDEO TAKEN DOWN DUE TO A DMCA NOTICE CAUSED BY THE WALLPAPER)
 
 ## Installing
