@@ -8,15 +8,9 @@
 
 ## Preview
 
-[PLACEHOLDER GFYCAT (NEW GIFS COMING SOON)](https://gfycat.com/TintedRepentantKawala)
+[GFYCAT](https://gfycat.com/TintedRepentantKawala)
 
-**Basics**
-
-(VIDEO TAKEN DOWN DUE TO A DMCA NOTICE CAUSED BY THE WALLPAPER)
-
-**Resizing**
-
-(VIDEO TAKEN DOWN DUE TO A DMCA NOTICE CAUSED BY THE WALLPAPER)
+Preview gifs got taken down, so I'm using gfycat as a placeholder until I can record new gifs.
 
 ## Installing
 
