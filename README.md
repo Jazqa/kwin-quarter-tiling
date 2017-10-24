@@ -8,7 +8,7 @@
 
 ## Preview
 
-[PLACEHOLDER GFYCAT (NEW GIFS COMING SOON)]
+[PLACEHOLDER GFYCAT (NEW GIFS COMING SOON)](https://gfycat.com/TintedRepentantKawala)
 
 **Basics**
 
