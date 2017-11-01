@@ -1141,13 +1141,16 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
           return;
         }
 
+        if (ignoredScreens.indexOf(tScr) > -1 ||
+            ignoredDesktops.indexOf(tDesk) > -1) {
+          // Do not reset the client if moved to an ignored desk/screen
+        } else {
+          resetClient(client, 2, tScr);
+        }
+
         var i = findClientIndex(client, fDesk, fScr);
         tiles[act][fDesk][fScr].splice(i, 1);
         tiles[act][tDesk][tScr].push(client);
-
-        if (ignoredScreens.indexOf(tScr) > -1) {
-          resetClient(client, 0, tScr);
-        }
 
         fitClient(client, tDesk, tScr, "throw");
         fitClients(act, fDesk, fScr, "throw");
