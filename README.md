@@ -8,9 +8,11 @@
 
 ## Preview
 
-[gfycat](https://gfycat.com/TintedRepentantKawala)
+![d1](https://i.imgur.com/mjlK2s9.gif)
 
-Preview gifs got taken down, so I'm using gfycat as a placeholder until I can record new gifs.
+![d2](https://i.imgur.com/xsuEXhw.gif)
+
+![d3](https://i.imgur.com/7rN8hg2.gif)
 
 ## Installing
 
