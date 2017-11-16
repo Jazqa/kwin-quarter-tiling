@@ -1163,6 +1163,22 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
     } else if (tiles[act][tDesk][tScr].blocked || 
                tiles[act][tDesk][tScr].length >= tiles[act][tDesk][tScr].max) {
       removeClient(client, false, fDesk, fScr);
+      var rect = client.geometry;
+      var area = screenGeo(tScr);
+      rect.x = area.x + area.width * 0.5 - rect.width * 0.5;
+      rect.y = area.y + area.height *0.5 - rect.height * 0.5;
+      client.geometry = rect;
+    }
+  } else {
+    if (tiles[act][tDesk][tScr].blocked !== true &&
+        tiles[act][tDesk][tScr].length < tiles[act][tDesk][tScr].max) {
+          addClient(client, false, tDesk, tScr);
+    } else {
+      var rect = client.geometry;
+      var area = screenGeo(tScr);
+      rect.x = area.x + area.width * 0.5 - rect.width * 0.5;
+      rect.y = area.y + area.height *0.5 - rect.height * 0.5;
+      client.geometry = rect;
     }
   }
   print("END: throwClient(" + client + ", " + fDesk + ", " +
