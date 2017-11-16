@@ -1309,6 +1309,7 @@ function minimizeClient(client) {
 function unminimizeClient(client) {
   if (client.fullScreen || isMaxed(client)) {
     tiles[client.act][client.desktop][client.screen].blocked = true;
+    return;
   }
   unreserveClient(client);
 }
