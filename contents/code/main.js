@@ -575,7 +575,7 @@ function connectWorkspace() {
 
 // Runs an ignore-check and if it passes, adds a client to tiles[]
 function addClient(client, follow, desk, scr) {
-  if (checkClient(client)) {
+  if (checkClient(client, desk, scr)) {
     print("START: addClient(" + client + ", " + follow + ", " + desk + ", " + scr + ")");
     var act = cAct;
 
@@ -1170,7 +1170,7 @@ function throwClient(client, fDesk, fScr, tDesk, tScr) {
       client.geometry = rect;
     }
   } else {
-    if (tiles[act][tDesk][tScr].blocked !== true &&
+    if (tiles[act][tDesk][tScr].blocked !== true ||
         tiles[act][tDesk][tScr].length < tiles[act][tDesk][tScr].max) {
           addClient(client, false, tDesk, tScr);
     } else {
@@ -1353,7 +1353,7 @@ function startMove(client) {
 }
 
 // Ignore-check to see if the client is valid for the script
-function checkClient(client) {
+function checkClient(client, desk, scr) {
   print("START: checkClient(" + client + ")");
   /* Dialogs tend to break tiling momentarily,
      but calling tileClients() after solves the issue */
@@ -1382,7 +1382,8 @@ function checkClient(client) {
       ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
       ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
       ignoredActivities.indexOf(curAct()) > -1 ||
-      ignoredDesktops.indexOf(client.desktop) > -1) {
+      ignoredDesktops.indexOf(desk) > -1 ||
+      ignoredScreens.indexOf(scr) > -1) {
     print("END: checkClient(" + client + ")" + "RETURN: false");
     return false;
   } else {
@@ -1526,7 +1527,7 @@ function createDesktop(act, desk) {
     tiles[act][desk][i] = [];
     if (ignoredScreens.indexOf(i) > -1) {
       // TODO: Ignored screens to work like desktops and activities
-      tiles[act][desk][i].max = Number.MAX_VALUE;
+      tiles[act][desk][i].blocked = true;
     } else {
       tiles[act][desk][i].max = 4;
     }
@@ -1679,7 +1680,7 @@ if (instantInit()) {
 function instantInit() {
   var clients = ws.clientList();
   for (var i = 0; i < clients.length; i++) {
-    if (checkClient(clients[i])) {
+    if (checkClient(clients[i], clients[i].desktop, clients[i].screen)) {
       return true;
     }
   }
@@ -1700,7 +1701,7 @@ function wait(client) {
 
 function check(client) {
   if (opt.useCompositing) {
-    if (checkClient(client)) {
+    if (checkClient(client, client.desktop, client.screen)) {
       ws.clientAdded.disconnect(wait);
       client.windowShown.disconnect(check);
       init();
@@ -1708,7 +1709,7 @@ function check(client) {
     } else client.windowShown.disconnect(check);
   } else {
     if (client != null) {
-      if (checkClient(client)) {
+      if (checkClient(client, client.desktop, client.screen)) {
         ws.clientActivated.disconnect(check);
         init();
         print("init() CAUSED BY: " + client.caption);
