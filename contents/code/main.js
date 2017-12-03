@@ -238,7 +238,7 @@ function registerKeys() {
           return;
         }
         tileClients();
-      } else {
+      } else if (checkClient(client, client.desktop, client.screen)) {
         var tile = screenGeo(scr);
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
@@ -277,7 +277,7 @@ function registerKeys() {
           return;
         }
         tileClients();
-      } else {
+      } else if (checkClient(client, client.desktop, client.screen)) {
         var tile = screenGeo(scr);
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
@@ -319,7 +319,7 @@ function registerKeys() {
           return;
         }
         tileClients();
-      } else {
+      } else if (checkClient(client, client.desktop, client.screen)) {
         var tile = screenGeo(scr);
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
@@ -358,7 +358,7 @@ function registerKeys() {
           return;
         }
         tileClients();
-      } else {
+      } else if (checkClient(client, client.desktop, client.screen)) {
         var tile = screenGeo(scr);
         var rect = client.geometry;
         rect.x = tile.x + gap + margins[1];
