@@ -1,14 +1,18 @@
 // -----------------------------------------------------------------
 // KWin - Quarter Tiling: A Tiling Script for the KWin Window Manager
 // -----------------------------------------------------------------
-
 // Shortcuts for KWin objects
 var opt = options;
 var ws = workspace;
-
 // Shortcuts for workspace properties
 var cAct;
+// Booleans to keep track which direction is next screen 
+// and wether we have computed those values
+var forwardScreen = true;
+var computedScreen = false;
 
+var firstScreenX = 1080; // End X position of the first screen
+var lastScreenX = 1080 + 2560; // Start X position of the last screen
 // Array for included clients
 var tiles = [];
 
@@ -165,6 +169,54 @@ function init() {
   addClients();
   connectWorkspace();
 }
+
+function moveRight(client) {
+  var scr = client.screen + 1;
+  if (scr >= ws.numScreens) {
+    scr = 0;
+  }
+  throwClient(client, client.desktop, client.screen, client.desktop, scr);
+  tileClients();
+}
+
+function moveLeft(client) {
+  var scr = client.screen - 1;
+  if (scr < 0) {
+    scr = ws.numScreens - 1;
+  }
+  throwClient(client, client.desktop, client.screen, client.desktop, scr);
+  tileClients();
+}
+
+function moveToScreen(client, next) {
+  if (computedScreen) {
+    next = forwardScreen ? next: !next;
+    moveFunc = next ? moveRight : moveLeft;
+    moveFunc(client);
+  } else {
+    moveFunc = next ? moveRight : moveLeft;
+    moveOpposite = next ? moveLeft : moveRight;
+    var oldX = client.geometry.x;
+    moveFunc(client);
+    var newX = client.geometry.x;
+    if (next) {
+      if (newX < oldX && newX > firstScreenX) {
+        forwardScreen = false;
+      }
+    }
+    else {
+      if (newX > oldX && newX < lastScreenX) {
+        forwardScreen = false;
+      }
+    }
+    if (!forwardScreen) {
+      moveOpposite(client);
+      moveOpposite(client);
+    }
+    computedScreen = true;
+  }
+}
+
 
 // Registers all the shortcuts used for the script
 function registerKeys() {
@@ -380,13 +432,7 @@ function registerKeys() {
     "Quarter: Move to Next Screen",
     "Meta+Right",
     function() {
-      var client = ws.activeClient;
-      var scr = client.screen + 1;
-      if (scr >= ws.numScreens) {
-        scr = 0;
-      }
-      throwClient(client, client.desktop, client.screen, client.desktop, scr);
-      tileClients();
+      moveToScreen(ws.activeClient, true);
     });
 
   registerShortcut(
@@ -394,13 +440,7 @@ function registerKeys() {
     "Quarter: Move to Previous Screen",
     "Meta+Left",
     function() {
-      var client = ws.activeClient;
-      var scr = client.screen - 1;
-      if (scr < 0) {
-        scr = ws.numScreens - 1;
-      }
-      throwClient(client, client.desktop, client.screen, client.desktop, scr);
-      tileClients();
+      moveToScreen(ws.activeClient, false);
     });
 
   registerShortcut(
