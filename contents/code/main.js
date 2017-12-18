@@ -11,8 +11,6 @@ var cAct;
 var forwardScreen = true;
 var computedScreen = false;
 
-var firstScreenX = 1080; // End X position of the first screen
-var lastScreenX = 1080 + 2560; // Start X position of the last screen
 // Array for included clients
 var tiles = [];
 
@@ -170,50 +168,101 @@ function init() {
   connectWorkspace();
 }
 
-function moveRight(client) {
+function moveNext(client) {
   var scr = client.screen + 1;
   if (scr >= ws.numScreens) {
     scr = 0;
   }
   throwClient(client, client.desktop, client.screen, client.desktop, scr);
-  tileClients();
 }
 
-function moveLeft(client) {
+function movePrev(client) {
   var scr = client.screen - 1;
   if (scr < 0) {
     scr = ws.numScreens - 1;
   }
   throwClient(client, client.desktop, client.screen, client.desktop, scr);
+}
+
+/*
+ * Compute wether the screen layout is flipped or not.
+ * 
+ * This will move the client to the next screen and the previous screen, both
+ * relative to the original screen, and get a sense of the x locations of
+ * these movements. And compute a boolean value to indicate if the screen
+ * layout is flipped.
+ *
+ * @param client: the client to be moved.
+ *
+ */
+function computeScreen(client) {
+  var oldX = client.geometry.x;
+  moveNext(client);
+  var nextX = client.geometry.x;
+  movePrev(client);
+  movePrev(client);
+  var prevX = client.geometry.x;
+  moveNext(client);
+  
+  if ((nextX < oldX && prevX < oldX && nextX > prevX) // Edge case for right most edge
+     ||(nextX > oldX && prevX > oldX && nextX > prevX) // Edge case for left most edge
+     ||(prevX > oldX && nextX < oldX)) { // General case
+    forwardScreen = false;
+  }
+  computedScreen = true;
+}
+
+/*
+ * Deal with moving windows across screens when there are >= 3 screens.
+ *
+ * If the screen layout has not been computed, call computeScreen function.
+ *
+ * Otherwise just move the client based on the forwardScreen boolean.
+ *
+ * If that boolean is false, it means we need to flip the next boolean.
+ *
+ * @param client: the client to be moved.
+ *
+ * @param next: if True then move to next screen, othewise 
+ *              move to the previous screen.
+ */
+function moveToScreenComplex(client, next) {
+  if (!computedScreen) {
+    computeScreen(client);
+  }
+  next = forwardScreen ? next: !next;
+  if (next) {
+    moveNext(client); 
+  } else {
+    movePrev(client);
+  }
   tileClients();
 }
 
-function moveToScreen(client, next) {
-  if (computedScreen) {
-    next = forwardScreen ? next: !next;
-    moveFunc = next ? moveRight : moveLeft;
-    moveFunc(client);
-  } else {
-    moveFunc = next ? moveRight : moveLeft;
-    moveOpposite = next ? moveLeft : moveRight;
-    var oldX = client.geometry.x;
-    moveFunc(client);
-    var newX = client.geometry.x;
-    if (next) {
-      if (newX < oldX && newX > firstScreenX) {
-        forwardScreen = false;
-      }
-    }
-    else {
-      if (newX > oldX && newX < lastScreenX) {
-        forwardScreen = false;
-      }
-    }
-    if (!forwardScreen) {
-      moveOpposite(client);
-      moveOpposite(client);
-    }
-    computedScreen = true;
+/*
+ * Move to next/previous screen.
+ *
+ * We have 3 cases:
+ *
+ * numScreens == 1: do nothing, since there's only one screen anyways.
+ *
+ * numScreens == 2: move to the other screen, there are only two screens 
+ *                  so this is a simple case.
+ *
+ * numScreens >= 3: this case is more compplex and it's handled in the
+ *                  moveToScreenComplex function.
+ *
+ * @param next: if True then move to next screen, othewise 
+ *              move to the previous screen.
+ */
+function moveToScreen(next) {
+  var client = ws.activeClient;
+  if (ws.numScreens === 2) {
+    var scr = client.screen === 1 ? 0 : 1;
+    throwClient(client, client.desktop, client.screen, client.desktop, scr);
+    tileClients();
+  } else if (ws.numScreens >= 3) {
+    moveToScreenComplex(client, next);
   }
 }
 
@@ -432,7 +481,7 @@ function registerKeys() {
     "Quarter: Move to Next Screen",
     "Meta+Right",
     function() {
-      moveToScreen(ws.activeClient, true);
+      moveToScreen(true);
     });
 
   registerShortcut(
@@ -440,7 +489,7 @@ function registerKeys() {
     "Quarter: Move to Previous Screen",
     "Meta+Left",
     function() {
-      moveToScreen(ws.activeClient, false);
+      moveToScreen(false);
     });
 
   registerShortcut(
