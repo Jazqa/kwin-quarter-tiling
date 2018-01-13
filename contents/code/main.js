@@ -324,13 +324,12 @@ function registerKeys() {
         removeClient(client, false, client.desktop, client.screen);
         if (floatX != 0 && floatY != 0) { // resize to fixed size if the settings aren't set to zero
           var scr = client.screen;
-          var x = Math.round(screenWidth(scr) * (floatX / 100));
-          var y = Math.round(screenHeight(scr) * (floatY / 100));
           var rect = client.geometry;
-          rect.width = x;
-          rect.height = y;
-          rect.x = (screenWidth(scr) - x) * 0.5;
-          rect.y = (screenHeight(scr) - y) * 0.5;
+          rect.width = Math.round(screenWidth(scr) * (floatX / 100));;
+          rect.height = Math.round(screenHeight(scr) * (floatY / 100));;
+          var area = screenGeo(scr);
+          rect.x = area.x + area.width * 0.5 - rect.width * 0.5;
+          rect.y = area.y + area.height * 0.5 - rect.height * 0.5;
           client.geometry = rect;
         }
       } else {
