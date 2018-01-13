@@ -6,7 +6,7 @@ var opt = options;
 var ws = workspace;
 // Shortcuts for workspace properties
 var cAct;
-// Booleans to keep track which direction is next screen 
+// Booleans to keep track which direction is next screen
 // and wether we have computed those values
 var forwardScreen = true;
 var computedScreen = false;
@@ -116,6 +116,16 @@ if (ignoredScreens != "") {
   ignoredScreens = [];
 }
 
+// Read Fixed size for floating windows
+var floatX = readConfig("floatX", 0);
+if (floatX > 100 || floatX < 0) {
+  floatX = 0
+}
+var floatY = readConfig("floatY", 0);
+if (floatY > 100 || floatY < 0) {
+  floatY = 0
+}
+
 var gap = readConfig("gap", 8);
 
 // Negative gaps are not allowed (difficulty recognizing maxed, overlapping x < 0 changes screen)
@@ -186,7 +196,7 @@ function movePrev(client) {
 
 /*
  * Compute wether the screen layout is flipped or not.
- * 
+ *
  * This will move the client to the next screen and the previous screen, both
  * relative to the original screen, and get a sense of the x locations of
  * these movements. And compute a boolean value to indicate if the screen
@@ -203,7 +213,7 @@ function computeScreen(client) {
   movePrev(client);
   var prevX = client.geometry.x;
   moveNext(client);
-  
+
   if ((nextX < oldX && prevX < oldX && nextX > prevX) // Edge case for right most edge
      ||(nextX > oldX && prevX > oldX && nextX > prevX) // Edge case for left most edge
      ||(prevX > oldX && nextX < oldX)) { // General case
@@ -223,7 +233,7 @@ function computeScreen(client) {
  *
  * @param client: the client to be moved.
  *
- * @param next: if True then move to next screen, othewise 
+ * @param next: if True then move to next screen, othewise
  *              move to the previous screen.
  */
 function moveToScreenComplex(client, next) {
@@ -232,7 +242,7 @@ function moveToScreenComplex(client, next) {
   }
   next = forwardScreen ? next: !next;
   if (next) {
-    moveNext(client); 
+    moveNext(client);
   } else {
     movePrev(client);
   }
@@ -246,13 +256,13 @@ function moveToScreenComplex(client, next) {
  *
  * numScreens == 1: do nothing, since there's only one screen anyways.
  *
- * numScreens == 2: move to the other screen, there are only two screens 
+ * numScreens == 2: move to the other screen, there are only two screens
  *                  so this is a simple case.
  *
  * numScreens >= 3: this case is more compplex and it's handled in the
  *                  moveToScreenComplex function.
  *
- * @param next: if True then move to next screen, othewise 
+ * @param next: if True then move to next screen, othewise
  *              move to the previous screen.
  */
 function moveToScreen(next) {
@@ -312,6 +322,17 @@ function registerKeys() {
       client.oldGeo = client.geometry;
       if (client.included) {
         removeClient(client, false, client.desktop, client.screen);
+        if (floatX != 0 && floatY != 0) { // resize to fixed size if the settings aren't set to zero
+          var scr = client.screen;
+          var x = Math.round(screenWidth(scr) * (floatX / 100));
+          var y = Math.round(screenHeight(scr) * (floatY / 100));
+          var rect = client.geometry;
+          rect.width = x;
+          rect.height = y;
+          rect.x = (screenWidth(scr) - x) * 0.5;
+          rect.y = (screenHeight(scr) - y) * 0.5;
+          client.geometry = rect;
+        }
       } else {
         addClient(client, true, client.desktop, client.screen);
       }
@@ -803,7 +824,7 @@ function removeClient(client, follow, desk, scr) {
       var i = findClientIndex(client, desk, scr);
       tiles[act][desk][scr].splice(i, 1);
       for (var j = 0; j < tiles[act][desk].length; j++) {
-        if (tiles[act][desk][j].length > 0) { 
+        if (tiles[act][desk][j].length > 0) {
           follow = false;
           break;
         }
@@ -1185,9 +1206,9 @@ function swapClients(i, j, scrI, scrJ) {
   tiles[act][desk][scrJ][j] = temp;
 
   // If the clients are adjacent, fits the smaller one
-  if (i === 3 && j === 0 || 
+  if (i === 3 && j === 0 ||
       i === 0 && j === 3 ||
-      i === 1 && j === 2 || 
+      i === 1 && j === 2 ||
       i === 2 && j === 1) {
     if (scrI === scrJ) {
       if (tiles[act][desk][scrJ][j].geometry.width <

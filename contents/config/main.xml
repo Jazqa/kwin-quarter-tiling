@@ -9,6 +9,14 @@
 		  <label>Pixels between the windows and screen edges</label>
 		  <default>8</default>
 		</entry>
+    	<entry name="floatX" type="int">
+		  <label>Floating Windows preset horizontal size value in percentage representing factor of screen size, zero disables the feature</label>
+		  <default>0</default>
+		</entry>
+    	<entry name="floatY" type="int">
+		  <label>Floating Windows preset vertical size value in percentage representing factor of screen size, zero disables the feature</label>
+		  <default>0</default>
+		</entry>
     <entry name="numDesks" type="int">
       <label>Initial number of desktops</label>
       <default>2</default>
