@@ -1263,15 +1263,15 @@ function resizeClient(client, scr, x, y) {
       currentLayout[2].height += y;
       break;
     case 3:
-      tiles[act][desk][scr].layout[0].width += x;
-      tiles[act][desk][scr].layout[1].x += x;
-      tiles[act][desk][scr].layout[1].width -= x;
-      tiles[act][desk][scr].layout[2].x += x;
-      tiles[act][desk][scr].layout[2].width -= x;
-      tiles[act][desk][scr].layout[3].width += x;
-      tiles[act][desk][scr].layout[0].height -= y;
-      tiles[act][desk][scr].layout[3].y -= y;
-      tiles[act][desk][scr].layout[3].height += y;
+      currentLayout[0].width += x;
+      currentLayout[1].x += x;
+      currentLayout[1].width -= x;
+      currentLayout[2].x += x;
+      currentLayout[2].width -= x;
+      currentLayout[3].width += x;
+      currentLayout[0].height -= y;
+      currentLayout[3].y -= y;
+      currentLayout[3].height += y;
       break;
   }
 }
