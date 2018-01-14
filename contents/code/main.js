@@ -1072,6 +1072,7 @@ function endMove(client) {
     resizeClient(client, client.oldScr, x, y);
     fitClient(client, client.desktop, client.oldScr, "resize");
     tileClients();
+    client.oldGeo = client.geometry;
   }
 }
 
