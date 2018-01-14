@@ -112,6 +112,16 @@ if (ignoredScreens != "") {
   ignoredScreens = [];
 }
 
+// Read Fixed size for floating windows
+var floatX = readConfig("floatX", 0);
+if (floatX > 100 || floatX < 0) {
+  floatX = 0
+}
+var floatY = readConfig("floatY", 0);
+if (floatY > 100 || floatY < 0) {
+  floatY = 0
+}
+
 var gap = readConfig("gap", 8);
 
 // Negative gaps are not allowed (difficulty recognizing maxed, overlapping x < 0 changes screen)
@@ -226,6 +236,16 @@ function registerKeys() {
       client.oldGeo = client.geometry;
       if (client.included) {
         removeClient(client, false, client.desktop, client.screen);
+        if (floatX != 0 && floatY != 0) { // resize to fixed size if the settings aren't set to zero
+          var scr = client.screen;
+          var rect = client.geometry;
+          rect.width = Math.round(screenWidth(scr) * (floatX / 100));;
+          rect.height = Math.round(screenHeight(scr) * (floatY / 100));;
+          var area = screenGeo(scr);
+          rect.x = area.x + area.width * 0.5 - rect.width * 0.5;
+          rect.y = area.y + area.height * 0.5 - rect.height * 0.5;
+          client.geometry = rect;
+        }
       } else {
         addClient(client, true, client.desktop, client.screen);
       }
@@ -717,7 +737,7 @@ function removeClient(client, follow, desk, scr) {
       var i = findClientIndex(client, desk, scr);
       tiles[act][desk][scr].splice(i, 1);
       for (var j = 0; j < tiles[act][desk].length; j++) {
-        if (tiles[act][desk][j].length > 0) { 
+        if (tiles[act][desk][j].length > 0) {
           follow = false;
           break;
         }
@@ -1099,9 +1119,9 @@ function swapClients(i, j, scrI, scrJ) {
   tiles[act][desk][scrJ][j] = temp;
 
   // If the clients are adjacent, fits the smaller one
-  if (i === 3 && j === 0 || 
+  if (i === 3 && j === 0 ||
       i === 0 && j === 3 ||
-      i === 1 && j === 2 || 
+      i === 1 && j === 2 ||
       i === 2 && j === 1) {
     if (scrI === scrJ) {
       if (tiles[act][desk][scrJ][j].geometry.width <
