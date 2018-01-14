@@ -1626,6 +1626,8 @@ function newLayout(scr) {
   area.y += margins[0];
   area.width -= margins[1] + margins[3];
   area.height -= margins[0] + margins[2];
+  area.width *= 0.5; // all areas will be half the available size
+  area.height *= 0.5;
   var layout = [];
   for (var i = 0; i < 4; i++) {
     layout[i] = {}; // Note: Need to clone the properties!
@@ -1636,25 +1638,9 @@ function newLayout(scr) {
     // TODO: Horizontal layout
     // Layouts = "Objects"
     // Layout.newLayout(), Layout.tileClients(), Layout.resizeClients() etc.
-    if (i === 1) {
-      layout[0].width = layout[0].width * 0.5;
-      layout[i].width = layout[0].width;
-      layout[i].x = layout[i].x + layout[i].width;
-    }
-    if (i === 2) {
-      layout[1].height = layout[1].height * 0.5;
-      layout[i].height = layout[1].height;
-      layout[i].y = layout[i].y + layout[i].height;
-      layout[i].width = layout[i].width * 0.5;
-      layout[i].x = layout[i].x + layout[i].width;
-    }
-    if (i === 3) {
-      layout[0].height = layout[0].height * 0.5;
-      layout[i].height = layout[0].height;
-      layout[i].width = layout[i].width * 0.5;
-      layout[i].y = layout[i].y + layout[i].height;
-    }
   }
+  layout[1].x = layout[2].x = area.x + area.width;
+  layout[2].y = layout[3].y = area.y + area.height;
   return layout;
 }
 
