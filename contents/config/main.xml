@@ -37,6 +37,10 @@
       <label>Tile small clients to the center of the tile instead of the center of the screen</label>
       <default>1</default>
     </entry>
+    <entry name="liveTiling" type="int">
+      <label>Tile the windows live when dragging and resizing with mouse</label>
+      <default>0</default>
+    </entry>
     <entry name="mt" type="int">
       <label>Top margin</label>
       <default>0</default>
