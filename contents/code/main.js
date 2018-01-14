@@ -6,10 +6,6 @@ var opt = options;
 var ws = workspace;
 // Shortcuts for workspace properties
 var cAct;
-// Booleans to keep track which direction is next screen
-// and wether we have computed those values
-var forwardScreen = true;
-var computedScreen = false;
 
 // Array for included clients
 var tiles = [];
@@ -178,102 +174,20 @@ function init() {
   connectWorkspace();
 }
 
-function moveNext(client) {
-  var scr = client.screen + 1;
-  if (scr >= ws.numScreens) {
-    scr = 0;
-  }
-  throwClient(client, client.desktop, client.screen, client.desktop, scr);
-}
-
-function movePrev(client) {
-  var scr = client.screen - 1;
-  if (scr < 0) {
-    scr = ws.numScreens - 1;
-  }
-  throwClient(client, client.desktop, client.screen, client.desktop, scr);
-}
-
-/*
- * Compute wether the screen layout is flipped or not.
- *
- * This will move the client to the next screen and the previous screen, both
- * relative to the original screen, and get a sense of the x locations of
- * these movements. And compute a boolean value to indicate if the screen
- * layout is flipped.
- *
- * @param client: the client to be moved.
- *
- */
-function computeScreen(client) {
-  var oldX = client.geometry.x;
-  moveNext(client);
-  var nextX = client.geometry.x;
-  movePrev(client);
-  movePrev(client);
-  var prevX = client.geometry.x;
-  moveNext(client);
-
-  if ((nextX < oldX && prevX < oldX && nextX > prevX) // Edge case for right most edge
-     ||(nextX > oldX && prevX > oldX && nextX > prevX) // Edge case for left most edge
-     ||(prevX > oldX && nextX < oldX)) { // General case
-    forwardScreen = false;
-  }
-  computedScreen = true;
-}
-
-/*
- * Deal with moving windows across screens when there are >= 3 screens.
- *
- * If the screen layout has not been computed, call computeScreen function.
- *
- * Otherwise just move the client based on the forwardScreen boolean.
- *
- * If that boolean is false, it means we need to flip the next boolean.
- *
- * @param client: the client to be moved.
- *
- * @param next: if True then move to next screen, othewise
- *              move to the previous screen.
- */
-function moveToScreenComplex(client, next) {
-  if (!computedScreen) {
-    computeScreen(client);
-  }
-  next = forwardScreen ? next: !next;
-  if (next) {
-    moveNext(client);
-  } else {
-    movePrev(client);
-  }
-  tileClients();
-}
-
 /*
  * Move to next/previous screen.
  *
- * We have 3 cases:
- *
- * numScreens == 1: do nothing, since there's only one screen anyways.
- *
- * numScreens == 2: move to the other screen, there are only two screens
- *                  so this is a simple case.
- *
- * numScreens >= 3: this case is more compplex and it's handled in the
- *                  moveToScreenComplex function.
- *
  * @param next: if True then move to next screen, othewise
  *              move to the previous screen.
  */
+
 function moveToScreen(next) {
   var client = ws.activeClient;
-  if (ws.numScreens === 2) {
-    var scr = client.screen === 1 ? 0 : 1;
-    throwClient(client, client.desktop, client.screen, client.desktop, scr);
-    tileClients();
-  } else if (ws.numScreens >= 3) {
-    moveToScreenComplex(client, next);
-  }
+  var n = ws.numScreens;
+  // apparently % is not the modulo operator in javascript so this hack is necessary when going back to previous screens (i.e. having negative numbers) :(
+  var scr = (((client.screen + (next ? 1 : -1)) % n) + n) % n;
+  throwClient(client, client.desktop, client.screen, client.desktop, scr);
+  tileClients();
 }
 
 
