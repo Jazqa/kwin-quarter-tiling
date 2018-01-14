@@ -1220,8 +1220,8 @@ function resizeClient(client, scr, x, y) {
   // Stop clients from getting too large
   area.width -= margins[1] + margins[3] + gap * 2 + area.width * 0.1;
   area.height -= margins[0] + margins[2] + gap * 2 + area.height * 0.1;
-  if (tiles[act][desk][scr].layout[i].width + x > area.width) {
-    x = area.width - tiles[act][desk][scr].layout[i].width;
+  if (currentLayout[i].width + x > area.width) {
+    x = area.width - currentLayout[i].width;
   }
   if (currentLayout[i].height + y > area.height) {
     y = area.height - currentLayout[i].height;
