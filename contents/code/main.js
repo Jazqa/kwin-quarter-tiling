@@ -901,10 +901,10 @@ function tileClients(desk) {
         adj[k] = {};
         adj[k].x = t.layout[k].x + gap * (k == 1 || k == 2 ? 0.5 : 1); // only multiply by 0.5 if tile is 1 or 2
         adj[k].y = t.layout[k].y + gap * (k >= 2 ? 0.5 : 1); // only multiply by 0.5 if tile is 2 or 3
-        // add the width again only when there is onl one tile and subtract gaps accordingly
-        adj[k].width = t.layout[k].width + (t.length == 1 ? t.layout[k].width - gap * 2 : - gap * 1.5);
-        // add heigh again if there are only 2 tiles or less or in case there are 3 tiles add height to tile zero
-        adj[k].height = t.layout[k].height + ((t.length <= 2) || (t.length == 3 && k == 0) ? t.layout[k].height - gap * 2 : - gap * 1.5);
+        // if there is only one tile add the width of the next one so that the current takes the whole screen width and compensate the center gap
+        adj[k].width = t.layout[k].width + (t.length == 1 ? t.layout[k + 1].width - gap * 2 : - gap * 1.5);
+        // add heigh of the tile below the current one and compensate for the horizontal gap
+        adj[k].height = t.layout[k].height + ((t.length <= 2) || (t.length == 3 && k == 0) ? t.layout[3 - k].height - gap * 2 : - gap * 1.5);
       }
 
       // Regular clients always have the size of their tile
