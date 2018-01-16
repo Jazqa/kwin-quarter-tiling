@@ -38,6 +38,8 @@ if (readConfig("ignoreJava", 0) == 1) {
   ignoredClients.push(java);
 }
 
+var liveTiling = readConfig("liveTiling", 0);
+
 // KWin client.resourceClasses & client.resourceNames to which tiles are adjusted to
 var fixedClients = [
   "kcalc",
@@ -694,6 +696,9 @@ function addClients() {
 function connectClient(client, desk, scr) {
   client.clientStartUserMovedResized.connect(startMove);
   client.clientFinishUserMovedResized.connect(endMove);
+  if (liveTiling == 1) {
+    client.clientStepUserMovedResized.connect(endMove);
+  }
   client.activeChanged.connect(tileClients);
   client.desktopChanged.connect(function() {
     if (ignoredDesktops.indexOf(client.desktop) > -1) {
@@ -765,6 +770,9 @@ function disconnectClient(client) {
   client.included = false;
   client.clientStartUserMovedResized.disconnect(startMove);
   client.clientFinishUserMovedResized.disconnect(endMove);
+  if (liveTiling == 1) {
+    client.clientStepUserMovedResized.disconnect(endMove);
+  }
 }
 
 // "Reserves" a spot for client on its current desktop and screen
@@ -1064,6 +1072,7 @@ function endMove(client) {
     resizeClient(client, client.oldScr, x, y);
     fitClient(client, client.desktop, client.oldScr, "resize");
     tileClients();
+    client.oldGeo = client.geometry;
   }
 }
 
@@ -1207,61 +1216,62 @@ function resizeClient(client, scr, x, y) {
   var desk = client.desktop;
   var area = screenGeo(scr);
   var i = findClientIndex(client, desk, scr);
+  var currentLayout = tiles[act][desk][scr].layout;
 
   // Stop clients from getting too large
   area.width -= margins[1] + margins[3] + gap * 2 + area.width * 0.1;
   area.height -= margins[0] + margins[2] + gap * 2 + area.height * 0.1;
-  if (tiles[act][desk][scr].layout[i].width + x > area.width) {
-    x = area.width - tiles[act][desk][scr].layout[i].width;
+  if (currentLayout[i].width + x > area.width) {
+    x = area.width - currentLayout[i].width;
   }
-  if (tiles[act][desk][scr].layout[i].height + y > area.height) {
-    y = area.height - tiles[act][desk][scr].layout[i].height;
+  if (currentLayout[i].height + y > area.height) {
+    y = area.height - currentLayout[i].height;
   }
 
   switch (i) {
     case 0:
-      tiles[act][desk][scr].layout[0].width += x;
-      tiles[act][desk][scr].layout[1].x += x;
-      tiles[act][desk][scr].layout[1].width -= x;
-      tiles[act][desk][scr].layout[2].x += x;
-      tiles[act][desk][scr].layout[2].width -= x;
-      tiles[act][desk][scr].layout[3].width += x;
-      tiles[act][desk][scr].layout[0].height += y;
-      tiles[act][desk][scr].layout[3].y += y;
-      tiles[act][desk][scr].layout[3].height -= y;
+      currentLayout[0].width += x;
+      currentLayout[1].x += x;
+      currentLayout[1].width -= x;
+      currentLayout[2].x += x;
+      currentLayout[2].width -= x;
+      currentLayout[3].width += x;
+      currentLayout[0].height += y;
+      currentLayout[3].y += y;
+      currentLayout[3].height -= y;
       break;
     case 1:
-      tiles[act][desk][scr].layout[0].width -= x;
-      tiles[act][desk][scr].layout[1].x -= x;
-      tiles[act][desk][scr].layout[1].width += x;
-      tiles[act][desk][scr].layout[2].x -= x;
-      tiles[act][desk][scr].layout[2].width += x;
-      tiles[act][desk][scr].layout[3].width -= x;
-      tiles[act][desk][scr].layout[1].height += y;
-      tiles[act][desk][scr].layout[2].y += y;
-      tiles[act][desk][scr].layout[2].height -= y;
+      currentLayout[0].width -= x;
+      currentLayout[1].x -= x;
+      currentLayout[1].width += x;
+      currentLayout[2].x -= x;
+      currentLayout[2].width += x;
+      currentLayout[3].width -= x;
+      currentLayout[1].height += y;
+      currentLayout[2].y += y;
+      currentLayout[2].height -= y;
       break;
     case 2:
-      tiles[act][desk][scr].layout[0].width -= x;
-      tiles[act][desk][scr].layout[1].x -= x;
-      tiles[act][desk][scr].layout[1].width += x;
-      tiles[act][desk][scr].layout[2].x -= x;
-      tiles[act][desk][scr].layout[2].width += x;
-      tiles[act][desk][scr].layout[3].width -= x;
-      tiles[act][desk][scr].layout[1].height -= y;
-      tiles[act][desk][scr].layout[2].y -= y;
-      tiles[act][desk][scr].layout[2].height += y;
+      currentLayout[0].width -= x;
+      currentLayout[1].x -= x;
+      currentLayout[1].width += x;
+      currentLayout[2].x -= x;
+      currentLayout[2].width += x;
+      currentLayout[3].width -= x;
+      currentLayout[1].height -= y;
+      currentLayout[2].y -= y;
+      currentLayout[2].height += y;
       break;
     case 3:
-      tiles[act][desk][scr].layout[0].width += x;
-      tiles[act][desk][scr].layout[1].x += x;
-      tiles[act][desk][scr].layout[1].width -= x;
-      tiles[act][desk][scr].layout[2].x += x;
-      tiles[act][desk][scr].layout[2].width -= x;
-      tiles[act][desk][scr].layout[3].width += x;
-      tiles[act][desk][scr].layout[0].height -= y;
-      tiles[act][desk][scr].layout[3].y -= y;
-      tiles[act][desk][scr].layout[3].height += y;
+      currentLayout[0].width += x;
+      currentLayout[1].x += x;
+      currentLayout[1].width -= x;
+      currentLayout[2].x += x;
+      currentLayout[2].width -= x;
+      currentLayout[3].width += x;
+      currentLayout[0].height -= y;
+      currentLayout[3].y -= y;
+      currentLayout[3].height += y;
       break;
   }
 }

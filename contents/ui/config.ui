@@ -271,6 +271,35 @@
          </property>
         </spacer>
        </item>
+       <item>
+        <widget class="QLabel" name="liveTilingLabel">
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Live
+           Tiling&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+          </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="kcfg_liveTiling">
+         <property name="maximumSize">
+          <size>
+           <width>64</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <item>
+          <property name="text">
+           <string>False</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>True</string>
+          </property>
+         </item>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -978,7 +1007,9 @@
        <item alignment="Qt::AlignHCenter">
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Small Programs:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Small
+           Programs:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+          </string>
          </property>
         </widget>
        </item>
