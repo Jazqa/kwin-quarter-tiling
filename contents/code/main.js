@@ -224,7 +224,15 @@ function registerKeys() {
         for (j = 0; j < removedClients.length; j++) {
           client = removedClients[j][0];
           removeClient(client, false, client.desktop, client.screen);
-          client.geometry = removedClients[j][1];
+          if (floatX != 0 && floatY != 0) {
+            resetClient(client, 4, client.screen);
+            var rect = client.geometry;
+            rect.x += removedClients.length * 50 * 0.5 - j * 50;
+            rect.y += removedClients.length * 50 * 0.5 - j * 50;
+            client.geometry = rect;
+          } else {
+            client.geometry = removedClients[j][1];
+          }
         }
       }
     });
@@ -239,14 +247,7 @@ function registerKeys() {
       if (client.included) {
         removeClient(client, false, client.desktop, client.screen);
         if (floatX != 0 && floatY != 0) { // resize to fixed size if the settings aren't set to zero
-          var scr = client.screen;
-          var rect = client.geometry;
-          rect.width = Math.round(screenWidth(scr) * (floatX / 100));;
-          rect.height = Math.round(screenHeight(scr) * (floatY / 100));;
-          var area = screenGeo(scr);
-          rect.x = area.x + area.width * 0.5 - rect.width * 0.5;
-          rect.y = area.y + area.height * 0.5 - rect.height * 0.5;
-          client.geometry = rect;
+          resetClient(client, 4, client.screen);
         }
       } else {
         addClient(client, true, client.desktop, client.screen);
@@ -1262,6 +1263,15 @@ function resetClient(client, pos, scr) {
       rect = client.geometry;
       rect.x = Math.floor((Math.random() * (tile.width - rect.width)) + tile.x);
       rect.y = Math.floor((Math.random() * (tile.height - rect.height)) + tile.y);
+      break;
+    case 4:
+      // Fixed
+      if (floatX == 0 || floatY == 0) { return; }
+      rect = client.geometry;
+      rect.width = Math.round(screenWidth(scr) * (floatX * 0.01));
+      rect.height = Math.round(screenHeight(scr) * (floatY * 0.01));
+      rect.x = tile.x + tile.width * 0.5 - rect.width * 0.5;
+      rect.y = tile.y + tile.height * 0.5 - rect.height * 0.5;
       break;
   }
 
