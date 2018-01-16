@@ -905,71 +905,14 @@ function tileClients(desk) {
       var t = tiles[act][desk][i];
       var adj = [];
 
-      switch (t.length) {
-        case 1:
-          adj[0] = {};
-          adj[0].x = t.layout[0].x + gap;
-          adj[0].y = t.layout[0].y + gap;
-          adj[0].width = t.layout[0].width + t.layout[1].width - gap * 2;
-          adj[0].height = t.layout[0].height + t.layout[3].height - gap * 2;
-          break;
-        case 2:
-          adj[0] = {};
-          adj[0].x = t.layout[0].x + gap;
-          adj[0].y = t.layout[0].y + gap;
-          adj[0].width = t.layout[0].width - gap * 1.5;
-          adj[0].height = t.layout[0].height + t.layout[3].height - gap * 2;
-
-          adj[1] = {};
-          adj[1].x = t.layout[1].x + gap * 0.5;
-          adj[1].y = t.layout[1].y + gap;
-          adj[1].width = t.layout[1].width - gap * 1.5;
-          adj[1].height = t.layout[1].height + t.layout[2].height - gap * 2;
-          break;
-        case 3:
-          adj[0] = {};
-          adj[0].x = t.layout[0].x + gap;
-          adj[0].y = t.layout[0].y + gap;
-          adj[0].width = t.layout[0].width - gap * 1.5;
-          adj[0].height = t.layout[0].height + t.layout[3].height - gap * 2;
-
-          adj[1] = {};
-          adj[1].x = t.layout[1].x + gap * 0.5;
-          adj[1].y = t.layout[1].y + gap;
-          adj[1].width = t.layout[1].width - gap * 1.5;
-          adj[1].height = t.layout[1].height - gap * 1.5;
-
-          adj[2] = {};
-          adj[2].x = t.layout[2].x + gap * 0.5;
-          adj[2].y = t.layout[2].y + gap * 0.5;
-          adj[2].width = t.layout[2].width - gap * 1.5;
-          adj[2].height = t.layout[2].height - gap * 1.5;
-          break;
-        case 4:
-          adj[0] = {};
-          adj[0].x = t.layout[0].x + gap;
-          adj[0].y = tiles[act][desk][i].layout[0].y + gap;
-          adj[0].width = t.layout[0].width - gap * 1.5;
-          adj[0].height = t.layout[0].height - gap * 1.5;
-
-          adj[1] = {};
-          adj[1].x = t.layout[1].x + gap * 0.5;
-          adj[1].y = t.layout[1].y + gap;
-          adj[1].width = t.layout[1].width - gap * 1.5;
-          adj[1].height = t.layout[1].height - gap * 1.5;
-
-          adj[2] = {};
-          adj[2].x = t.layout[2].x + gap * 0.5;
-          adj[2].y = t.layout[2].y + gap * 0.5;
-          adj[2].width = t.layout[2].width - gap * 1.5;
-          adj[2].height = t.layout[2].height - gap * 1.5;
-
-          adj[3] = {};
-          adj[3].x = t.layout[3].x + gap;
-          adj[3].y = t.layout[3].y + gap * 0.5;
-          adj[3].width = t.layout[3].width - gap * 1.5;
-          adj[3].height = t.layout[3].height - gap * 1.5;
-          break;
+      for (var k = 0; k < t.length; k++) {
+        adj[k] = {};
+        adj[k].x = t.layout[k].x + gap * (k == 1 || k == 2 ? 0.5 : 1); // only multiply by 0.5 if tile is 1 or 2
+        adj[k].y = t.layout[k].y + gap * (k >= 2 ? 0.5 : 1); // only multiply by 0.5 if tile is 2 or 3
+        // if there is only one tile add the width of the next one so that the current takes the whole screen width and compensate the center gap
+        adj[k].width = t.layout[k].width + (t.length == 1 ? t.layout[k + 1].width - gap * 2 : - gap * 1.5);
+        // add heigh of the tile below the current one and compensate for the horizontal gap
+        adj[k].height = t.layout[k].height + ((t.length <= 2) || (t.length == 3 && k == 0) ? t.layout[3 - k].height - gap * 2 : - gap * 1.5);
       }
 
       // Regular clients always have the size of their tile
@@ -1636,6 +1579,8 @@ function newLayout(scr) {
   area.y += margins[0];
   area.width -= margins[1] + margins[3];
   area.height -= margins[0] + margins[2];
+  area.width *= 0.5; // all areas will be half the available size
+  area.height *= 0.5;
   var layout = [];
   for (var i = 0; i < 4; i++) {
     layout[i] = {}; // Note: Need to clone the properties!
@@ -1646,25 +1591,9 @@ function newLayout(scr) {
     // TODO: Horizontal layout
     // Layouts = "Objects"
     // Layout.newLayout(), Layout.tileClients(), Layout.resizeClients() etc.
-    if (i === 1) {
-      layout[0].width = layout[0].width * 0.5;
-      layout[i].width = layout[0].width;
-      layout[i].x = layout[i].x + layout[i].width;
-    }
-    if (i === 2) {
-      layout[1].height = layout[1].height * 0.5;
-      layout[i].height = layout[1].height;
-      layout[i].y = layout[i].y + layout[i].height;
-      layout[i].width = layout[i].width * 0.5;
-      layout[i].x = layout[i].x + layout[i].width;
-    }
-    if (i === 3) {
-      layout[0].height = layout[0].height * 0.5;
-      layout[i].height = layout[0].height;
-      layout[i].width = layout[i].width * 0.5;
-      layout[i].y = layout[i].y + layout[i].height;
-    }
   }
+  layout[1].x = layout[2].x = area.x + area.width;
+  layout[2].y = layout[3].y = area.y + area.height;
   return layout;
 }
 
