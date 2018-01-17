@@ -384,14 +384,10 @@ function onGapSizeShortcut(increase) {
 
 // Registers all the shortcuts used for the script
 function registerKeys() {
-  registerShortcut('Quarter: Reset Layout', 'Quarter: Reset Layout', 'Meta+R',
-      resetLayout);
-  registerShortcut('Quarter: Float/Tile Desktop', 'Quarter: Float/Tile Desktop',
-      'Meta+Esc', toggleFloatTile);
-  registerShortcut('Quarter: Float On/Off', 'Quarter: Float On/Off', 'Meta+F',
-      toggleFloat);
-  registerShortcut('Quarter: Toggle Gaps On/Off', 'Quarter: Toggle Gaps On/Off',
-      'Meta+G', toggleGaps);
+  registerShortcut('Quarter: Reset Layout', 'Quarter: Reset Layout', 'Meta+R',resetLayout);
+  registerShortcut('Quarter: Float/Tile Desktop', 'Quarter: Float/Tile Desktop','Meta+Esc', toggleFloatTile);
+  registerShortcut('Quarter: Float On/Off', 'Quarter: Float On/Off', 'Meta+F',toggleFloat);
+  registerShortcut('Quarter: Toggle Gaps On/Off', 'Quarter: Toggle Gaps On/Off','Meta+G', toggleGaps);
   registerShortcut('Quarter: Move Up', 'Quarter: Move Up', 'Meta+K',
       function() {
         moveToDirection('up');
@@ -408,13 +404,11 @@ function registerKeys() {
       function() {
         moveToDirection('right');
       });
-  registerShortcut('Quarter: Move to Next Screen',
-      'Quarter: Move to Next Screen', 'Meta+Right',
+  registerShortcut('Quarter: Move to Next Screen','Quarter: Move to Next Screen', 'Meta+Right',
       function() {
         moveToScreen(true);
       });
-  registerShortcut('Quarter: Move to Previous Screen',
-      'Quarter: Move to Previous Screen', 'Meta+Left',
+  registerShortcut('Quarter: Move to Previous Screen','Quarter: Move to Previous Screen', 'Meta+Left',
       function() {
         moveToScreen(false);
       });
