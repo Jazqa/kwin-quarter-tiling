@@ -176,6 +176,84 @@ function init() {
   connectWorkspace();
 }
 
+function moveToDirection(direction) {
+  var client = ws.activeClient;
+  var act = client.act;
+  var desk = client.desktop;
+  var scr = client.screen;
+  if (cAct !== client.act) {
+    removeClient(client, false, desk, scr);
+  }
+
+  if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
+    var i = findClientIndex(client, desk, scr);
+    switch (direction) {
+      case 'up':
+        if (i === 2) {
+          swapClients(i, 1, scr, scr);
+        } else if (i === 3) {
+          swapClients(i, 0, scr, scr);
+        } else {
+          return;
+        }
+        break;
+      case 'down':
+        if (i === 0 && tiles[act][desk][scr].length === 4) {
+          swapClients(i, 3, scr, scr);
+        } else if (i === 1 && tiles[act][desk][scr].length >= 3) {
+          swapClients(i, 2, scr, scr);
+        } else {
+          return;
+        }
+        break;
+      case 'left':
+        if (i === 1) {
+          swapClients(i, 0, scr, scr);
+        } else if (i === 2 && tiles[act][desk][scr].length === 4) {
+          swapClients(i, 3, scr, scr);
+        } else if (i === 2) {
+          swapClients(i, 0, scr, scr);
+        } else {
+          return;
+        }
+        break;
+      case 'right':
+        if (i === 0 && tiles[act][desk][scr].length > 1) {
+          swapClients(i, 1, scr, scr);
+        } else if (i === 3) {
+          swapClients(i, 2, scr, scr);
+        } else {
+          return;
+        }
+        break;
+    }
+
+    tileClients();
+  } else if (checkClient(client, client.desktop, client.screen)) {
+    var tile = screenGeo(scr);
+    var rect = client.geometry;
+
+    rect.x = tile.x + gap + margins[1];
+    rect.y = tile.y + gap + margins[0];
+    if (direction === 'up' || direction === 'down') {
+      rect.width = tile.width - gap * 2 - margins[1] - margins[3];
+      rect.height = tile.height * 0.5 - gap -
+          margins[direction === 'up' ? 0 : 2];
+    } else {
+      rect.width = tile.width * 0.5 - gap -
+          margins[direction === 'left' ? 1 : 3];
+      rect.height = tile.height - gap * 2 - margins[0] - margins[2];
+    }
+    if (client.geometry.x === rect.x && client.geometry.y === rect.y &&
+        client.geometry.width === rect.width &&
+        client.geometry.height === rect.height) {
+      client.geometry = screenGeo(scr, true);
+    } else {
+      client.geometry = rect;
+    }
+  }
+}
+
 /*
  * Move to next/previous screen.
  *
@@ -192,345 +270,165 @@ function moveToScreen(next) {
   tileClients();
 }
 
+function onResizeShortcut(increase) {
+  // TODO: Implement for fixed clients
+  var client = ws.activeClient;
+  if (client.fixed) {
+    return;
+  }
+
+  var scr = client.screen;
+  var x = Math.round(screenWidth(scr) * 0.01);
+  var y = Math.round(screenHeight(scr) * 0.01);
+  if (!increase) {
+    x = -x;
+    y = -y;
+  }
+
+  if (client.included && ignoredScreens.indexOf(scr) === -1) {
+    resizeClient(client, scr, x, y);
+    tileClients();
+  } else {
+    var rect = client.geometry;
+    rect.width += x;
+    rect.height += y;
+    rect.x -= x * 0.5;
+    rect.y -= y * 0.5;
+    client.geometry = rect;
+  }
+
+}
+
+function toggleFloatTile() {
+  // Floats the whole desktop and aligns windows to the middle
+  var clients = ws.clientList();
+  var client;
+  var desk = ws.currentDesktop;
+  if (ignoredDesktops.indexOf(desk) > -1) {
+    ignoredDesktops.splice(i, 1);
+    for (var i = 0; i < clients.length; i++) {
+      client = clients[i];
+      if (client.desktop == desk && client.included !== true) {
+        addClient(client, true, client.desktop, client.screen);
+      }
+    }
+  } else {
+    ignoredDesktops.push(desk);
+    var removedClients = [];
+    for (var j = 0; j < clients.length; j++) {
+      client = clients[j];
+      if (client.desktop === desk && client.included) {
+        removedClients.push([client, client.geometry]);
+      }
+    }
+    for (j = 0; j < removedClients.length; j++) {
+      client = removedClients[j][0];
+      removeClient(client, false, client.desktop, client.screen);
+      if (floatX != 0 && floatY != 0) {
+        resetClient(client, 4, client.screen);
+        var rect = client.geometry;
+        rect.x += removedClients.length * 50 * 0.5 - j * 50;
+        rect.y += removedClients.length * 50 * 0.5 - j * 50;
+        client.geometry = rect;
+      } else {
+        client.geometry = removedClients[j][1];
+      }
+    }
+  }
+}
+
+function toggleFloat() {
+  var client = ws.activeClient;
+  client.oldGeo = client.geometry;
+  if (client.included) {
+    removeClient(client, false, client.desktop, client.screen);
+    if (floatX != 0 && floatY != 0) { // resize to fixed size if the settings aren't set to zero
+      resetClient(client, 4, client.screen);
+    }
+  } else {
+    addClient(client, true, client.desktop, client.screen);
+  }
+}
+
+function resetLayout() {
+  tiles[cAct][ws.currentDesktop][ws.activeScreen].layout = newLayout(
+      ws.activeScreen);
+  tileClients();
+}
+
+function toggleGaps() {
+  if (gap <= 1) {
+    gap = readConfig('gap', 8);
+  } else {
+    for (var i = 0; i < margins.length; i++) {
+      if (margins[i] > 0) {
+        gap = 0;
+        tileClients();
+        return;
+      }
+    }
+    gap = 1;
+    /* If margins are set to zero, gaps can't be zero
+                       or the last window will be recognized as maximized */
+  }
+  tileClients();
+}
+
+function onGapSizeShortcut(increase) {
+  gap += increase ? 2 : -2;
+  if (gap < 0) {
+    gap = 0;
+  }
+  tileClients();
+}
 
 // Registers all the shortcuts used for the script
 function registerKeys() {
-  registerShortcut(
-    "Quarter: Float/Tile Desktop",
-    "Quarter: Float/Tile Desktop",
-    "Meta+Esc",
-    function() {
-      // Floats the whole desktop and aligns windows to the middle
-      var clients = ws.clientList();
-      var client;
-      var desk = ws.currentDesktop;
-      if (ignoredDesktops.indexOf(desk) > -1) {
-        ignoredDesktops.splice(i, 1);
-        for (var i = 0; i < clients.length; i++) {
-          client = clients[i];
-          if (client.desktop == desk && client.included !== true) {
-            addClient(client, true, client.desktop, client.screen);
-          }
-        }
-      } else {
-        ignoredDesktops.push(desk);
-        var removedClients = [];
-        for (var j = 0; j < clients.length; j++) {
-          client = clients[j];
-          if (client.desktop === desk && client.included) {
-            removedClients.push([client, client.geometry]);
-          }
-        }
-        for (j = 0; j < removedClients.length; j++) {
-          client = removedClients[j][0];
-          removeClient(client, false, client.desktop, client.screen);
-          if (floatX != 0 && floatY != 0) {
-            resetClient(client, 4, client.screen);
-            var rect = client.geometry;
-            rect.x += removedClients.length * 50 * 0.5 - j * 50;
-            rect.y += removedClients.length * 50 * 0.5 - j * 50;
-            client.geometry = rect;
-          } else {
-            client.geometry = removedClients[j][1];
-          }
-        }
-      }
-    });
+  registerShortcut('Quarter: Reset Layout', 'Quarter: Reset Layout', 'Meta+R',resetLayout);
+  registerShortcut('Quarter: Float/Tile Desktop', 'Quarter: Float/Tile Desktop','Meta+Esc', toggleFloatTile);
+  registerShortcut('Quarter: Float On/Off', 'Quarter: Float On/Off', 'Meta+F',toggleFloat);
+  registerShortcut('Quarter: Toggle Gaps On/Off', 'Quarter: Toggle Gaps On/Off','Meta+G', toggleGaps);
+  registerShortcut('Quarter: Move Up', 'Quarter: Move Up', 'Meta+K',
+      function() {
+        moveToDirection('up');
+      });
+  registerShortcut('Quarter: Move Down', 'Quarter: Move Down', 'Meta+J',
+      function() {
+        moveToDirection('down');
+      });
+  registerShortcut('Quarter: Move Left', 'Quarter: Move Left', 'Meta+H',
+      function() {
+        moveToDirection('left');
+      });
+  registerShortcut('Quarter: Move Right', 'Quarter: Move Right', 'Meta+L',
+      function() {
+        moveToDirection('right');
+      });
+  registerShortcut('Quarter: Move to Next Screen','Quarter: Move to Next Screen', 'Meta+Right',
+      function() {
+        moveToScreen(true);
+      });
+  registerShortcut('Quarter: Move to Previous Screen','Quarter: Move to Previous Screen', 'Meta+Left',
+      function() {
+        moveToScreen(false);
+      });
+  registerShortcut('Quarter: + Window Size', 'Quarter: + Window Size', 'Meta+Y',
+      function() {
+        onResizeShortcut(true);
+      });
+  registerShortcut('Quarter: - Window Size', 'Quarter: - Window Size', 'Meta+N',
+      function() {
+        onResizeShortcut(false);
+      });
+  registerShortcut('Quarter: + Gap Size', 'Quarter: + Gap Size', 'Meta+PgUp',
+      function() {
+        onGapSizeShortcut(true);
+      });
 
-  registerShortcut(
-    "Quarter: Float On/Off",
-    "Quarter: Float On/Off",
-    "Meta+F",
-    function() {
-      var client = ws.activeClient;
-      client.oldGeo = client.geometry;
-      if (client.included) {
-        removeClient(client, false, client.desktop, client.screen);
-        if (floatX != 0 && floatY != 0) { // resize to fixed size if the settings aren't set to zero
-          resetClient(client, 4, client.screen);
-        }
-      } else {
-        addClient(client, true, client.desktop, client.screen);
-      }
-    });
-
-  registerShortcut(
-    "Quarter: Move Up",
-    "Quarter: Move Up",
-    "Meta+K",
-    function() {
-      var client = ws.activeClient;
-      var desk = client.desktop;
-      var scr = client.screen;
-      if (cAct !== client.act) {
-        removeClient(client, false, desk, scr);
-      }
-
-      if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
-        var i = findClientIndex(client, ws.currentDesktop, scr);
-        if (i === 2) {
-          swapClients(i, 1, scr, scr);
-        } else if (i === 3) {
-          swapClients(i, 0, scr, scr);
-        } else {
-          return;
-        }
-        tileClients();
-      } else if (checkClient(client, client.desktop, client.screen)) {
-        var tile = screenGeo(scr);
-        var rect = client.geometry;
-        rect.x = tile.x + gap + margins[1];
-        rect.y = tile.y + gap + margins[0];
-        rect.width = tile.width - gap * 2 - margins[1] - margins[3];
-        rect.height = tile.height * 0.5 - gap - margins[0];
-        if (client.geometry.x === rect.x && client.geometry.y === rect.y &&
-            client.geometry.width === rect.width && client.geometry.height === rect.height) {
-          client.geometry = screenGeo(scr, true);
-        } else {
-          client.geometry = rect;
-        }
-      }
-    });
-
-  registerShortcut(
-    "Quarter: Move Down",
-    "Quarter: Move Down",
-    "Meta+J",
-    function() {
-      var client = ws.activeClient;
-      var act = client.act;
-      var desk = client.desktop;
-      var scr = client.screen;
-      if (cAct !== client.act) {
-        removeClient(client, false, desk, scr);
-      }
-
-      if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
-        var i = findClientIndex(client, desk, scr);
-        if (i === 0 && tiles[act][desk][scr].length === 4) {
-          swapClients(i, 3, scr, scr);
-        } else if (i === 1 && tiles[act][desk][scr].length >= 3) {
-          swapClients(i, 2, scr, scr);
-        } else {
-          return;
-        }
-        tileClients();
-      } else if (checkClient(client, client.desktop, client.screen)) {
-        var tile = screenGeo(scr);
-        var rect = client.geometry;
-        rect.x = tile.x + gap + margins[1];
-        rect.y = tile.y + gap + margins[0];
-        rect.width = tile.width - gap * 2 - margins[1] - margins[3];
-        rect.height = tile.height * 0.5 - gap - margins[2];
-        rect.y += rect.height;
-        if (client.geometry.x === rect.x && client.geometry.y === rect.y &&
-            client.geometry.width === rect.width && client.geometry.height === rect.height) {
-          client.geometry = screenGeo(scr, true);
-        } else {
-          client.geometry = rect;
-        }
-      }
-    });
-
-  registerShortcut(
-    "Quarter: Move Left",
-    "Quarter: Move Left",
-    "Meta+H",
-    function() {
-      var client = ws.activeClient;
-      var act = client.act;
-      var desk = client.desktop;
-      var scr = client.screen;
-      if (cAct !== client.act) {
-        removeClient(client, false, desk, scr);
-      }
-
-      if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
-        var i = findClientIndex(client, desk, scr);
-        if (i === 1) {
-          swapClients(i, 0, scr, scr);
-        } else if (i === 2 && tiles[act][desk][scr].length === 4) {
-          swapClients(i, 3, scr, scr);
-        } else if (i === 2) {
-          swapClients(i, 0, scr, scr);
-        } else {
-          return;
-        }
-        tileClients();
-      } else if (checkClient(client, client.desktop, client.screen)) {
-        var tile = screenGeo(scr);
-        var rect = client.geometry;
-        rect.x = tile.x + gap + margins[1];
-        rect.y = tile.y + gap + margins[0];
-        rect.width = tile.width * 0.5 - gap - margins[1];
-        rect.height = tile.height - gap * 2 - margins[0] - margins[2];
-        if (client.geometry.x === rect.x && client.geometry.y === rect.y &&
-            client.geometry.width === rect.width && client.geometry.height === rect.height) {
-          client.geometry = screenGeo(scr, true);
-        } else {
-          client.geometry = rect;
-        }
-      }
-    });
-
-  registerShortcut(
-    "Quarter: Move Right",
-    "Quarter: Move Right",
-    "Meta+L",
-    function() {
-      var client = ws.activeClient;
-      var act = client.act;
-      var desk = client.desktop;
-      var scr = client.screen;
-      if (cAct !== client.act) {
-        removeClient(client, false, desk, scr);
-      }
-
-      if (client.included && ignoredScreens.indexOf(client.screen) === -1) {
-        var i = findClientIndex(client, desk, scr);
-        if (i === 0 && tiles[act][desk][scr].length > 1) {
-          swapClients(i, 1, scr, scr);
-        } else if (i === 3) {
-          swapClients(i, 2, scr, scr);
-        } else {
-          return;
-        }
-        tileClients();
-      } else if (checkClient(client, client.desktop, client.screen)) {
-        var tile = screenGeo(scr);
-        var rect = client.geometry;
-        rect.x = tile.x + gap + margins[1];
-        rect.y = tile.y + gap + margins[0];
-        rect.width = tile.width * 0.5 - gap - margins[3];
-        rect.height = tile.height - gap * 2 - margins[0] - margins[2];
-        rect.x += rect.width;
-        if (client.geometry.x === rect.x && client.geometry.y === rect.y &&
-            client.geometry.width === rect.width && client.geometry.height === rect.height) {
-          client.geometry = screenGeo(scr, true);
-        } else {
-          client.geometry = rect;
-        }
-      }
-    });
-
-  registerShortcut(
-    "Quarter: Move to Next Screen",
-    "Quarter: Move to Next Screen",
-    "Meta+Right",
-    function() {
-      moveToScreen(true);
-    });
-
-  registerShortcut(
-    "Quarter: Move to Previous Screen",
-    "Quarter: Move to Previous Screen",
-    "Meta+Left",
-    function() {
-      moveToScreen(false);
-    });
-
-  registerShortcut(
-    "Quarter: + Window Size",
-    "Quarter: + Window Size",
-    "Meta+Y",
-    function() {
-      // TODO: Implement for fixed clients
-      var client = ws.activeClient;
-      if (client.fixed) {
-        return;
-      }
-      var scr = client.screen;
-      var x = Math.round(screenWidth(scr) * 0.01);
-      var y = Math.round(screenHeight(scr) * 0.01);
-      if (client.included && ignoredScreens.indexOf(scr) === -1) {
-        resizeClient(client, scr, x, y);
-        tileClients();
-      } else {
-        var rect = client.geometry;
-        rect.width += x;
-        rect.height += y;
-        rect.x -= x * 0.5;
-        rect.y -= y * 0.5;
-        client.geometry = rect;
-      }
-    });
-
-  registerShortcut(
-    "Quarter: - Window Size",
-    "Quarter: - Window Size",
-    "Meta+N",
-    function() {
-      // TODO: Implement for fixed clients
-      var client = ws.activeClient;
-      if (client.fixed) {
-        return;
-      }
-      var scr = client.screen;
-      var x = Math.round(screenWidth(scr) * 0.01);
-      var y = Math.round(screenHeight(scr) * 0.01);
-      if (client.included && ignoredScreens.indexOf(scr) === -1) {
-        resizeClient(client, scr, -x, -y);
-        tileClients();
-      } else {
-        var rect = client.geometry;
-        rect.width -= x;
-        rect.height -= y;
-        rect.x += x * 0.5;
-        rect.y += y * 0.5;
-        client.geometry = rect;
-      }
-    });
-
-  registerShortcut(
-    "Quarter: Reset Layout",
-    "Quarter: Reset Layout",
-    "Meta+R",
-    function() {
-      tiles[cAct][ws.currentDesktop][ws.activeScreen].layout = newLayout(ws.activeScreen);
-      tileClients();
-    });
-
-  registerShortcut(
-    "Quarter: Toggle Gaps On/Off",
-    "Quarter: Toggle Gaps On/Off",
-    "Meta+G",
-    function() {
-      if (gap <= 1) {
-        gap = readConfig("gap", 8);
-      } else {
-        for (var i = 0; i < margins.length; i++) {
-          if (margins[i] > 0) {
-            gap = 0;
-            tileClients();
-            return;
-          }
-        }
-        gap = 1; /* If margins are set to zero, gaps can't be zero
-                    or the last window will be recognized as maximized */
-      }
-      tileClients();
-    });
-
-  registerShortcut(
-    "Quarter: + Gap Size",
-    "Quarter: + Gap Size",
-    "Meta+PgUp",
-    function() {
-      gap += 2;
-      tileClients();
-    });
-
-  registerShortcut(
-    "Quarter: - Gap Size",
-    "Quarter: - Gap Size",
-    "Meta+Down",
-    function() {
-      gap -= 2;
-      if (gap < 0) {
-        gap = 0;
-      }
-      tileClients();
-    });
+  registerShortcut('Quarter: - Gap Size', 'Quarter: - Gap Size', 'Meta+Down',
+      function() {
+        onGapSizeShortcut(false);
+      });
 }
 
 // Connects the KWin:Workspace signals to the following functions
