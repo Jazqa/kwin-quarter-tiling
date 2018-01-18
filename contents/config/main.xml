@@ -21,7 +21,7 @@
       <label>Initial number of desktops</label>
       <default>2</default>
     </entry>
-    <entry name="follow" type="Bool">
+    <entry name="follow" type="bool">
       <label>Go to the next busy desktop when the last window of a desktop is closed</label>
       <default>true</default>
     </entry>
@@ -41,7 +41,7 @@
       <label>Tile small clients to the center of the tile instead of the center of the screen</label>
       <default>1</default>
     </entry>
-    <entry name="liveTiling" type="Bool">
+    <entry name="liveTiling" type="bool">
       <label>Tile the windows live when dragging and resizing with mouse</label>
       <default>false</default>
     </entry>
@@ -65,7 +65,7 @@
   	  <label>Programs that should be ignored by the script (f.ex. "kate", "steam")</label>
   	  <default>wine, steam, kate</default>
     </entry>
-    <entry name="ignoreJava" type="Bool">
+    <entry name="ignoreJava" type="bool">
       <label>Ignores all Java programs if set to true</label>
       <default>false</default>
     </entry>
