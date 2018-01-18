@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>341</width>
-    <height>559</height>
+    <width>360</width>
+    <height>629</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -87,6 +87,9 @@
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QLabel" name="gapLabel">
+         <property name="toolTip">
+          <string>Pixels between the windows and screen edges</string>
+         </property>
          <property name="text">
           <string>&lt;b&gt;Gap Size:&lt;/b&gt;</string>
          </property>
@@ -99,6 +102,9 @@
            <width>64</width>
            <height>16777215</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Pixels between the windows and screen edges</string>
          </property>
          <property name="text">
           <string>10</string>
@@ -120,6 +126,9 @@
        </item>
        <item>
         <widget class="QLabel" name="numDesksLabel">
+         <property name="toolTip">
+          <string>Initial number of desktops</string>
+         </property>
          <property name="text">
           <string>&lt;b&gt;Initial Desktops:&lt;/b&gt;</string>
          </property>
@@ -132,6 +141,9 @@
            <width>64</width>
            <height>16777215</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Initial number of desktops</string>
          </property>
          <property name="text">
           <string>2</string>
@@ -160,6 +172,9 @@
       <layout class="QHBoxLayout" name="horizontalLayout_7">
        <item>
         <widget class="QLabel" name="floatX_label">
+         <property name="toolTip">
+          <string>Floating Windows preset horizontal size value in percentage representing factor of screen size, zero disables the feature</string>
+         </property>
          <property name="text">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Float Width&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -172,6 +187,9 @@
            <width>64</width>
            <height>16777215</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Floating Windows preset horizontal size value in percentage representing factor of screen size, zero disables the feature</string>
          </property>
          <property name="text">
           <string>0</string>
@@ -193,6 +211,9 @@
        </item>
        <item>
         <widget class="QLabel" name="floatY_label">
+         <property name="toolTip">
+          <string>Floating Windows preset vertical size value in percentage representing factor of screen size, zero disables the feature</string>
+         </property>
          <property name="text">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Float Height&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -205,6 +226,9 @@
            <width>64</width>
            <height>16777215</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Floating Windows preset vertical size value in percentage representing factor of screen size, zero disables the feature</string>
          </property>
          <property name="text">
           <string>0</string>
@@ -236,6 +260,9 @@
        </property>
        <item>
         <widget class="QLabel" name="label_7">
+         <property name="toolTip">
+          <string>Tile small clients to the center of the tile or center of the screen</string>
+         </property>
          <property name="text">
           <string>&lt;b&gt;Center:&lt;/b&gt;</string>
          </property>
@@ -243,6 +270,9 @@
        </item>
        <item>
         <widget class="QComboBox" name="kcfg_centerTo">
+         <property name="toolTip">
+          <string>Tile small clients to the center of the tile or center of the screen</string>
+         </property>
          <property name="currentText">
           <string>Screen</string>
          </property>
@@ -272,34 +302,64 @@
         </spacer>
        </item>
        <item>
-        <widget class="QLabel" name="liveTilingLabel">
+        <widget class="QCheckBox" name="kcfg_follow">
+         <property name="toolTip">
+          <string>Go to the next busy desktop when the last window of a desktop is closed</string>
+         </property>
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Live
-           Tiling&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
-          </string>
+          <string>Follow</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="kcfg_liveTiling">
-         <property name="maximumSize">
+        <spacer name="horizontalSpacer_28">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
           <size>
-           <width>64</width>
-           <height>16777215</height>
+           <width>40</width>
+           <height>20</height>
           </size>
          </property>
-         <item>
-          <property name="text">
-           <string>False</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>True</string>
-          </property>
-         </item>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="kcfg_liveTiling">
+         <property name="toolTip">
+          <string>Tile the windows live when dragging and resizing with mouse</string>
+         </property>
+         <property name="text">
+          <string>Live Tiling</string>
+         </property>
         </widget>
        </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_8">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>10</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <property name="topMargin">
+        <number>0</number>
+       </property>
       </layout>
      </item>
      <item>
@@ -704,26 +764,6 @@
          </property>
         </spacer>
        </item>
-       <item>
-        <widget class="QLabel" name="ignoreJavaLabel">
-         <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Java&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_16">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>10</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
       </layout>
      </item>
      <item>
@@ -752,6 +792,9 @@
            <height>16777215</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Ignored Activities</string>
+         </property>
          <property name="placeholderText">
           <string>1, 2 ,3</string>
          </property>
@@ -777,6 +820,9 @@
            <width>64</width>
            <height>16777215</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>Ignored Desktops</string>
          </property>
          <property name="placeholderText">
           <string>1, 2, 3</string>
@@ -804,6 +850,9 @@
            <height>16777215</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>Ignored Screens</string>
+         </property>
          <property name="placeholderText">
           <string>1, 2, 3</string>
          </property>
@@ -822,28 +871,51 @@
          </property>
         </spacer>
        </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_9">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>10</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_10">
        <item>
-        <widget class="QComboBox" name="kcfg_ignoreJava">
-         <property name="maximumSize">
+        <spacer name="horizontalSpacer_16">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
           <size>
-           <width>64</width>
-           <height>16777215</height>
+           <width>10</width>
+           <height>20</height>
           </size>
          </property>
-         <item>
-          <property name="text">
-           <string>False</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>True</string>
-          </property>
-         </item>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="kcfg_ignoreJava">
+         <property name="toolTip">
+          <string>Ignores all Java programs if checked</string>
+         </property>
+         <property name="text">
+          <string>Java</string>
+         </property>
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer_21">
+        <spacer name="horizontalSpacer_30">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -953,6 +1025,9 @@
        </property>
        <item>
         <widget class="QLineEdit" name="kcfg_ignoredClients">
+         <property name="toolTip">
+          <string>Ignored Programs (Separated by ',')</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -963,6 +1038,9 @@
        </item>
        <item>
         <widget class="QLineEdit" name="kcfg_ignoredCaptions">
+         <property name="toolTip">
+          <string>(Parts of) Window captions that should be ignored by the script (f.ex &quot;move to trash&quot;) (separated by ',')</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -1035,6 +1113,9 @@
        </property>
        <item>
         <widget class="QLineEdit" name="kcfg_fixedClients">
+         <property name="toolTip">
+          <string>Clients that are aligned (position) but not resized with the layout (separated by ',')</string>
+         </property>
          <property name="text">
           <string>telegram, telegramdesktop, telegram-desktop</string>
          </property>
