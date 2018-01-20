@@ -21,10 +21,6 @@
       <label>Initial number of desktops</label>
       <default>2</default>
     </entry>
-    <entry name="follow" type="bool">
-      <label>Go to the next busy desktop when the last window of a desktop is closed</label>
-      <default>true</default>
-    </entry>
     <entry name="ignoredScreens" type="string">
       <label>Ignored Screens</label>
       <default></default>
@@ -34,16 +30,16 @@
       <default></default>
     </entry>
     <entry name="ignoredActivities" type="string">
-      <label>Ignored Activities</label>
+      <label>Ignored Desktops</label>
       <default></default>
     </entry>
     <entry name="centerTo" type="int">
       <label>Tile small clients to the center of the tile instead of the center of the screen</label>
       <default>1</default>
     </entry>
-    <entry name="liveTiling" type="bool">
+    <entry name="liveTiling" type="int">
       <label>Tile the windows live when dragging and resizing with mouse</label>
-      <default>false</default>
+      <default>0</default>
     </entry>
     <entry name="mt" type="int">
       <label>Top margin</label>
@@ -65,9 +61,9 @@
   	  <label>Programs that should be ignored by the script (f.ex. "kate", "steam")</label>
   	  <default>wine, steam, kate</default>
     </entry>
-    <entry name="ignoreJava" type="bool">
+    <entry name="ignoreJava" type="int">
       <label>Ignores all Java programs if set to true</label>
-      <default>false</default>
+      <default>0</default>
     </entry>
     <entry name="ignoredCaptions" type="string">
   	  <label>(Parts of) Window captions that should be ignored by the script (f.ex "move to trash")</label>

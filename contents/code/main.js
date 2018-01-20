@@ -33,12 +33,12 @@ ignoredClients = ignoredClients.concat(
   );
 
 // Easy way to disable all Java-based programs
-if (readConfig("ignoreJava", false)) {
+if (readConfig("ignoreJava", 0) == 1) {
   var java = "sun-awt-x11-xframepeer";
   ignoredClients.push(java);
 }
 
-var liveTiling = readConfig("liveTiling", false);
+var liveTiling = readConfig("liveTiling", 0);
 
 // KWin client.resourceClasses & client.resourceNames to which tiles are adjusted to
 var fixedClients = [
@@ -123,8 +123,6 @@ var floatY = readConfig("floatY", 0);
 if (floatY > 100 || floatY < 0) {
   floatY = 0
 }
-
-var followDesktop = readConfig("follow")
 
 var gap = readConfig("gap", 8);
 
@@ -439,7 +437,7 @@ function connectWorkspace() {
     addClient(client, true, ws.currentDesktop, ws.activeScreen);
   });
   ws.clientRemoved.connect(function(client) {
-    removeClient(client, followDesktop, client.desktop, client.screen);
+    removeClient(client, true, client.desktop, client.screen);
   });
   ws.desktopPresenceChanged.connect(function(client, desk) {
     if (client && client.included) {
@@ -597,7 +595,7 @@ function addClients() {
 function connectClient(client, desk, scr) {
   client.clientStartUserMovedResized.connect(startMove);
   client.clientFinishUserMovedResized.connect(endMove);
-  if (liveTiling) {
+  if (liveTiling == 1) {
     client.clientStepUserMovedResized.connect(endMove);
   }
   client.activeChanged.connect(tileClients);
@@ -671,7 +669,7 @@ function disconnectClient(client) {
   client.included = false;
   client.clientStartUserMovedResized.disconnect(startMove);
   client.clientFinishUserMovedResized.disconnect(endMove);
-  if (liveTiling) {
+  if (liveTiling == 1) {
     client.clientStepUserMovedResized.disconnect(endMove);
   }
 }
