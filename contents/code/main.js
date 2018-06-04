@@ -58,28 +58,73 @@ function addClient(client) {
       client: client,
       geometry: client.geometry
     });
+
+    // Connect
+    client.clientStartUserMovedResized.connect(startMoveClient);
+    client.clientFinishUserMovedResized.connect(finishMoveClient);
+
     tileClients();
   }
 }
 
 function removeClient(client) {
-  var index = findClient(client);
+  var index = findClient(client, windows);
   if (index > -1) {
     print("Removing a client");
     client.geometry = windows[index].geometry;
     windows.splice(index, 1);
+
+    // Disconnect
+    client.clientStartUserMovedResized.disconnect(startMoveClient);
+    client.clientFinishUserMovedResized.disconnect(finishMoveClient);
+
     tileClients();
   }
 }
 
-function findClient(client) {
+function findClient(client, array) {
   print("Finding a client");
-  for (var i = 0; i < windows.length; i++) {
-    if (windows[i].client.windowId === client.windowId) {
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].client.windowId === client.windowId) {
       return i;
     }
   }
   return -1;
+}
+
+var startGeometry;
+var startScreen;
+function startMoveClient(client) {
+  startGeometry = client.geometry;
+  startScreen = client.screen;
+}
+
+function finishMoveClient(client) {
+  if (client.screen === startScreen) {
+    if (
+      client.geometry.width === startGeometry.width &&
+      client.geometry.height === startGeometry.height
+    ) {
+      // Move
+      var closest = [-1, -9999];
+      var tiles = screens[startScreen].getTiles(client);
+      for (var i = 0; i < tiles.length; i++) {
+        var distance =
+          client.geometry.x -
+          tiles[i].geometry.x +
+          (client.geometry.y - tiles[i].geometry.y);
+        if (distance > closest[1]) {
+          closest = [i, distance];
+        }
+        // Switch places with closest
+      }
+    } else {
+      // Resize
+      screens[startScreen].resize(client);
+    }
+  }
+
+  tileClients();
 }
 
 function tileClients() {
@@ -198,6 +243,40 @@ function Screen(i) {
     for (var i = 0; i < included.length; i++) {
       included[i].client.geometry = tiles[i];
     }
+  };
+
+  this.resize = function(client) {
+    var x;
+    var y;
+    var included = this.getWindows().slice(0, 4);
+    switch (findClient(client, included)) {
+      case 0:
+        x =
+          included.length < 2 ? 0 : client.geometry.width - startGeometry.width;
+        y =
+          included.length < 4
+            ? 0
+            : client.geometry.height - startGeometry.height;
+        break;
+      case 1:
+        x = startGeometry.width - client.geometry.width;
+        y =
+          included.length < 3
+            ? 0
+            : client.geometry.height - startGeometry.height;
+        break;
+      case 2:
+        x = startGeometry.width - client.geometry.width;
+        y = startGeometry.height - client.geometry.height;
+        break;
+      case 3:
+        x = client.geometry.width - startGeometry.width;
+        y = startGeometry.height - client.geometry.height;
+        break;
+    }
+    self.separator.x += x;
+    self.separator.y += y;
+    self.tile();
   };
 }
 
