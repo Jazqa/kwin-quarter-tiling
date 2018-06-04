@@ -4,6 +4,8 @@
 
 print("Quarter Tiling initialized");
 
+var gap = 8;
+
 var windows = [];
 var screens = [];
 for (var i = 0; i < workspace.numScreens; i++) {
@@ -66,6 +68,7 @@ function removeClient(client) {
     print("Removing a client");
     client.geometry = windows[index].geometry;
     windows.splice(index, 1);
+    tileClients();
   }
 }
 
@@ -89,57 +92,113 @@ function tileClients() {
 function Screen(i) {
   print("Creating a new screen");
   var self = this;
-  
+
   this.id = i;
   this.geometry = workspace.clientArea(0, i, 0);
+
+  this.geometry.x += gap;
+  this.geometry.y += gap;
+  this.geometry.width -= gap * 2;
+  this.geometry.height -= gap * 2;
+
   this.separator = {
     x: this.geometry.x + this.geometry.width / 2,
     y: this.geometry.y + this.geometry.height / 2
   };
 
-  this.tiles = [
-    {
-      x: this.geometry.x,
-      y: this.geometry.y,
-      width: this.separator.x,
-      height: this.separator.y
-    },
-    {
-      x: this.geometry.x - this.separator.x,
-      y: this.geometry.y,
-      width: this.geometry.width - this.separator.x,
-      height: this.separator.y
-    },
-    {
-      x: this.geometry.x,
-      y: this.geometry.y - this.separator.y,
-      width: this.separator.x,
-      height: this.geometry.height - this.separator.y
-    },
-    {
-      x: this.geometry.x - this.separator.x,
-      y: this.geometry.y - this.separator.y,
-      width: this.geometry.width - this.separator.x,
-      height: this.geometry.height - this.separator.y
+  this.getTiles = function(length) {
+    switch (length) {
+      case 1:
+        return [
+          {
+            x: self.geometry.x,
+            y: self.geometry.y,
+            width: self.geometry.width,
+            height: self.geometry.height
+          }
+        ];
+      case 2:
+        return [
+          {
+            x: self.geometry.x,
+            y: self.geometry.y,
+            width: self.separator.x,
+            height: self.geometry.height
+          },
+          {
+            x: self.geometry.x + self.separator.x,
+            y: self.geometry.y,
+            width: self.geometry.width - self.separator.x,
+            height: self.geometry.height
+          }
+        ];
+      case 3:
+        return [
+          {
+            x: self.geometry.x,
+            y: self.geometry.y,
+            width: self.separator.x,
+            height: self.geometry.height
+          },
+          {
+            x: self.geometry.x + self.separator.x,
+            y: self.geometry.y,
+            width: self.geometry.width - self.separator.x,
+            height: self.separator.y
+          },
+          {
+            x: self.geometry.x + self.separator.x,
+            y: self.geometry.y + self.separator.y,
+            width: self.geometry.width - self.separator.x,
+            height: self.geometry.height - self.separator.y
+          }
+        ];
+      case 4:
+        return [
+          {
+            x: self.geometry.x,
+            y: self.geometry.y,
+            width: self.separator.x,
+            height: self.separator.y
+          },
+          {
+            x: self.geometry.x + self.separator.x,
+            y: self.geometry.y,
+            width: self.geometry.width - self.separator.x,
+            height: self.separator.y
+          },
+          {
+            x: self.geometry.x + self.separator.x,
+            y: self.geometry.y + self.separator.y,
+            width: self.geometry.width - self.separator.x,
+            height: self.geometry.height - self.separator.y
+          },
+          {
+            x: self.geometry.x,
+            y: self.geometry.y + self.separator.y,
+            width: self.separator.x,
+            height: self.geometry.height - self.separator.y
+          }
+        ];
     }
-  ];
-  
-  this.windows = [];
-  
+  };
+
   this.getWindows = function() {
-    self.windows = windows.filter(function(window) {
-      return window.client.desktop === workspace.currentDesktop && window.client.screen === self.id
+    return windows.filter(function(window) {
+      return (
+        window.client.desktop === workspace.currentDesktop &&
+        window.client.screen === self.id
+      );
     });
-  }
-  
+  };
+
   this.tile = function() {
-    this.getWindows();
-    for (var i = 0; i < self.windows.length; i++) {
-      if (i < 3) {
-        self.windows[i].client.geometry = self.tiles[i]
-      }
+    var included = this.getWindows().slice(0, 4);
+    var tiles = this.getTiles(included.length);
+    for (var i = 0; i < included.length; i++) {
+      included[i].client.geometry = tiles[i];
     }
-  }
+  };
 }
 
 workspace.clientAdded.connect(addClient);
