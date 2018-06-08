@@ -72,7 +72,7 @@ function addClient(client) {
     client.clientStartUserMovedResized.connect(startMoveClient);
     client.clientFinishUserMovedResized.connect(finishMoveClient);
 
-    tileClients();
+    screens[client.screen].tile();
   }
 }
 
@@ -87,7 +87,13 @@ function removeClient(client) {
     client.clientStartUserMovedResized.disconnect(startMoveClient);
     client.clientFinishUserMovedResized.disconnect(finishMoveClient);
 
-    tileClients();
+    screens[client.screen].tile();
+  }
+}
+
+function maximizeClient(client, h, v) {
+  if (h && v) {
+    removeClient(client);
   }
 }
 
@@ -159,10 +165,9 @@ function tileClients() {
 function Screen(i) {
   print("Creating a new screen");
   const id = i;
-  var geometry = workspace.clientArea(0, i, 0);
-  var separator = {
-    x: geometry.x + geometry.width / 2,
-    y: geometry.y + geometry.height / 2
+  var offset = {
+    x: 0,
+    y: 0
   };
 
   // Gap cheat sheet:
@@ -171,6 +176,12 @@ function Screen(i) {
   // If not occupying the whole width/height Size -= gap * 1.5
   // If not the first window Position += gap * 0.5
   this.getTiles = function(length) {
+    print("Getting tiles");
+    const geometry = workspace.clientArea(0, id, 0);
+    const separator = {
+      x: geometry.x + geometry.width * 0.5 + offset.x,
+      y: geometry.y + geometry.height * 0.5 + offset.y
+    };
     switch (length) {
       case 1:
         return [
@@ -250,6 +261,7 @@ function Screen(i) {
   this.getWindows = function() {
     const included = windows.filter(function(window) {
       return (
+        window.client.activities.indexOf(workspace.currentActivity > -1) &&
         window.client.desktop === workspace.currentDesktop &&
         window.client.screen === id
       );
@@ -259,6 +271,7 @@ function Screen(i) {
   };
 
   this.tile = function() {
+    print("Tiling screen");
     const included = this.getWindows();
     const tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
@@ -288,16 +301,14 @@ function Screen(i) {
         y = snapshot.geometry.height - client.geometry.height;
         break;
     }
-    separator.x += x;
-    separator.y += y;
+    offset.x += x;
+    offset.y += y;
     this.tile();
   };
 }
 
 workspace.clientAdded.connect(addClient);
 workspace.clientRemoved.connect(removeClient);
-workspace.screenResized.connect(function() {
-  for (var i = 0; i < screens.length; i++) {
-    screens[i].geometry = workspace.clientArea(0, i, 0);
-  }
-});
+workspace.clientMaximizeSet.connect(maximizeClient);
+workspace.currentDesktopChanged.connect(tileClients);
+workspace.desktopPresenceChanged.connect(tileClients);
