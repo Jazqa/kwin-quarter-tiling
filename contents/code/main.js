@@ -4,6 +4,11 @@
 
 print("Quarter Tiling initialized");
 
+// Disable some default options that don't play nicely with the script
+options.windowSnapZone = 0;
+options.electricBorderMaximize = false;
+options.electricBorderTiling = false;
+
 var gap = 8;
 
 var windows = [];
@@ -14,7 +19,7 @@ for (var i = 0; i < workspace.numScreens; i++) {
 
 function isEligible(client) {
   print("Checking eligibility of a client");
-  var ignoredClients = [
+  const ignoredClients = [
     "albert",
     "kazam",
     "krunner",
@@ -45,6 +50,10 @@ function isEligible(client) {
     client.tooltip ||
     client.utility ||
     client.transient ||
+    (client.geometry.width ===
+      workspace.clientArea(0, client.screen, 0).width &&
+      client.geometry.height ===
+        workspace.clientArea(0, client.screen, 0).height) ||
     ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
     ignoredClients.indexOf(client.resourceName.toString()) > -1
     ? false
@@ -68,7 +77,7 @@ function addClient(client) {
 }
 
 function removeClient(client) {
-  var index = findClient(client, windows);
+  const index = findClient(client, windows);
   if (index > -1) {
     print("Removing a client");
     client.geometry = windows[index].geometry;
@@ -103,8 +112,8 @@ var snapshot = {
 function startMoveClient(client) {
   snapshot.geometry = client.geometry;
   snapshot.screen = client.screen;
-  snapshot.windows = screens[startScreen].getWindows();
-  snapshot.screen = screens[startScreen].getTiles(startWindows.length);
+  snapshot.windows = screens[snapshot.screen].getWindows();
+  snapshot.tiles = screens[snapshot.screen].getTiles(snapshot.windows.length);
 }
 
 function finishMoveClient(client) {
@@ -116,7 +125,7 @@ function finishMoveClient(client) {
       // Calculate the closest tile
       var closest = [-1, 9999];
       for (var i = 0; i < snapshot.tiles.length; i++) {
-        var distance =
+        const distance =
           Math.abs(client.geometry.x - snapshot.tiles[i].x) +
           Math.abs(client.geometry.y - snapshot.tiles[i].y);
         if (distance < closest[1]) {
@@ -125,7 +134,7 @@ function finishMoveClient(client) {
       }
 
       // Swap clients
-      var i = findClient(client, windows);
+      const i = findClient(client, windows);
       var temp = windows[i];
       windows[i] = windows[closest[0]];
       windows[closest[0]] = temp;
@@ -149,97 +158,100 @@ function tileClients() {
 
 function Screen(i) {
   print("Creating a new screen");
-  var self = this;
-
-  this.id = i;
-  this.geometry = workspace.clientArea(0, i, 0);
-  this.separator = {
-    x: this.geometry.x + this.geometry.width / 2,
-    y: this.geometry.y + this.geometry.height / 2
+  const id = i;
+  var geometry = workspace.clientArea(0, i, 0);
+  var separator = {
+    x: geometry.x + geometry.width / 2,
+    y: geometry.y + geometry.height / 2
   };
 
+  // Gap cheat sheet:
+  // If the first window Position += gap
+  // If occupying the whole width/height Size -= gap * 2
+  // If not occupying the whole width/height Size -= gap * 1.5
+  // If not the first window Position += gap * 0.5
   this.getTiles = function(length) {
     switch (length) {
       case 1:
         return [
           {
-            x: self.geometry.x,
-            y: self.geometry.y,
-            width: self.geometry.width,
-            height: self.geometry.height
+            x: geometry.x + gap,
+            y: geometry.y + gap,
+            width: geometry.width - gap * 2,
+            height: geometry.height - gap * 2
           }
         ];
       case 2:
         return [
           {
-            x: self.geometry.x,
-            y: self.geometry.y,
-            width: self.separator.x,
-            height: self.geometry.height
+            x: geometry.x + gap,
+            y: geometry.y + gap,
+            width: separator.x - gap * 1.5,
+            height: geometry.height - gap * 2
           },
           {
-            x: self.geometry.x + self.separator.x,
-            y: self.geometry.y,
-            width: self.geometry.width - self.separator.x,
-            height: self.geometry.height
+            x: geometry.x + separator.x + gap * 0.5,
+            y: geometry.y + gap,
+            width: geometry.width - separator.x - gap * 1.5,
+            height: geometry.height - gap * 2
           }
         ];
       case 3:
         return [
           {
-            x: self.geometry.x,
-            y: self.geometry.y,
-            width: self.separator.x,
-            height: self.geometry.height
+            x: geometry.x + gap,
+            y: geometry.y + gap,
+            width: separator.x - gap * 1.5,
+            height: geometry.height - gap * 2
           },
           {
-            x: self.geometry.x + self.separator.x,
-            y: self.geometry.y,
-            width: self.geometry.width - self.separator.x,
-            height: self.separator.y
+            x: geometry.x + separator.x + gap * 0.5,
+            y: geometry.y + gap,
+            width: geometry.width - separator.x - gap * 1.5,
+            height: separator.y - gap * 1.5
           },
           {
-            x: self.geometry.x + self.separator.x,
-            y: self.geometry.y + self.separator.y,
-            width: self.geometry.width - self.separator.x,
-            height: self.geometry.height - self.separator.y
+            x: geometry.x + separator.x + gap * 0.5,
+            y: geometry.y + separator.y + gap * 0.5,
+            width: geometry.width - separator.x - gap * 1.5,
+            height: geometry.height - separator.y - gap * 1.5
           }
         ];
       case 4:
         return [
           {
-            x: self.geometry.x,
-            y: self.geometry.y,
-            width: self.separator.x,
-            height: self.separator.y
+            x: geometry.x + gap,
+            y: geometry.y + gap,
+            width: separator.x - gap * 1.5,
+            height: separator.y - gap * 1.5
           },
           {
-            x: self.geometry.x + self.separator.x,
-            y: self.geometry.y,
-            width: self.geometry.width - self.separator.x,
-            height: self.separator.y
+            x: geometry.x + separator.x + gap * 0.5,
+            y: geometry.y + gap,
+            width: geometry.width - separator.x - gap * 1.5,
+            height: separator.y - gap * 1.5
           },
           {
-            x: self.geometry.x + self.separator.x,
-            y: self.geometry.y + self.separator.y,
-            width: self.geometry.width - self.separator.x,
-            height: self.geometry.height - self.separator.y
+            x: geometry.x + separator.x + gap * 0.5,
+            y: geometry.y + separator.y + gap * 0.5,
+            width: geometry.width - separator.x - gap * 1.5,
+            height: geometry.height - separator.y - gap * 1.5
           },
           {
-            x: self.geometry.x,
-            y: self.geometry.y + self.separator.y,
-            width: self.separator.x,
-            height: self.geometry.height - self.separator.y
+            x: geometry.x + gap,
+            y: geometry.y + separator.y + gap * 0.5,
+            width: separator.x - gap * 1.5,
+            height: geometry.height - separator.y - gap * 1.5
           }
         ];
     }
   };
 
   this.getWindows = function() {
-    var included = windows.filter(function(window) {
+    const included = windows.filter(function(window) {
       return (
         window.client.desktop === workspace.currentDesktop &&
-        window.client.screen === self.id
+        window.client.screen === id
       );
     });
 
@@ -247,8 +259,8 @@ function Screen(i) {
   };
 
   this.tile = function() {
-    var included = this.getWindows();
-    var tiles = this.getTiles(included.length);
+    const included = this.getWindows();
+    const tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
       included[i].client.geometry = tiles[i];
     }
@@ -257,24 +269,15 @@ function Screen(i) {
   this.resize = function(client) {
     var x;
     var y;
-    var included = this.getWindows();
+    const included = this.getWindows();
     switch (findClient(client, included)) {
       case 0:
-        x =
-          included.length < 2
-            ? 0
-            : client.geometry.width - snapshot.geometry.width;
-        y =
-          included.length < 4
-            ? 0
-            : client.geometry.height - snapshot.geometry.height;
+        x = client.geometry.width - snapshot.geometry.width;
+        y = client.geometry.height - snapshot.geometry.height;
         break;
       case 1:
         x = snapshot.geometry.width - client.geometry.width;
-        y =
-          included.length < 3
-            ? 0
-            : client.geometry.height - snapshot.geometry.height;
+        y = client.geometry.height - snapshot.geometry.height;
         break;
       case 2:
         x = snapshot.geometry.width - client.geometry.width;
@@ -285,11 +288,16 @@ function Screen(i) {
         y = snapshot.geometry.height - client.geometry.height;
         break;
     }
-    self.separator.x += x;
-    self.separator.y += y;
-    self.tile();
+    separator.x += x;
+    separator.y += y;
+    this.tile();
   };
 }
 
 workspace.clientAdded.connect(addClient);
 workspace.clientRemoved.connect(removeClient);
+workspace.screenResized.connect(function() {
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].geometry = workspace.clientArea(0, i, 0);
+  }
+});
