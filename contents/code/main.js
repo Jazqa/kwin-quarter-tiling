@@ -9,7 +9,7 @@ options.windowSnapZone = 0;
 options.electricBorderMaximize = false;
 options.electricBorderTiling = false;
 
-var gap = 8;
+var gap = readConfig("gap", 8);
 
 var windows = [];
 var screens = [];
@@ -17,23 +17,49 @@ for (var i = 0; i < workspace.numScreens; i++) {
   screens[i] = new Screen(i);
 }
 
+var ignoredClients = [
+  "albert",
+  "kazam",
+  "krunner",
+  "ksmserver",
+  "lattedock",
+  "pinentry",
+  "Plasma",
+  "plasma",
+  "plasma-desktop",
+  "plasmashell",
+  "plugin-container",
+  "simplescreenrecorder",
+  "yakuake"
+];
+
+ignoredClients = ignoredClients.concat(
+  readConfig("ignoredClients", "wine, steam, kate")
+    .toString()
+    .split(", ")
+);
+
+// KWin client.captions that are not tiled
+var ignoredCaptions = [
+  "File Upload",
+  "Move to Trash",
+  "Quit GIMP",
+  "Create a New Image",
+  "QEMU"
+];
+
+ignoredCaptions = ignoredCaptions.concat(
+  readConfig("ignoredCaptions", "Quit GIMP, Create a New Image")
+    .toString()
+    .split(", ")
+);
+
+if (readConfig("ignoreJava", false).toString() === "true") {
+  ignoredClients.push("sun-awt-x11-xframepeer");
+}
+
 function isEligible(client) {
   print("Checking eligibility of a client");
-  const ignoredClients = [
-    "albert",
-    "kazam",
-    "krunner",
-    "ksmserver",
-    "lattedock",
-    "pinentry",
-    "Plasma",
-    "plasma",
-    "plasma-desktop",
-    "plasmashell",
-    "plugin-container",
-    "simplescreenrecorder",
-    "yakuake"
-  ];
 
   return client.comboBox ||
     client.desktopWindow ||
@@ -136,7 +162,7 @@ function finishMoveClient(client) {
       }
 
       swapClients(findClient(client, windows), closest[0]);
-      tileClients();
+      screens[snapshot.screen].tile();
     } else {
       // Resize
       screens[snapshot.screen].resize(client);
@@ -159,6 +185,7 @@ function tileClients() {
   }
 }
 
+// Easy to create alternative "classes" for different layouts
 function Screen(i) {
   print("Creating a new screen");
   const id = i;
@@ -167,11 +194,6 @@ function Screen(i) {
     y: 0
   };
 
-  // Gap cheat sheet:
-  // If the first window Position += gap
-  // If occupying the whole width/height Size -= gap * 2
-  // If not occupying the whole width/height Size -= gap * 1.5
-  // If not the first window Position += gap * 0.5
   this.getTiles = function(length) {
     print("Getting tiles");
     const geometry = workspace.clientArea(0, id, 0);
@@ -304,14 +326,17 @@ function Screen(i) {
   };
 }
 
-workspace.clientAdded.connect(addClient);
+// Workspace signals
+if (readConfig("autoTile", true).toString() === "true") {
+  workspace.clientAdded.connect(addClient);
+}
+
 workspace.clientRemoved.connect(removeClient);
 workspace.clientMaximizeSet.connect(maximizeClient);
 workspace.currentDesktopChanged.connect(tileClients);
 workspace.desktopPresenceChanged.connect(tileClients);
 
 // Keybindings
-
 registerShortcut(
   "Quarter: Float On/Off",
   "Quarter: Float On/Off",

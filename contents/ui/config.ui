@@ -74,7 +74,7 @@
       <bool>false</bool>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -321,7 +321,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="kcfg_ignoredPrograms"/>
+         <widget class="QLineEdit" name="kcfg_ignoredClients">
+          <property name="placeholderText">
+           <string>wine, kate, spotify</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QLabel" name="ignoredCaptionsLabel">
@@ -334,7 +338,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="kcfg_ignoredCaptions"/>
+         <widget class="QLineEdit" name="kcfg_ignoredCaptions">
+          <property name="placeholderText">
+           <string>Move to trash, Quit GIMP</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QLabel" name="smallProgramsLabel">
@@ -347,7 +355,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="kcfg_smallPrograms"/>
+         <widget class="QLineEdit" name="kcfg_smallPrograms">
+          <property name="placeholderText">
+           <string>kcalc, telegram</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>

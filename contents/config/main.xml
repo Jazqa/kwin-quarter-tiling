@@ -5,5 +5,25 @@
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
     <kcfgfile name=""/>
     <group name="">
+      <entry name="autoTile" type="bool">
+        <label>Automatically tile windows</label>
+        <default>true</default>
+      </entry>
+      <entry name="ignoreJava" type="bool">
+        <label>Ignore all Java windows</label>
+        <default>false</default>
+      </entry>
+    	<entry name="gap" type="int">
+        <label>Pixels between the windows and screen edges</label>
+        <default>8</default>
+		  </entry>
+      <entry name="ignoredClients" type="string">
+  	    <label>Programs that should be ignored by the script (e.g. "kate", "steam")</label>
+  	    <default>wine, steam, kate</default>
+      </entry>
+      <entry name="ignoredCaptions" type="string">
+  	    <label>Captions that should be ignored by the script (e.g. "Quit GIMP")</label>
+  	    <default>Quit GIMP, Create a New Image</default>
+      </entry>
    	</group>
 </kcfg>
