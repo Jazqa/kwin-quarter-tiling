@@ -63,10 +63,7 @@ function isEligible(client) {
 function addClient(client) {
   if (isEligible(client)) {
     print("Adding a client");
-    windows.push({
-      client: client,
-      geometry: client.geometry
-    });
+    windows.push(client);
 
     // Connect
     client.clientStartUserMovedResized.connect(startMoveClient);
@@ -80,7 +77,6 @@ function removeClient(client) {
   const index = findClient(client, windows);
   if (index > -1) {
     print("Removing a client");
-    client.geometry = windows[index].geometry;
     windows.splice(index, 1);
 
     // Disconnect
@@ -100,7 +96,7 @@ function maximizeClient(client, h, v) {
 function findClient(client, array) {
   print("Finding a client");
   for (var i = 0; i < array.length; i++) {
-    if (array[i].client.windowId === client.windowId) {
+    if (array[i].windowId === client.windowId) {
       return i;
     }
   }
@@ -261,9 +257,9 @@ function Screen(i) {
   this.getWindows = function() {
     const included = windows.filter(function(window) {
       return (
-        window.client.activities.indexOf(workspace.currentActivity > -1) &&
-        window.client.desktop === workspace.currentDesktop &&
-        window.client.screen === id
+        window.activities.indexOf(workspace.currentActivity > -1) &&
+        window.desktop === workspace.currentDesktop &&
+        window.screen === id
       );
     });
 
@@ -275,7 +271,7 @@ function Screen(i) {
     const included = this.getWindows();
     const tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
-      included[i].client.geometry = tiles[i];
+      included[i].geometry = tiles[i];
     }
   };
 
