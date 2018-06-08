@@ -105,7 +105,7 @@ function findClient(client, array) {
 
 // Saves a snapshot of the screen when moving starts
 var snapshot = {
-  geometry: { x: 0, y: 0, width: 0, height: 0 },
+  geometry: {},
   screen: 0,
   windows: [],
   tiles: []
@@ -135,12 +135,7 @@ function finishMoveClient(client) {
         }
       }
 
-      // Swap clients
-      const i = findClient(client, windows);
-      var temp = windows[i];
-      windows[i] = windows[closest[0]];
-      windows[closest[0]] = temp;
-
+      swapClients(findClient(client, windows), closest[0]);
       tileClients();
     } else {
       // Resize
@@ -149,6 +144,12 @@ function finishMoveClient(client) {
   }
 
   tileClients();
+}
+
+function swapClients(i, j) {
+  var t = windows[i];
+  windows[i] = windows[j];
+  windows[j] = t;
 }
 
 function tileClients() {
@@ -308,3 +309,19 @@ workspace.clientRemoved.connect(removeClient);
 workspace.clientMaximizeSet.connect(maximizeClient);
 workspace.currentDesktopChanged.connect(tileClients);
 workspace.desktopPresenceChanged.connect(tileClients);
+
+// Keybindings
+
+registerShortcut(
+  "Quarter: Float On/Off",
+  "Quarter: Float On/Off",
+  "Meta+F",
+  function() {
+    var client = workspace.activeClient;
+    if (findClient(client, windows) > -1) {
+      removeClient(client);
+    } else {
+      addClient(client);
+    }
+  }
+);
