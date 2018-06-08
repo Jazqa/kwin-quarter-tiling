@@ -92,35 +92,48 @@ function findClient(client, array) {
   return -1;
 }
 
-var startGeometry;
-var startScreen;
+// Saves a snapshot of the screen when moving starts
+var snapshot = {
+  geometry: { x: 0, y: 0, width: 0, height: 0 },
+  screen: 0,
+  windows: [],
+  tiles: []
+};
+
 function startMoveClient(client) {
-  startGeometry = client.geometry;
-  startScreen = client.screen;
+  snapshot.geometry = client.geometry;
+  snapshot.screen = client.screen;
+  snapshot.windows = screens[startScreen].getWindows();
+  snapshot.screen = screens[startScreen].getTiles(startWindows.length);
 }
 
 function finishMoveClient(client) {
-  if (client.screen === startScreen) {
+  if (client.screen === snapshot.screen) {
     if (
-      client.geometry.width === startGeometry.width &&
-      client.geometry.height === startGeometry.height
+      client.geometry.width === snapshot.geometry.width &&
+      client.geometry.height === snapshot.geometry.height
     ) {
-      // Move
-      var closest = [-1, -9999];
-      var tiles = screens[startScreen].getTiles(client);
-      for (var i = 0; i < tiles.length; i++) {
+      // Calculate the closest tile
+      var closest = [-1, 9999];
+      for (var i = 0; i < snapshot.tiles.length; i++) {
         var distance =
-          client.geometry.x -
-          tiles[i].geometry.x +
-          (client.geometry.y - tiles[i].geometry.y);
-        if (distance > closest[1]) {
+          Math.abs(client.geometry.x - snapshot.tiles[i].x) +
+          Math.abs(client.geometry.y - snapshot.tiles[i].y);
+        if (distance < closest[1]) {
           closest = [i, distance];
         }
-        // Switch places with closest
       }
+
+      // Swap clients
+      var i = findClient(client, windows);
+      var temp = windows[i];
+      windows[i] = windows[closest[0]];
+      windows[closest[0]] = temp;
+
+      tileClients();
     } else {
       // Resize
-      screens[startScreen].resize(client);
+      screens[snapshot.screen].resize(client);
     }
   }
 
@@ -140,12 +153,6 @@ function Screen(i) {
 
   this.id = i;
   this.geometry = workspace.clientArea(0, i, 0);
-
-  this.geometry.x += gap;
-  this.geometry.y += gap;
-  this.geometry.width -= gap * 2;
-  this.geometry.height -= gap * 2;
-
   this.separator = {
     x: this.geometry.x + this.geometry.width / 2,
     y: this.geometry.y + this.geometry.height / 2
@@ -229,16 +236,18 @@ function Screen(i) {
   };
 
   this.getWindows = function() {
-    return windows.filter(function(window) {
+    var included = windows.filter(function(window) {
       return (
         window.client.desktop === workspace.currentDesktop &&
         window.client.screen === self.id
       );
     });
+
+    return included.slice(0, 4);
   };
 
   this.tile = function() {
-    var included = this.getWindows().slice(0, 4);
+    var included = this.getWindows();
     var tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
       included[i].client.geometry = tiles[i];
@@ -248,30 +257,32 @@ function Screen(i) {
   this.resize = function(client) {
     var x;
     var y;
-    var included = this.getWindows().slice(0, 4);
+    var included = this.getWindows();
     switch (findClient(client, included)) {
       case 0:
         x =
-          included.length < 2 ? 0 : client.geometry.width - startGeometry.width;
+          included.length < 2
+            ? 0
+            : client.geometry.width - snapshot.geometry.width;
         y =
           included.length < 4
             ? 0
-            : client.geometry.height - startGeometry.height;
+            : client.geometry.height - snapshot.geometry.height;
         break;
       case 1:
-        x = startGeometry.width - client.geometry.width;
+        x = snapshot.geometry.width - client.geometry.width;
         y =
           included.length < 3
             ? 0
-            : client.geometry.height - startGeometry.height;
+            : client.geometry.height - snapshot.geometry.height;
         break;
       case 2:
-        x = startGeometry.width - client.geometry.width;
-        y = startGeometry.height - client.geometry.height;
+        x = snapshot.geometry.width - client.geometry.width;
+        y = snapshot.geometry.height - client.geometry.height;
         break;
       case 3:
-        x = client.geometry.width - startGeometry.width;
-        y = startGeometry.height - client.geometry.height;
+        x = client.geometry.width - snapshot.geometry.width;
+        y = snapshot.geometry.height - client.geometry.height;
         break;
     }
     self.separator.x += x;
