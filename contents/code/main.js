@@ -11,6 +11,17 @@ options.electricBorderTiling = false;
 
 var gap = readConfig("gap", 8);
 
+function adjustGapSize(amount) {
+  gap += amount;
+  if (gap < 1) {
+    gap = 1;
+  } else if (gap > 64) {
+    gap = 64;
+  }
+
+  tileClients();
+}
+
 var windows = [];
 var screens = [];
 for (var i = 0; i < workspace.numScreens; i++) {
@@ -371,8 +382,26 @@ registerShortcut(
 );
 
 registerShortcut(
-  "Quarter: Increase Screen Capacity",
-  "Quarter: Increase Screen Capacity",
+  "Quarter: + Gap Size",
+  "Quarter: + Gap Size",
+  "Meta+PgUp",
+  function() {
+    adjustGapSize(2);
+  }
+);
+
+registerShortcut(
+  "Quarter: - Gap Size",
+  "Quarter: - Gap Size",
+  "Meta+PgDown",
+  function() {
+    adjustGapSize(-2);
+  }
+);
+
+registerShortcut(
+  "Quarter: + Screen Capacity",
+  "Quarter: + Screen Capacity",
   "Meta+F",
   function() {
     // ActiveScreen.adjustCapacity(true)
@@ -380,8 +409,8 @@ registerShortcut(
 );
 
 registerShortcut(
-  "Quarter: Decrease Screen Capacity",
-  "Quarter: Decrease Screen Capacity",
+  "Quarter: - Screen Capacity",
+  "Quarter: - Screen Capacity",
   "Meta+F",
   function() {
     // ActiveScreen.adjustCapacity(false)
