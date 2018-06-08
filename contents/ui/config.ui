@@ -74,7 +74,7 @@
       <bool>false</bool>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -151,7 +151,7 @@
           <item>
            <widget class="QLabel" name="marginLabel">
             <property name="text">
-             <string>Margins</string>
+             <string>Layout</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
@@ -173,10 +173,15 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="kcfg_margin">
-            <property name="maximum">
-             <number>64</number>
+           <widget class="QComboBox" name="comboBox">
+            <property name="currentText">
+             <string>Quarters</string>
             </property>
+            <item>
+             <property name="text">
+              <string>Quarters</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
