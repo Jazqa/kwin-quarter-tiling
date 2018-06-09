@@ -25,7 +25,7 @@ function adjustGapSize(amount) {
 var windows = [];
 var screens = [];
 for (var i = 0; i < workspace.numScreens; i++) {
-  screens[i] = new Tall(i);
+  screens[i] = new Quarter(i);
 }
 
 var ignoredClients = [
@@ -476,6 +476,97 @@ function Tall(i) {
         x = snapshot.geometry.width - client.geometry.width;
       }
       offset += x;
+      this.tile();
+    }
+  };
+}
+
+function Wide(i) {
+  print("Creating a new screen");
+  const id = i;
+  var master = 1;
+  var max = 4;
+  var offset = 0;
+
+  this.adjustMaster = function(increase) {
+    if (increase) {
+      this.master += 1;
+    } else {
+      this.master = this.master > 1 ? this.master - 1 : 1;
+    }
+  };
+
+  this.adjustCapacity = function(increase) {
+    if (increase) {
+      this.max += 1;
+    } else {
+      this.max = this.max > 1 ? this.max - 1 : 1;
+    }
+
+    this.tile();
+  };
+
+  this.getTiles = function(length) {
+    print("Getting tiles");
+    const geometry = workspace.clientArea(0, id, 0);
+    const separator = geometry.y + geometry.height * 0.5 + offset;
+
+    var tiles = [];
+
+    const shorter = master >= length ? length : master;
+    for (var i = 0; i < master; i++) {
+      tiles.push({
+        x: geometry.x + gap / (i + 1) + geometry.width * (1 / shorter) * i,
+        y: geometry.y + gap,
+        width: geometry.width * (1 / shorter) - gap * (1 + 1 / shorter),
+        height: length <= master ? geometry.height - gap * 2 : separator - gap * 1.5
+      });
+    }
+
+    length -= master;
+    for (var i = 0; i < length; i++) {
+      tiles.push({
+        x: geometry.x + gap / (i + 1) + geometry.width * (1 / length) * i,
+        y: geometry.y + separator + gap * 0.5,
+        width: geometry.width * (1 / length) - gap * (1 + 1 / length),
+        height: geometry.height - separator - gap * 1.5
+      });
+    }
+    return tiles;
+  };
+
+  this.getWindows = function() {
+    const included = windows.filter(function(window) {
+      return (
+        window.activities.indexOf(workspace.currentActivity > -1) &&
+        window.desktop === workspace.currentDesktop &&
+        window.screen === id
+      );
+    });
+
+    return included.slice(0, max);
+  };
+
+  this.tile = function() {
+    print("Tiling screen");
+    const included = this.getWindows();
+    const tiles = this.getTiles(included.length);
+    for (var i = 0; i < included.length; i++) {
+      included[i].geometry = tiles[i];
+    }
+  };
+
+  this.resize = function(client) {
+    var y;
+    const included = this.getWindows();
+    const index = findClient(client, included);
+    if (index > -1) {
+      if (index < master) {
+        y = client.geometry.height - snapshot.geometry.height;
+      } else {
+        y = snapshot.geometry.height - client.geometry.height;
+      }
+      offset += y;
       this.tile();
     }
   };
