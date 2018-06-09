@@ -149,27 +149,30 @@ function startMoveClient(client) {
 
 function finishMoveClient(client) {
   const index = findClient(client, snapshot.windows);
-  if (client.screen === snapshot.screen && index > -1) {
-    if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
-      // Calculate the closest tile
-      var closest = [-1, 9999];
-      for (var i = 0; i < snapshot.tiles.length; i++) {
-        const distance =
-          Math.abs(client.geometry.x - snapshot.tiles[i].x) + Math.abs(client.geometry.y - snapshot.tiles[i].y);
-        if (distance < closest[1]) {
-          closest = [i, distance];
+  if (index > -1) {
+    if (client.screen === snapshot.screen) {
+      if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
+        // Calculate the closest tile
+        var closest = [-1, 9999];
+        for (var i = 0; i < snapshot.tiles.length; i++) {
+          const distance =
+            Math.abs(client.geometry.x - snapshot.tiles[i].x) + Math.abs(client.geometry.y - snapshot.tiles[i].y);
+          if (distance < closest[1]) {
+            closest = [i, distance];
+          }
         }
+        swapClients(index, closest[0]);
+        screens[snapshot.screen].tile();
+      } else {
+        // Resize
+        screens[snapshot.screen].resize(client);
       }
-
-      swapClients(index, closest[0]);
-      screens[snapshot.screen].tile();
     } else {
-      // Resize
-      screens[snapshot.screen].resize(client);
+      windows.push(windows.splice(index, 1)[0]);
+      screens[snapshot.screen].tile();
+      screens[client.screen].tile();
     }
   }
-
-  tileClients();
 }
 
 function swapClients(i, j) {
