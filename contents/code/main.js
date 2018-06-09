@@ -25,7 +25,7 @@ function adjustGapSize(amount) {
 var windows = [];
 var screens = [];
 for (var i = 0; i < workspace.numScreens; i++) {
-  screens[i] = new Quarter(i);
+  screens[i] = new Tall(i);
 }
 
 var ignoredClients = [
@@ -51,13 +51,7 @@ ignoredClients = ignoredClients.concat(
 );
 
 // KWin client.captions that are not tiled
-var ignoredCaptions = [
-  "File Upload",
-  "Move to Trash",
-  "Quit GIMP",
-  "Create a New Image",
-  "QEMU"
-];
+var ignoredCaptions = ["File Upload", "Move to Trash", "Quit GIMP", "Create a New Image", "QEMU"];
 
 ignoredCaptions = ignoredCaptions.concat(
   readConfig("ignoredCaptions", "Quit GIMP, Create a New Image")
@@ -87,10 +81,8 @@ function isEligible(client) {
     client.tooltip ||
     client.utility ||
     client.transient ||
-    (client.geometry.width ===
-      workspace.clientArea(0, client.screen, 0).width &&
-      client.geometry.height ===
-        workspace.clientArea(0, client.screen, 0).height) ||
+    (client.geometry.width === workspace.clientArea(0, client.screen, 0).width &&
+      client.geometry.height === workspace.clientArea(0, client.screen, 0).height) ||
     ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
     ignoredClients.indexOf(client.resourceName.toString()) > -1
     ? false
@@ -158,16 +150,12 @@ function startMoveClient(client) {
 function finishMoveClient(client) {
   const index = findClient(client, snapshot.windows);
   if (client.screen === snapshot.screen && index > -1) {
-    if (
-      client.geometry.width === snapshot.geometry.width &&
-      client.geometry.height === snapshot.geometry.height
-    ) {
+    if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
       // Calculate the closest tile
       var closest = [-1, 9999];
       for (var i = 0; i < snapshot.tiles.length; i++) {
         const distance =
-          Math.abs(client.geometry.x - snapshot.tiles[i].x) +
-          Math.abs(client.geometry.y - snapshot.tiles[i].y);
+          Math.abs(client.geometry.x - snapshot.tiles[i].x) + Math.abs(client.geometry.y - snapshot.tiles[i].y);
         if (distance < closest[1]) {
           closest = [i, distance];
         }
@@ -205,6 +193,8 @@ function Quarter(i) {
     x: 0,
     y: 0
   };
+
+  this.adjustMaster = function(increase) {};
 
   this.adjustCapacity = function(increase) {
     if (increase) {
@@ -351,7 +341,6 @@ function Quarter(i) {
   };
 }
 
-//
 // Workspace signals
 
 if (readConfig("autoTile", true).toString() === "true") {
@@ -364,74 +353,61 @@ workspace.clientMinimized.connect(removeClient);
 workspace.currentDesktopChanged.connect(tileClients);
 workspace.desktopPresenceChanged.connect(tileClients);
 
-//
 // Keybindings
 
-registerShortcut(
-  "Quarter: Float On/Off",
-  "Quarter: Float On/Off",
-  "Meta+F",
-  function() {
-    var client = workspace.activeClient;
-    if (findClient(client, windows) > -1) {
-      removeClient(client);
-    } else {
-      addClient(client);
-    }
+registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function() {
+  var client = workspace.activeClient;
+  if (findClient(client, windows) > -1) {
+    removeClient(client);
+  } else {
+    addClient(client);
   }
-);
+});
 
-registerShortcut(
-  "Quarter: + Gap Size",
-  "Quarter: + Gap Size",
-  "Meta+PgUp",
-  function() {
-    adjustGapSize(2);
-  }
-);
+registerShortcut("Quarter: + Gap Size", "Quarter: + Gap Size", "Meta+PgUp", function() {
+  adjustGapSize(2);
+});
 
-registerShortcut(
-  "Quarter: - Gap Size",
-  "Quarter: - Gap Size",
-  "Meta+PgDown",
-  function() {
-    adjustGapSize(-2);
-  }
-);
+registerShortcut("Quarter: - Gap Size", "Quarter: - Gap Size", "Meta+PgDown", function() {
+  adjustGapSize(-2);
+});
 
-registerShortcut(
-  "Quarter: + Screen Capacity",
-  "Quarter: + Screen Capacity",
-  "Meta+F",
-  function() {
-    // ActiveScreen.adjustCapacity(true)
-  }
-);
+registerShortcut("Quarter: + Master Column", "Quarter: + Master Column", "Meta+F", function() {
+  screens[workspace.activeScreen].adjustMaster(true);
+});
 
-registerShortcut(
-  "Quarter: - Screen Capacity",
-  "Quarter: - Screen Capacity",
-  "Meta+F",
-  function() {
-    // ActiveScreen.adjustCapacity(false)
-  }
-);
+registerShortcut("Quarter: - Master Column", "Quarter: - Master Column", "Meta+F", function() {
+  screens[workspace.activeScreen].adjustMaster(false);
+});
 
-//
-// Alternative layouts
+registerShortcut("Quarter: + Screen Capacity", "Quarter: + Screen Capacity", "Meta+F", function() {
+  screens[workspace.activeScreen].adjustCapacity(true);
+});
 
-function QuarterInverted(i) {
+registerShortcut("Quarter: - Screen Capacity", "Quarter: - Screen Capacity", "Meta+F", function() {
+  screens[workspace.activeScreen].adjustCapacity(false);
+});
+
+// Additional layouts
+
+function Tall(i) {
   print("Creating a new screen");
   const id = i;
+  var master = 1;
   var max = 4;
-  var offset = {
-    x: 0,
-    y: 0
+  var offset = 0;
+
+  this.adjustMaster = function(increase) {
+    if (increase) {
+      this.master += 1;
+    } else {
+      this.master = this.master > 1 ? this.master - 1 : 1;
+    }
   };
 
   this.adjustCapacity = function(increase) {
     if (increase) {
-      this.max = this.max < 4 ? this.max + 1 : this.max;
+      this.max += 1;
     } else {
       this.max = this.max > 1 ? this.max - 1 : 1;
     }
@@ -442,84 +418,30 @@ function QuarterInverted(i) {
   this.getTiles = function(length) {
     print("Getting tiles");
     const geometry = workspace.clientArea(0, id, 0);
-    const separator = {
-      x: geometry.x + geometry.width * 0.5 - offset.x,
-      y: geometry.y + geometry.height * 0.5 + offset.y
-    };
-    switch (length) {
-      case 1:
-        return [
-          {
-            x: geometry.x + gap,
-            y: geometry.y + gap,
-            width: geometry.width - gap * 2,
-            height: geometry.height - gap * 2
-          }
-        ];
-      case 2:
-        return [
-          {
-            x: geometry.x + separator.x + gap * 0.5,
-            y: geometry.y + gap,
-            width: geometry.width - separator.x - gap * 1.5,
-            height: geometry.height - gap * 2
-          },
-          {
-            x: geometry.x + gap,
-            y: geometry.y + gap,
-            width: separator.x - gap * 1.5,
-            height: geometry.height - gap * 2
-          }
-        ];
-      case 3:
-        return [
-          {
-            x: geometry.x + separator.x + gap * 0.5,
-            y: geometry.y + gap,
-            width: geometry.width - separator.x - gap * 1.5,
-            height: geometry.height - gap * 2
-          },
-          {
-            x: geometry.x + gap,
-            y: geometry.y + gap,
-            width: separator.x - gap * 1.5,
-            height: separator.y - gap * 1.5
-          },
-          {
-            x: geometry.x + gap,
-            y: geometry.y + separator.y + gap * 0.5,
-            width: separator.x - gap * 1.5,
-            height: geometry.height - separator.y - gap * 1.5
-          }
-        ];
-      case 4:
-        return [
-          {
-            x: geometry.x + separator.x + gap * 0.5,
-            y: geometry.y + gap,
-            width: geometry.width - separator.x - gap * 1.5,
-            height: separator.y - gap * 1.5
-          },
-          {
-            x: geometry.x + gap,
-            y: geometry.y + gap,
-            width: separator.x - gap * 1.5,
-            height: separator.y - gap * 1.5
-          },
-          {
-            x: geometry.x + gap,
-            y: geometry.y + separator.y + gap * 0.5,
-            width: separator.x - gap * 1.5,
-            height: geometry.height - separator.y - gap * 1.5
-          },
-          {
-            x: geometry.x + separator.x + gap * 0.5,
-            y: geometry.y + separator.y + gap * 0.5,
-            width: geometry.width - separator.x - gap * 1.5,
-            height: geometry.height - separator.y - gap * 1.5
-          }
-        ];
+    const separator = geometry.x + geometry.width * 0.5 + offset;
+
+    var tiles = [];
+
+    const shorter = master >= length ? length : master;
+    for (var i = 0; i < master; i++) {
+      tiles.push({
+        x: geometry.x + gap,
+        y: geometry.y + gap / (i + 1) + geometry.height * (1 / shorter) * i,
+        width: length <= master ? geometry.width - gap * 2 : separator - gap * 1.5,
+        height: geometry.height * (1 / shorter) - gap * (1 + 1 / shorter)
+      });
     }
+
+    length -= master;
+    for (var i = 0; i < length; i++) {
+      tiles.push({
+        x: geometry.x + separator + gap * 0.5,
+        y: geometry.y + gap / (i + 1) + geometry.height * (1 / length) * i,
+        width: geometry.width - separator - gap * 1.5,
+        height: geometry.height * (1 / length) - gap * (1 + 1 / length)
+      });
+    }
+    return tiles;
   };
 
   this.getWindows = function() {
@@ -545,30 +467,15 @@ function QuarterInverted(i) {
 
   this.resize = function(client) {
     var x;
-    var y;
     const included = this.getWindows();
     const index = findClient(client, included);
     if (index > -1) {
-      switch (findClient(client, included)) {
-        case 0:
-          x = client.geometry.width - snapshot.geometry.width;
-          y = client.geometry.height - snapshot.geometry.height;
-          break;
-        case 1:
-          x = snapshot.geometry.width - client.geometry.width;
-          y = client.geometry.height - snapshot.geometry.height;
-          break;
-        case 2:
-          x = snapshot.geometry.width - client.geometry.width;
-          y = snapshot.geometry.height - client.geometry.height;
-          break;
-        case 3:
-          x = client.geometry.width - snapshot.geometry.width;
-          y = snapshot.geometry.height - client.geometry.height;
-          break;
+      if (index < master) {
+        x = client.geometry.width - snapshot.geometry.width;
+      } else {
+        x = snapshot.geometry.width - client.geometry.width;
       }
-      offset.x += x;
-      offset.y += y;
+      offset += x;
       this.tile();
     }
   };

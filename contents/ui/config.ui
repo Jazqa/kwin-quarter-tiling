@@ -182,6 +182,16 @@
               <string>Quarters</string>
              </property>
             </item>
+            <item>
+             <property name="text">
+              <string>Tall</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Wide</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
