@@ -24,8 +24,22 @@ function adjustGapSize(amount) {
 
 var windows = [];
 var screens = [];
-for (var i = 0; i < workspace.numScreens; i++) {
-  screens[i] = new Quarter(i);
+
+initScreens();
+function initScreens() {
+  const layout = readConfig("layout", 0).toString();
+  for (var i = 0; i < workspace.numScreens; i++) {
+    switch (layout) {
+      case "1":
+        screens[i] = new Tall(i);
+        break;
+      case "2":
+        screens[i] = new Wide(i);
+        break;
+      default:
+        screens[i] = new Quarter(i);
+    }
+  }
 }
 
 var ignoredClients = [
@@ -173,6 +187,19 @@ function finishMoveClient(client) {
       screens[client.screen].tile();
     }
   }
+}
+
+function changeDesktop(client, desktop) {
+  print("Changing desktop");
+
+  if (client) {
+    var index = findClient(client, windows);
+    if (index > -1) {
+      windows.push(windows.splice(index, 1)[0]);
+    }
+  }
+
+  tileClients();
 }
 
 function swapClients(i, j) {
@@ -354,7 +381,7 @@ workspace.clientRemoved.connect(removeClient);
 workspace.clientMaximizeSet.connect(maximizeClient);
 workspace.clientMinimized.connect(removeClient);
 workspace.currentDesktopChanged.connect(tileClients);
-workspace.desktopPresenceChanged.connect(tileClients);
+workspace.desktopPresenceChanged.connect(changeDesktop);
 
 // Keybindings
 

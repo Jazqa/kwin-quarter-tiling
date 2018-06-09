@@ -17,6 +17,10 @@
         <label>Pixels between the windows and screen edges</label>
         <default>8</default>
 		  </entry>
+      <entry name="layout" type="int">
+        <label>Tiling layout</label>
+        <default>0</default>
+		  </entry>
       <entry name="ignoredClients" type="string">
   	    <label>Programs that should be ignored by the script (e.g. "kate", "steam")</label>
   	    <default>wine, steam, kate</default>
