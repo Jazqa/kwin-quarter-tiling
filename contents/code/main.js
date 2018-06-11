@@ -77,6 +77,11 @@ if (readConfig("ignoreJava", false).toString() === "true") {
   ignoredClients.push("sun-awt-x11-xframepeer");
 }
 
+const minimumGeometry = {
+  width: readConfig("minWidth", 256),
+  height: readConfig("minHeight", 256)
+};
+
 function isEligible(client) {
   print("Checking eligibility of a client");
 
@@ -87,6 +92,7 @@ function isEligible(client) {
     client.dock ||
     client.dropdownMenu ||
     client.menu ||
+    client.minimized ||
     client.notification ||
     client.popupMenu ||
     client.specialWindow ||
@@ -97,6 +103,9 @@ function isEligible(client) {
     client.transient ||
     (client.geometry.width === workspace.clientArea(0, client.screen, 0).width &&
       client.geometry.height === workspace.clientArea(0, client.screen, 0).height) ||
+    client.geometry.width < minimumGeometry.width ||
+    client.geometry.height < minimumGeometry.height ||
+    ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
     ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
     ignoredClients.indexOf(client.resourceName.toString()) > -1
     ? false
@@ -175,6 +184,7 @@ function finishMoveClient(client) {
             closest = [i, distance];
           }
         }
+        // Swap with the closest
         swapClients(index, closest[0]);
         screens[snapshot.screen].tile();
       } else {
@@ -283,6 +293,17 @@ function Tall(i) {
   var master = 1;
   var offsets = { x: 0 };
 
+  this.getGeometry = function(gaps) {
+    const geometry = workspace.clientArea(0, id, 0);
+    if (gaps) {
+      geometry.x += gap;
+      geometry.y += gap;
+      geometry.width -= gap * 2;
+      geometry.height -= gap * 2;
+    }
+    return geometry;
+  };
+
   this.adjustMaster = function(increase) {
     if (increase) {
       master += 1;
@@ -295,11 +316,7 @@ function Tall(i) {
 
   this.getTiles = function(length) {
     print("Getting tiles");
-    const geometry = workspace.clientArea(0, id, 0);
-    geometry.x += gap;
-    geometry.y += gap;
-    geometry.width -= gap * 2;
-    geometry.height -= gap * 2;
+    const geometry = this.getGeometry(true);
 
     var separators = {
       x: length > master ? geometry.width / 2 - offsets.x : geometry.width
@@ -348,12 +365,10 @@ function Tall(i) {
     const tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
       var tile = tiles[i];
-
       tile.x += gap;
       tile.y += gap;
       tile.width -= gap * 2;
       tile.height -= gap * 2;
-
       included[i].geometry = tile;
     }
   };
@@ -367,6 +382,15 @@ function Tall(i) {
       } else {
         offsets.x += client.geometry.width - snapshot.geometry.width;
       }
+
+      // Don't let the windows grow out of bounds
+      const geometry = this.getGeometry(false);
+      if (offsets.x < -1 * (geometry.width / 2 - 256)) {
+        offsets.x = -1 * (geometry.width / 2 - 256);
+      } else if (offsets.x > geometry.width / 2 - 256) {
+        offsets.x = geometry.width / 2 - 256;
+      }
+
       this.tile();
     }
   };

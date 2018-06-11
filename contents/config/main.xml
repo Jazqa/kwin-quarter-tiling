@@ -21,6 +21,27 @@
         <label>Tiling layout</label>
         <default>0</default>
 		  </entry>
+      <entry name="">
+      <entry name="minWidth" type="int">
+        <label>Minimum Program Width</label>
+        <default>256</default>
+      </entry>
+      <entry name="minHeight" type="int">
+        <label>Minimum Program Height</label>
+        <default>256</default>
+      </entry>
+      <entry name="ignoredScreens" type="string">
+  	    <label>Screens that should be ignored by the script</label>
+  	    <default></default>
+      </entry>
+      <entry name="ignoredDesktops" type="string">
+  	    <label>Desktops that should be ignored by the script</label>
+  	    <default></default>
+      </entry>
+      <entry name="ignoredActivities" type="string">
+  	    <label>Activities that should be ignored by the script</label>
+  	    <default></default>
+      </entry>
       <entry name="ignoredClients" type="string">
   	    <label>Programs that should be ignored by the script (e.g. "kate", "steam")</label>
   	    <default>wine, steam, kate</default>
