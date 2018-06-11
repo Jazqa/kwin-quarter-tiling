@@ -9,14 +9,14 @@ options.windowSnapZone = 0;
 options.electricBorderMaximize = false;
 options.electricBorderTiling = false;
 
-var gap = readConfig("gap", 8);
+var gap = readConfig("gap", 8) / 2;
 
 function adjustGapSize(amount) {
   gap += amount;
-  if (gap < 1) {
-    gap = 1;
-  } else if (gap > 64) {
-    gap = 64;
+  if (gap < 2) {
+    gap = 2;
+  } else if (gap > 32) {
+    gap = 32;
   }
 
   tileClients();
@@ -34,10 +34,10 @@ function initScreens() {
         screens[i] = new Tall(i);
         break;
       case "2":
-        screens[i] = new Wide(i);
+        screens[i] = new Tall(i);
         break;
       default:
-        screens[i] = new Quarter(i);
+        screens[i] = new Tall(i);
     }
   }
 }
@@ -182,6 +182,7 @@ function finishMoveClient(client) {
         screens[snapshot.screen].resize(client);
       }
     } else {
+      // Push the client to the end of the array
       windows.push(windows.splice(index, 1)[0]);
       screens[snapshot.screen].tile();
       screens[client.screen].tile();
@@ -195,6 +196,7 @@ function changeDesktop(client, desktop) {
   if (client) {
     var index = findClient(client, windows);
     if (index > -1) {
+      // Push the client to the end of the array
       windows.push(windows.splice(index, 1)[0]);
     }
   }
@@ -213,162 +215,6 @@ function tileClients() {
   for (var i = 0; i < screens.length; i++) {
     screens[i].tile();
   }
-}
-
-function Quarter(i) {
-  print("Creating a new screen");
-  const id = i;
-  var max = 4;
-  var offset = {
-    x: 0,
-    y: 0
-  };
-
-  this.adjustMaster = function(increase) {};
-
-  this.adjustCapacity = function(increase) {
-    if (increase) {
-      this.max = this.max < 4 ? this.max + 1 : this.max;
-    } else {
-      this.max = this.max > 1 ? this.max - 1 : 1;
-    }
-
-    this.tile();
-  };
-
-  this.getTiles = function(length) {
-    print("Getting tiles");
-    const geometry = workspace.clientArea(0, id, 0);
-    const separator = {
-      x: geometry.x + geometry.width * 0.5 + offset.x,
-      y: geometry.y + geometry.height * 0.5 + offset.y
-    };
-    switch (length) {
-      case 1:
-        return [
-          {
-            x: geometry.x + gap,
-            y: geometry.y + gap,
-            width: geometry.width - gap * 2,
-            height: geometry.height - gap * 2
-          }
-        ];
-      case 2:
-        return [
-          {
-            x: geometry.x + gap,
-            y: geometry.y + gap,
-            width: separator.x - gap * 1.5,
-            height: geometry.height - gap * 2
-          },
-          {
-            x: geometry.x + separator.x + gap * 0.5,
-            y: geometry.y + gap,
-            width: geometry.width - separator.x - gap * 1.5,
-            height: geometry.height - gap * 2
-          }
-        ];
-      case 3:
-        return [
-          {
-            x: geometry.x + gap,
-            y: geometry.y + gap,
-            width: separator.x - gap * 1.5,
-            height: geometry.height - gap * 2
-          },
-          {
-            x: geometry.x + separator.x + gap * 0.5,
-            y: geometry.y + gap,
-            width: geometry.width - separator.x - gap * 1.5,
-            height: separator.y - gap * 1.5
-          },
-          {
-            x: geometry.x + separator.x + gap * 0.5,
-            y: geometry.y + separator.y + gap * 0.5,
-            width: geometry.width - separator.x - gap * 1.5,
-            height: geometry.height - separator.y - gap * 1.5
-          }
-        ];
-      case 4:
-        return [
-          {
-            x: geometry.x + gap,
-            y: geometry.y + gap,
-            width: separator.x - gap * 1.5,
-            height: separator.y - gap * 1.5
-          },
-          {
-            x: geometry.x + separator.x + gap * 0.5,
-            y: geometry.y + gap,
-            width: geometry.width - separator.x - gap * 1.5,
-            height: separator.y - gap * 1.5
-          },
-          {
-            x: geometry.x + separator.x + gap * 0.5,
-            y: geometry.y + separator.y + gap * 0.5,
-            width: geometry.width - separator.x - gap * 1.5,
-            height: geometry.height - separator.y - gap * 1.5
-          },
-          {
-            x: geometry.x + gap,
-            y: geometry.y + separator.y + gap * 0.5,
-            width: separator.x - gap * 1.5,
-            height: geometry.height - separator.y - gap * 1.5
-          }
-        ];
-    }
-  };
-
-  this.getWindows = function() {
-    const included = windows.filter(function(window) {
-      return (
-        window.activities.indexOf(workspace.currentActivity > -1) &&
-        window.desktop === workspace.currentDesktop &&
-        window.screen === id
-      );
-    });
-
-    return included.slice(0, max);
-  };
-
-  this.tile = function() {
-    print("Tiling screen");
-    const included = this.getWindows();
-    const tiles = this.getTiles(included.length);
-    for (var i = 0; i < included.length; i++) {
-      included[i].geometry = tiles[i];
-    }
-  };
-
-  this.resize = function(client) {
-    var x;
-    var y;
-    const included = this.getWindows();
-    const index = findClient(client, included);
-    if (index > -1) {
-      switch (findClient(client, included)) {
-        case 0:
-          x = client.geometry.width - snapshot.geometry.width;
-          y = client.geometry.height - snapshot.geometry.height;
-          break;
-        case 1:
-          x = snapshot.geometry.width - client.geometry.width;
-          y = client.geometry.height - snapshot.geometry.height;
-          break;
-        case 2:
-          x = snapshot.geometry.width - client.geometry.width;
-          y = snapshot.geometry.height - client.geometry.height;
-          break;
-        case 3:
-          x = client.geometry.width - snapshot.geometry.width;
-          y = snapshot.geometry.height - client.geometry.height;
-          break;
-      }
-      offset.x += x;
-      offset.y += y;
-      this.tile();
-    }
-  };
 }
 
 // Workspace signals
@@ -394,52 +240,54 @@ registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", fun
   }
 });
 
-registerShortcut("Quarter: + Gap Size", "Quarter: + Gap Size", "Meta+PgUp", function() {
+registerShortcut("Quarter: Increase Gap Size", "Quarter: Increase Gap Size", "Meta+Shift+PgUp", function() {
   adjustGapSize(2);
 });
 
-registerShortcut("Quarter: - Gap Size", "Quarter: - Gap Size", "Meta+PgDown", function() {
+registerShortcut("Quarter: Decrease Gap Size", "Quarter: Decrease Gap Size", "Meta+Shift+PgDown", function() {
   adjustGapSize(-2);
 });
 
-registerShortcut("Quarter: + Master Column", "Quarter: + Master Column", "Meta+F", function() {
-  screens[workspace.activeScreen].adjustMaster(true);
+registerShortcut("Quarter: Switch Active With Master", "Quarter: Switch Active With Master", "Meta+Enter", function() {
+  swapClients(
+    findClient(workspace.activeClient, windows),
+    findClient(screens[workspace.activeClient.screen].getWindows()[0], windows)
+  );
+  screens[workspace.activeClient.screen].tile();
 });
 
-registerShortcut("Quarter: - Master Column", "Quarter: - Master Column", "Meta+F", function() {
-  screens[workspace.activeScreen].adjustMaster(false);
-});
+registerShortcut(
+  "Quarter: Increase Master Pane Capacity",
+  "Quarter: Increase Master Pane Capacity",
+  "Meta+<",
+  function() {
+    screens[workspace.activeScreen].adjustMaster(true);
+  }
+);
 
-registerShortcut("Quarter: + Screen Capacity", "Quarter: + Screen Capacity", "Meta+F", function() {
-  screens[workspace.activeScreen].adjustCapacity(true);
-});
+registerShortcut(
+  "Quarter: Decrease Master Pane Capacity",
+  "Quarter: Decrease Master Pane Capacity",
+  "Meta+>",
+  function() {
+    screens[workspace.activeScreen].adjustMaster(false);
+  }
+);
 
-registerShortcut("Quarter: - Screen Capacity", "Quarter: - Screen Capacity", "Meta+F", function() {
-  screens[workspace.activeScreen].adjustCapacity(false);
-});
+workspace.clientList().forEach(addClient);
 
-// Additional layouts
-
+// Tall layout with two columns
 function Tall(i) {
   print("Creating a new screen");
   const id = i;
   var master = 1;
-  var max = 4;
-  var offset = 0;
+  var offsets = { x: 0 };
 
   this.adjustMaster = function(increase) {
     if (increase) {
-      this.master += 1;
+      master += 1;
     } else {
-      this.master = this.master > 1 ? this.master - 1 : 1;
-    }
-  };
-
-  this.adjustCapacity = function(increase) {
-    if (increase) {
-      this.max += 1;
-    } else {
-      this.max = this.max > 1 ? this.max - 1 : 1;
+      master = master > 1 ? master - 1 : 1;
     }
 
     this.tile();
@@ -448,29 +296,37 @@ function Tall(i) {
   this.getTiles = function(length) {
     print("Getting tiles");
     const geometry = workspace.clientArea(0, id, 0);
-    const separator = geometry.x + geometry.width * 0.5 + offset;
+    geometry.x += gap;
+    geometry.y += gap;
+    geometry.width -= gap * 2;
+    geometry.height -= gap * 2;
+
+    var separators = {
+      x: length > master ? geometry.width / 2 - offsets.x : geometry.width
+    };
 
     var tiles = [];
 
-    const shorter = master >= length ? length : master;
-    for (var i = 0; i < master; i++) {
+    const leftTiles = length > master ? master : length;
+    for (var i = 0; i < leftTiles; i++) {
       tiles.push({
-        x: geometry.x + gap,
-        y: geometry.y + gap / (i + 1) + geometry.height * (1 / shorter) * i,
-        width: length <= master ? geometry.width - gap * 2 : separator - gap * 1.5,
-        height: geometry.height * (1 / shorter) - gap * (1 + 1 / shorter)
+        x: geometry.x,
+        y: geometry.y + (geometry.height / leftTiles) * i,
+        width: separators.x,
+        height: geometry.height / leftTiles
       });
     }
 
-    length -= master;
-    for (var i = 0; i < length; i++) {
+    const rightTiles = length - master;
+    for (var i = 0; i < rightTiles; i++) {
       tiles.push({
-        x: geometry.x + separator + gap * 0.5,
-        y: geometry.y + gap / (i + 1) + geometry.height * (1 / length) * i,
-        width: geometry.width - separator - gap * 1.5,
-        height: geometry.height * (1 / length) - gap * (1 + 1 / length)
+        x: geometry.x + separators.x,
+        y: geometry.y + (geometry.height / rightTiles) * i,
+        width: geometry.width - separators.x,
+        height: geometry.height / rightTiles
       });
     }
+
     return tiles;
   };
 
@@ -483,7 +339,7 @@ function Tall(i) {
       );
     });
 
-    return included.slice(0, max);
+    return included;
   };
 
   this.tile = function() {
@@ -491,112 +347,26 @@ function Tall(i) {
     const included = this.getWindows();
     const tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
-      included[i].geometry = tiles[i];
+      var tile = tiles[i];
+
+      tile.x += gap;
+      tile.y += gap;
+      tile.width -= gap * 2;
+      tile.height -= gap * 2;
+
+      included[i].geometry = tile;
     }
   };
 
   this.resize = function(client) {
-    var x;
     const included = this.getWindows();
     const index = findClient(client, included);
     if (index > -1) {
       if (index < master) {
-        x = client.geometry.width - snapshot.geometry.width;
+        offsets.x += snapshot.geometry.width - client.geometry.width;
       } else {
-        x = snapshot.geometry.width - client.geometry.width;
+        offsets.x += client.geometry.width - snapshot.geometry.width;
       }
-      offset += x;
-      this.tile();
-    }
-  };
-}
-
-function Wide(i) {
-  print("Creating a new screen");
-  const id = i;
-  var master = 1;
-  var max = 4;
-  var offset = 0;
-
-  this.adjustMaster = function(increase) {
-    if (increase) {
-      this.master += 1;
-    } else {
-      this.master = this.master > 1 ? this.master - 1 : 1;
-    }
-  };
-
-  this.adjustCapacity = function(increase) {
-    if (increase) {
-      this.max += 1;
-    } else {
-      this.max = this.max > 1 ? this.max - 1 : 1;
-    }
-
-    this.tile();
-  };
-
-  this.getTiles = function(length) {
-    print("Getting tiles");
-    const geometry = workspace.clientArea(0, id, 0);
-    const separator = geometry.y + geometry.height * 0.5 + offset;
-
-    var tiles = [];
-
-    const shorter = master >= length ? length : master;
-    for (var i = 0; i < master; i++) {
-      tiles.push({
-        x: geometry.x + gap / (i + 1) + geometry.width * (1 / shorter) * i,
-        y: geometry.y + gap,
-        width: geometry.width * (1 / shorter) - gap * (1 + 1 / shorter),
-        height: length <= master ? geometry.height - gap * 2 : separator - gap * 1.5
-      });
-    }
-
-    length -= master;
-    for (var i = 0; i < length; i++) {
-      tiles.push({
-        x: geometry.x + gap / (i + 1) + geometry.width * (1 / length) * i,
-        y: geometry.y + separator + gap * 0.5,
-        width: geometry.width * (1 / length) - gap * (1 + 1 / length),
-        height: geometry.height - separator - gap * 1.5
-      });
-    }
-    return tiles;
-  };
-
-  this.getWindows = function() {
-    const included = windows.filter(function(window) {
-      return (
-        window.activities.indexOf(workspace.currentActivity > -1) &&
-        window.desktop === workspace.currentDesktop &&
-        window.screen === id
-      );
-    });
-
-    return included.slice(0, max);
-  };
-
-  this.tile = function() {
-    print("Tiling screen");
-    const included = this.getWindows();
-    const tiles = this.getTiles(included.length);
-    for (var i = 0; i < included.length; i++) {
-      included[i].geometry = tiles[i];
-    }
-  };
-
-  this.resize = function(client) {
-    var y;
-    const included = this.getWindows();
-    const index = findClient(client, included);
-    if (index > -1) {
-      if (index < master) {
-        y = client.geometry.height - snapshot.geometry.height;
-      } else {
-        y = snapshot.geometry.height - client.geometry.height;
-      }
-      offset += y;
       this.tile();
     }
   };

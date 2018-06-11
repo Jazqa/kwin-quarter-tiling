@@ -175,16 +175,11 @@
           <item>
            <widget class="QComboBox" name="kcfg_layout">
             <property name="currentText">
-             <string>Quarters</string>
+             <string>Tall</string>
             </property>
             <property name="frame">
              <bool>true</bool>
             </property>
-            <item>
-             <property name="text">
-              <string>Quarters</string>
-             </property>
-            </item>
             <item>
              <property name="text">
               <string>Tall</string>
