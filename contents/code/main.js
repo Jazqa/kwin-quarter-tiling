@@ -291,7 +291,7 @@ function Tall(i) {
   print("Creating a new screen");
   const id = i;
   var master = 1;
-  var offsets = { x: 0 };
+  var offsets = { x: 0, y: [] };
 
   this.getGeometry = function(gaps) {
     const geometry = workspace.clientArea(0, id, 0);
@@ -326,21 +326,55 @@ function Tall(i) {
 
     const leftTiles = length > master ? master : length;
     for (var i = 0; i < leftTiles; i++) {
+      var y = geometry.y + (geometry.height / leftTiles) * i;
+      if (i !== 0 && offsets.y[i]) {
+        y += offsets.y[i];
+      }
+
+      var height = geometry.height / leftTiles;
+      if (i === 0 && i === leftTiles - 1) {
+        // Do nothing
+      } else if (i === leftTiles - 1) {
+        height = geometry.height - y + gap;
+      } else {
+        var yn = (geometry.y + geometry.height / leftTiles) * (i + 1);
+        yn += offsets.y[i + 1] ? offsets.y[i + 1] : 0;
+        height = yn - y - gap * i;
+      }
+
       tiles.push({
         x: geometry.x,
-        y: geometry.y + (geometry.height / leftTiles) * i,
+        y: y,
         width: separators.x,
-        height: geometry.height / leftTiles
+        height: height
       });
     }
 
     const rightTiles = length - master;
     for (var i = 0; i < rightTiles; i++) {
+      var j = i + master;
+
+      var y = geometry.y + (geometry.height / rightTiles) * i;
+      if (i !== 0 && offsets.y[j]) {
+        y += offsets.y[j];
+      }
+
+      var height = geometry.height / rightTiles;
+      if (i === 0 && i === rightTiles - 1) {
+        // Do nothing
+      } else if (i === rightTiles - 1) {
+        height = geometry.height - y + gap;
+      } else {
+        var yn = (geometry.y + geometry.height / rightTiles) * (i + 1);
+        yn += offsets.y[j + 1] ? offsets.y[j + 1] : 0;
+        height = yn - y - gap * i;
+      }
+
       tiles.push({
         x: geometry.x + separators.x,
-        y: geometry.y + (geometry.height / rightTiles) * i,
+        y: y,
         width: geometry.width - separators.x,
-        height: geometry.height / rightTiles
+        height: height
       });
     }
 
@@ -377,18 +411,28 @@ function Tall(i) {
     const included = this.getWindows();
     const index = findClient(client, included);
     if (index > -1) {
+      // Width
       if (index < master) {
         offsets.x += snapshot.geometry.width - client.geometry.width;
       } else {
         offsets.x += client.geometry.width - snapshot.geometry.width;
       }
 
+      //Height
+      if (client.geometry.y !== snapshot.geometry.y) {
+        offsets.y[index] = offsets.y[index] ? offsets.y[index] : 0;
+        offsets.y[index] += client.geometry.y - snapshot.geometry.y;
+      } else {
+        offsets.y[index + 1] = offsets.y[index + 1] ? offsets.y[index + 1] : 0;
+        offsets.y[index + 1] += client.geometry.height - snapshot.geometry.height;
+      }
+
       // Don't let the windows grow out of bounds
-      const geometry = this.getGeometry(false);
-      if (offsets.x < -1 * (geometry.width / 2 - 256)) {
-        offsets.x = -1 * (geometry.width / 2 - 256);
-      } else if (offsets.x > geometry.width / 2 - 256) {
-        offsets.x = geometry.width / 2 - 256;
+      const width = this.getGeometry(false).width / 2 - 256;
+      if (offsets.x < -1 * width) {
+        offsets.x = -1 * width;
+      } else if (offsets.x > width) {
+        offsets.x = width;
       }
 
       this.tile();
