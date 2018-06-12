@@ -9,7 +9,8 @@ options.windowSnapZone = 0;
 options.electricBorderMaximize = false;
 options.electricBorderTiling = false;
 
-var gap = readConfig("gap", 8) / 2;
+// Divided by two, because gaps are applied to each tile and the screen
+const gap = readConfig("gap", 8) / 2;
 
 function adjustGapSize(amount) {
   gap += amount;
@@ -42,7 +43,7 @@ function initScreens() {
   }
 }
 
-var ignoredClients = [
+const ignoredClients = [
   "albert",
   "kazam",
   "krunner",
@@ -65,7 +66,7 @@ ignoredClients = ignoredClients.concat(
 );
 
 // KWin client.captions that are not tiled
-var ignoredCaptions = ["File Upload", "Move to Trash", "Quit GIMP", "Create a New Image", "QEMU"];
+const ignoredCaptions = ["File Upload", "Move to Trash", "Quit GIMP", "Create a New Image", "QEMU"];
 
 ignoredCaptions = ignoredCaptions.concat(
   readConfig("ignoredCaptions", "Quit GIMP, Create a New Image")
@@ -83,8 +84,6 @@ const minimumGeometry = {
 };
 
 function isEligible(client) {
-  print("Checking eligibility of a client");
-
   return client.comboBox ||
     client.desktopWindow ||
     client.dialog ||
@@ -114,7 +113,6 @@ function isEligible(client) {
 
 function addClient(client) {
   if (isEligible(client)) {
-    print("Adding a client");
     windows.push(client);
 
     // Connect
@@ -128,7 +126,6 @@ function addClient(client) {
 function removeClient(client) {
   const index = findClient(client, windows);
   if (index > -1) {
-    print("Removing a client");
     windows.splice(index, 1);
 
     // Disconnect
@@ -146,7 +143,6 @@ function maximizeClient(client, h, v) {
 }
 
 function findClient(client, array) {
-  print("Finding a client");
   for (var i = 0; i < array.length; i++) {
     if (array[i].windowId === client.windowId) {
       return i;
@@ -156,12 +152,7 @@ function findClient(client, array) {
 }
 
 // Saves a snapshot of the screen when moving starts
-var snapshot = {
-  geometry: {},
-  screen: 0,
-  windows: [],
-  tiles: []
-};
+const snapshot = {};
 
 function startMoveClient(client) {
   snapshot.geometry = client.geometry;
@@ -206,7 +197,7 @@ function changeDesktop(client, desktop) {
   print("Changing desktop");
 
   if (client) {
-    var index = findClient(client, windows);
+    const index = findClient(client, windows);
     if (index > -1) {
       // Push the client to the end of the array
       windows.push(windows.splice(index, 1)[0]);
@@ -244,7 +235,7 @@ workspace.desktopPresenceChanged.connect(changeDesktop);
 // Keybindings
 
 registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function() {
-  var client = workspace.activeClient;
+  const client = workspace.activeClient;
   if (findClient(client, windows) > -1) {
     removeClient(client);
   } else {
@@ -297,13 +288,13 @@ function Tall(i) {
   const panes = [];
 
   this.getMaster = function() {
-    var location = workspace.currentActivity.toString() + workspace.currentDesktop.toString();
+    const location = workspace.currentActivity.toString() + workspace.currentDesktop.toString();
     masters[location] = masters[location] ? masters[location] : { n: 1 };
     return masters[location];
   };
 
   this.getPane = function() {
-    var location = workspace.currentActivity.toString() + workspace.currentDesktop.toString();
+    const location = workspace.currentActivity.toString() + workspace.currentDesktop.toString();
     panes[location] = panes[location] ? panes[location] : { x: 0, y: [] };
     return panes[location];
   };
@@ -322,7 +313,7 @@ function Tall(i) {
   };
 
   this.adjustMaster = function(increase) {
-    var master = this.getMaster();
+    const master = this.getMaster();
 
     if (increase) {
       master.n += 1;
@@ -339,9 +330,9 @@ function Tall(i) {
     const master = this.getMaster().n;
     const pane = this.getPane();
 
-    var x = length > master ? geometry.width / 2 - pane.x : geometry.width;
+    const x = length > master ? geometry.width / 2 - pane.x : geometry.width;
 
-    var tiles = [];
+    const tiles = [];
 
     const leftTiles = length > master ? master : length;
     for (var i = 0; i < leftTiles; i++) {
@@ -368,7 +359,7 @@ function Tall(i) {
 
     const rightTiles = length - master;
     for (var i = 0; i < rightTiles; i++) {
-      var j = i + master;
+      const j = i + master;
 
       var y = geometry.y + (geometry.height / rightTiles) * i;
       if (i !== 0 && pane.y[j]) {
@@ -411,7 +402,7 @@ function Tall(i) {
     const included = this.getWindows();
     const tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
-      var tile = tiles[i];
+      const tile = tiles[i];
       tile.x += gap;
       tile.y += gap;
       tile.width -= gap * 2;
@@ -423,8 +414,10 @@ function Tall(i) {
   this.resize = function(client) {
     const included = this.getWindows();
     const index = findClient(client, included);
-    var pane = this.getPane();
+
     if (index > -1) {
+      const pane = this.getPane();
+
       // Width
       if (index < this.getMaster().n) {
         pane.x += snapshot.geometry.width - client.geometry.width;

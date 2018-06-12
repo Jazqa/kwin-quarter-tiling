@@ -74,7 +74,7 @@
       <bool>false</bool>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -165,10 +165,13 @@
           <item>
            <widget class="QSpinBox" name="kcfg_gap">
             <property name="minimum">
-             <number>1</number>
+             <number>2</number>
             </property>
             <property name="maximum">
              <number>64</number>
+            </property>
+            <property name="singleStep">
+             <number>2</number>
             </property>
            </widget>
           </item>
