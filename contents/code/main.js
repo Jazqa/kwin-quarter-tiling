@@ -291,7 +291,13 @@ function Tall(i) {
   print("Creating a new screen");
   const id = i;
   var master = 1;
-  var offsets = { x: 0, y: [] };
+  var panes = [];
+
+  this.getPane = function() {
+    var location = workspace.currentActivity.toString() + workspace.currentDesktop.toString();
+    panes[location] = panes[location] ? panes[location] : { x: 0, y: [] };
+    return panes[location];
+  };
 
   this.getGeometry = function(gaps) {
     const geometry = workspace.clientArea(0, id, 0);
@@ -317,35 +323,34 @@ function Tall(i) {
   this.getTiles = function(length) {
     print("Getting tiles");
     const geometry = this.getGeometry(true);
+    var pane = this.getPane();
 
-    var separators = {
-      x: length > master ? geometry.width / 2 - offsets.x : geometry.width
-    };
+    var x = length > master ? geometry.width / 2 - pane.x : geometry.width;
 
     var tiles = [];
 
     const leftTiles = length > master ? master : length;
     for (var i = 0; i < leftTiles; i++) {
       var y = geometry.y + (geometry.height / leftTiles) * i;
-      if (i !== 0 && offsets.y[i]) {
-        y += offsets.y[i];
+      if (i !== 0 && pane.y[i]) {
+        y += pane.y[i];
       }
 
       var height = geometry.height / leftTiles;
       if (i === 0 && i === leftTiles - 1) {
-        // Do nothing
+        // Do nothing. It's the only client on the pane and should have full height
       } else if (i === leftTiles - 1) {
         height = geometry.height - y + gap;
       } else {
         var yn = (geometry.y + geometry.height / leftTiles) * (i + 1);
-        yn += offsets.y[i + 1] ? offsets.y[i + 1] : 0;
+        yn += pane.y[i + 1] ? pane.y[i + 1] : 0;
         height = yn - y - gap * i;
       }
 
       tiles.push({
         x: geometry.x,
         y: y,
-        width: separators.x,
+        width: x,
         height: height
       });
     }
@@ -355,25 +360,25 @@ function Tall(i) {
       var j = i + master;
 
       var y = geometry.y + (geometry.height / rightTiles) * i;
-      if (i !== 0 && offsets.y[j]) {
-        y += offsets.y[j];
+      if (i !== 0 && pane.y[j]) {
+        y += pane.y[j];
       }
 
       var height = geometry.height / rightTiles;
       if (i === 0 && i === rightTiles - 1) {
-        // Do nothing
+        // Do nothing. It's the only client on the pane and should have full height
       } else if (i === rightTiles - 1) {
         height = geometry.height - y + gap;
       } else {
         var yn = (geometry.y + geometry.height / rightTiles) * (i + 1);
-        yn += offsets.y[j + 1] ? offsets.y[j + 1] : 0;
+        yn += pane.y[j + 1] ? pane.y[j + 1] : 0;
         height = yn - y - gap * i;
       }
 
       tiles.push({
-        x: geometry.x + separators.x,
+        x: geometry.x + x,
         y: y,
-        width: geometry.width - separators.x,
+        width: geometry.width - x,
         height: height
       });
     }
@@ -410,29 +415,30 @@ function Tall(i) {
   this.resize = function(client) {
     const included = this.getWindows();
     const index = findClient(client, included);
+    var pane = this.getPane();
     if (index > -1) {
       // Width
       if (index < master) {
-        offsets.x += snapshot.geometry.width - client.geometry.width;
+        pane.x += snapshot.geometry.width - client.geometry.width;
       } else {
-        offsets.x += client.geometry.width - snapshot.geometry.width;
+        pane.x += client.geometry.width - snapshot.geometry.width;
       }
 
       //Height
       if (client.geometry.y !== snapshot.geometry.y) {
-        offsets.y[index] = offsets.y[index] ? offsets.y[index] : 0;
-        offsets.y[index] += client.geometry.y - snapshot.geometry.y;
+        pane.y[index] = pane.y[index] ? pane.y[index] : 0;
+        pane.y[index] += client.geometry.y - snapshot.geometry.y;
       } else {
-        offsets.y[index + 1] = offsets.y[index + 1] ? offsets.y[index + 1] : 0;
-        offsets.y[index + 1] += client.geometry.height - snapshot.geometry.height;
+        pane.y[index + 1] = pane.y[index + 1] ? pane.y[index + 1] : 0;
+        pane.y[index + 1] += client.geometry.height - snapshot.geometry.height;
       }
 
       // Don't let the windows grow out of bounds
       const width = this.getGeometry(false).width / 2 - 256;
-      if (offsets.x < -1 * width) {
-        offsets.x = -1 * width;
-      } else if (offsets.x > width) {
-        offsets.x = width;
+      if (pane.x < -1 * width) {
+        pane.x = -1 * width;
+      } else if (pane.x > width) {
+        pane.x = width;
       }
 
       this.tile();
