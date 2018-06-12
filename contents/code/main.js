@@ -291,9 +291,16 @@ workspace.clientList().forEach(addClient);
 // Tall layout with two columns
 function Tall(i) {
   print("Creating a new screen");
+
   const id = i;
-  var master = 1;
-  var panes = [];
+  const masters = [];
+  const panes = [];
+
+  this.getMaster = function() {
+    var location = workspace.currentActivity.toString() + workspace.currentDesktop.toString();
+    masters[location] = masters[location] ? masters[location] : { n: 1 };
+    return masters[location];
+  };
 
   this.getPane = function() {
     var location = workspace.currentActivity.toString() + workspace.currentDesktop.toString();
@@ -303,20 +310,24 @@ function Tall(i) {
 
   this.getGeometry = function(gaps) {
     const geometry = workspace.clientArea(0, id, 0);
+
     if (gaps) {
       geometry.x += gap;
       geometry.y += gap;
       geometry.width -= gap * 2;
       geometry.height -= gap * 2;
     }
+
     return geometry;
   };
 
   this.adjustMaster = function(increase) {
+    var master = this.getMaster();
+
     if (increase) {
-      master += 1;
+      master.n += 1;
     } else {
-      master = master > 1 ? master - 1 : 1;
+      master.n = master.n > 1 ? master.n - 1 : 1;
     }
 
     this.tile();
@@ -325,7 +336,8 @@ function Tall(i) {
   this.getTiles = function(length) {
     print("Getting tiles");
     const geometry = this.getGeometry(true);
-    var pane = this.getPane();
+    const master = this.getMaster().n;
+    const pane = this.getPane();
 
     var x = length > master ? geometry.width / 2 - pane.x : geometry.width;
 
@@ -414,7 +426,7 @@ function Tall(i) {
     var pane = this.getPane();
     if (index > -1) {
       // Width
-      if (index < master) {
+      if (index < this.getMaster().n) {
         pane.x += snapshot.geometry.width - client.geometry.width;
       } else {
         pane.x += client.geometry.width - snapshot.geometry.width;
