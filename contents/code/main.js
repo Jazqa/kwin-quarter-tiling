@@ -184,8 +184,10 @@ function finishMoveClient(client) {
             closest = [i, distance];
           }
         }
-        // Swap with the closest
-        swapClients(index, closest[0]);
+        if (index !== closest[0]) {
+          // Swap with the closest
+          swapClients(findClient(snapshot.windows[index], windows), findClient(snapshot.windows[closest[0]], windows));
+        }
         screens[snapshot.screen].tile();
       } else {
         // Resize
@@ -336,10 +338,7 @@ function Tall(i) {
         y += pane.y[i];
       }
 
-      var height = geometry.height / leftTiles;
-      if (i === 0 && i === leftTiles - 1) {
-        // Do nothing. It's the only client on the pane and should have full height
-      } else if (i === leftTiles - 1) {
+      if (i === leftTiles - 1) {
         height = geometry.height - y + gap;
       } else {
         var yn = (geometry.y + geometry.height / leftTiles) * (i + 1);
@@ -364,10 +363,7 @@ function Tall(i) {
         y += pane.y[j];
       }
 
-      var height = geometry.height / rightTiles;
-      if (i === 0 && i === rightTiles - 1) {
-        // Do nothing. It's the only client on the pane and should have full height
-      } else if (i === rightTiles - 1) {
+      if (i === rightTiles - 1) {
         height = geometry.height - y + gap;
       } else {
         var yn = (geometry.y + geometry.height / rightTiles) * (i + 1);
@@ -431,14 +427,6 @@ function Tall(i) {
       } else {
         pane.y[index + 1] = pane.y[index + 1] ? pane.y[index + 1] : 0;
         pane.y[index + 1] += client.geometry.height - snapshot.geometry.height;
-      }
-
-      // Don't let the windows grow out of bounds
-      const width = this.getGeometry(false).width / 2 - 256;
-      if (pane.x < -1 * width) {
-        pane.x = -1 * width;
-      } else if (pane.x > width) {
-        pane.x = width;
       }
 
       this.tile();
