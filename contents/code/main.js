@@ -281,8 +281,6 @@ workspace.clientList().forEach(addClient);
 
 // Tall layout with two columns
 function Tall(i) {
-  print("Creating a new screen");
-
   const id = i;
   const masters = [];
   const panes = [];
@@ -295,12 +293,12 @@ function Tall(i) {
 
   this.getPane = function() {
     const location = workspace.currentActivity.toString() + workspace.currentDesktop.toString();
-    panes[location] = panes[location] ? panes[location] : { x: 0, y: [] };
+    panes[location] = panes[location] ? panes[location] : { x: [], y: [] };
     return panes[location];
   };
 
   this.getGeometry = function(gaps) {
-    const geometry = workspace.clientArea(0, id, 0);
+    const geometry = workspace.clientArea(0, id, workspace.currentDesktop);
 
     if (gaps) {
       geometry.x += gap;
@@ -325,61 +323,53 @@ function Tall(i) {
   };
 
   this.getTiles = function(length) {
-    print("Getting tiles");
     const geometry = this.getGeometry(true);
     const master = this.getMaster().n;
     const pane = this.getPane();
 
-    const x = length > master ? geometry.width / 2 - pane.x : geometry.width;
-
     const tiles = [];
 
-    const leftTiles = length > master ? master : length;
-    for (var i = 0; i < leftTiles; i++) {
-      var y = geometry.y + (geometry.height / leftTiles) * i;
-      if (i !== 0 && pane.y[i]) {
-        y += pane.y[i];
+    var columns = length > master ? 2 : 1;
+    for (var i = 0; i < columns; i++) {
+      var x = geometry.x + (geometry.width / columns) * i;
+      if (i !== 0 && pane.x[i]) {
+        x += pane.x[i];
       }
 
-      if (i === leftTiles - 1) {
-        height = geometry.height - y + gap;
+      var width;
+      if (i === columns - 1) {
+        width = geometry.width - x + gap;
       } else {
-        var yn = (geometry.y + geometry.height / leftTiles) * (i + 1);
-        yn += pane.y[i + 1] ? pane.y[i + 1] : 0;
-        height = yn - y - gap * i;
+        var xn = (geometry.x + geometry.width / columns) * (i + 1);
+        xn += pane.x[i + 1] ? pane.x[i + 1] : 0;
+        width = xn - x - gap * i;
       }
 
-      tiles.push({
-        x: geometry.x,
-        y: y,
-        width: x,
-        height: height
-      });
-    }
+      var rows = i === 0 ? master : length - master;
+      for (var j = 0; j < rows; j++) {
+        const k = j + master;
 
-    const rightTiles = length - master;
-    for (var i = 0; i < rightTiles; i++) {
-      const j = i + master;
+        var y = geometry.y + (geometry.height / rows) * j;
+        if (j !== 0 && pane.y[k]) {
+          y += pane.y[k];
+        }
 
-      var y = geometry.y + (geometry.height / rightTiles) * i;
-      if (i !== 0 && pane.y[j]) {
-        y += pane.y[j];
+        var height;
+        if (j === rows - 1) {
+          height = geometry.height - y + gap;
+        } else {
+          var yn = (geometry.y + geometry.height / rows) * (j + 1);
+          yn += pane.y[k + 1] ? pane.y[k + 1] : 0;
+          height = yn - y - gap * j;
+        }
+
+        tiles.push({
+          x: x,
+          y: y,
+          width: width,
+          height: height
+        });
       }
-
-      if (i === rightTiles - 1) {
-        height = geometry.height - y + gap;
-      } else {
-        var yn = (geometry.y + geometry.height / rightTiles) * (i + 1);
-        yn += pane.y[j + 1] ? pane.y[j + 1] : 0;
-        height = yn - y - gap * i;
-      }
-
-      tiles.push({
-        x: geometry.x + x,
-        y: y,
-        width: geometry.width - x,
-        height: height
-      });
     }
 
     return tiles;
@@ -398,7 +388,6 @@ function Tall(i) {
   };
 
   this.tile = function() {
-    print("Tiling screen");
     const included = this.getWindows();
     const tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
@@ -417,12 +406,15 @@ function Tall(i) {
 
     if (index > -1) {
       const pane = this.getPane();
+      var column = index < this.getMaster().n ? 0 : 1;
 
       // Width
-      if (index < this.getMaster().n) {
-        pane.x += snapshot.geometry.width - client.geometry.width;
+      if (client.geometry.x !== snapshot.geometry.x) {
+        pane.x[column] = pane.x[column] ? pane.x[column] : 0;
+        pane.x[column] += client.geometry.x - snapshot.geometry.x;
       } else {
-        pane.x += client.geometry.width - snapshot.geometry.width;
+        pane.x[column + 1] = pane.x[column + 1] ? pane.x[column + 1] : 0;
+        pane.x[column + 1] += client.geometry.width - snapshot.geometry.width;
       }
 
       //Height
