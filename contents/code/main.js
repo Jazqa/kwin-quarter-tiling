@@ -298,16 +298,25 @@ function Tall(i) {
   };
 
   this.getGeometry = function(gaps) {
-    const geometry = workspace.clientArea(0, id, workspace.currentDesktop);
+    const availGeo = workspace.clientArea(0, id, workspace.currentDesktop);
+    const fullGeo = workspace.clientArea(1, id, workspace.currentDesktop);
 
-    if (gaps) {
-      geometry.x += gap;
-      geometry.y += gap;
-      geometry.width -= gap * 2;
-      geometry.height -= gap * 2;
+    if (fullGeo.x < availGeo.x) {
+      availGeo.width += availGeo.x - fullGeo.x;
     }
 
-    return geometry;
+    if (fullGeo.y < availGeo.y) {
+      availGeo.height += availGeo.y - fullGeo.y;
+    }
+
+    if (gaps) {
+      availGeo.x += gap;
+      availGeo.y += gap;
+      availGeo.width -= gap * 2;
+      availGeo.height -= gap * 2;
+    }
+
+    return availGeo;
   };
 
   this.adjustMaster = function(increase) {
