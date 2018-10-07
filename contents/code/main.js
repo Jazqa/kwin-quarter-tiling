@@ -6,27 +6,27 @@ options.windowSnapZone = 0;
 options.electricBorderMaximize = false;
 options.electricBorderTiling = false;
 
-const gap = readConfig("gap", 8) / 2;
+const gap = readConfig("gap", 8) * 0.5;
 
 function adjustGapSize(amount) {
   gap += amount;
   if (gap < 2) {
     // Gaps are forced, because maximized clients are identified by their size
     gap = 2;
-  } else if (gap > 32) {
-    gap = 32;
+  } else if (gap > 64) {
+    gap = 64;
   }
 
   tileClients();
 }
 
 function withGaps(geometry) {
-  const geoWithGaps = geometry;
-  geoWithGaps.x += gap;
-  geoWithGaps.y += gap;
-  geoWithGaps.width -= gap * 2;
-  geoWithGaps.height -= gap * 2;
-  return geoWithGaps;
+  const newGeo = copyGeometry(geometry);
+  newGeo.x += gap;
+  newGeo.y += gap;
+  newGeo.width -= gap * 2;
+  newGeo.height -= gap * 2;
+  return newGeo;
 }
 
 var windows = [];
@@ -36,23 +36,22 @@ function getGeometry(id, gaps) {
   const availGeo = workspace.clientArea(0, id, workspace.currentDesktop);
   const fullGeo = workspace.clientArea(1, id, workspace.currentDesktop);
 
-  if (fullGeo.x < availGeo.x) {
-    availGeo.width += availGeo.x - fullGeo.x;
-  }
+  availGeo.width += fullGeo.x < availGeo.x ? availGeo.x - fullGeo.x : 0;
+  availGeo.height += fullGeo.y < availGeo.y ? availGeo.y - fullGeo.y : 0;
 
-  if (fullGeo.y < availGeo.y) {
-    availGeo.height += availGeo.y - fullGeo.y;
-  }
+  availGeo.width -= availGeo.width - (availGeo.width - availGeo.x);
+  availGeo.height -= availGeo.height - (availGeo.height - availGeo.y);
 
-  if (gaps) {
-    // withGaps() not used because x and y are aware of the available area (e.g. Plasma bar), but the width and height are not
-    availGeo.x += gap;
-    availGeo.y += gap;
-    availGeo.width -= availGeo.width - (availGeo.width - availGeo.x) + gap;
-    availGeo.height -= availGeo.height - (availGeo.height - availGeo.y) + gap;
-  }
+  return withGaps(availGeo);
+}
 
-  return availGeo;
+function copyGeometry(geometry) {
+  return {
+    x: geometry.x,
+    y: geometry.y,
+    width: geometry.width,
+    height: geometry.height
+  };
 }
 
 initScreens();
@@ -300,7 +299,7 @@ function Quarter(i) {
   var tiles = [];
 
   this.getParent = function(i) {
-    return i === 0 ? getGeometry(id, false) : i - 1;
+    return i === 0 ? getGeometry(id) : tiles[i - 1];
   };
 
   this.getNeighbor = function(tile, dir) {
@@ -314,13 +313,18 @@ function Quarter(i) {
     return null;
   };
 
-  this.addTile = function(i) {
-    var tile = {
-      x: parent.x,
-      y: parent.y,
-      width: parent.width,
-      height: parent.height
-    };
+  this.splitGeometry = function(parent, dir) {
+    var child = copyGeometry(parent);
+    if (dir === "h") {
+      parent.width *= 0.5;
+      child.width *= 0.5;
+      child.x += parent.width;
+    }
+    return child;
+  };
+
+  this.addTile = function(i, dir) {
+    tiles[i] = i === 0 ? getGeometry(id) : this.splitGeometry(this.getParent(i), dir);
   };
 
   this.removeTile = function(i) {
@@ -328,15 +332,14 @@ function Quarter(i) {
   };
 
   this.getTiles = function(length) {
-    const geometry = getGeometry(id, true);
-    const tiles = [];
-
     if (length > tiles.length) {
-      // for length - tiles.length
-      //  add tiles
+      for (var i = tiles.length; i < length; i++) {
+        this.addTile(i, "h");
+      }
     } else if (tiles.length > length) {
-      // for tiles.length - length
-      //  remove tiles
+      // for (var i = length; i <= tiles.length; i++) {
+      //  this.removeTile(i);
+      // }
     }
 
     return tiles;
@@ -356,7 +359,7 @@ function Quarter(i) {
     const included = this.getWindows();
     const tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
-      included[i].geometry = withGaps(tiles[i]);
+      included[i].geometry = withGaps(tiles[i], false);
     }
   };
 
