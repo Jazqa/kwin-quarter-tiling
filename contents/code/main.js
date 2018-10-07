@@ -2,19 +2,16 @@
 // KWin - Quarter Tiling: A Tiling Script for the KWin Window Manager
 // -----------------------------------------------------------------
 
-print("Quarter Tiling initialized");
-
-// Disable some default options that don't play nicely with the script
 options.windowSnapZone = 0;
 options.electricBorderMaximize = false;
 options.electricBorderTiling = false;
 
-// Divided by two, because gaps are applied to each tile and the screen
 const gap = readConfig("gap", 8) / 2;
 
 function adjustGapSize(amount) {
   gap += amount;
   if (gap < 2) {
+    // Gaps are forced, because maximized clients are identified by their size
     gap = 2;
   } else if (gap > 32) {
     gap = 32;
@@ -26,14 +23,36 @@ function adjustGapSize(amount) {
 var windows = [];
 var screens = [];
 
+function getGeometry(id, gaps) {
+  const availGeo = workspace.clientArea(0, id, workspace.currentDesktop);
+  const fullGeo = workspace.clientArea(1, id, workspace.currentDesktop);
+
+  if (fullGeo.x < availGeo.x) {
+    availGeo.width += availGeo.x - fullGeo.x;
+  }
+
+  if (fullGeo.y < availGeo.y) {
+    availGeo.height += availGeo.y - fullGeo.y;
+  }
+
+  if (gaps) {
+    availGeo.x += gap;
+    availGeo.y += gap;
+    availGeo.width -= availGeo.width - (availGeo.width - availGeo.x) + gap; // x is aware of available area, width is not
+    availGeo.height -= availGeo.height - (availGeo.height - availGeo.y) + gap; // y is aware of available area, height is not
+  }
+
+  return availGeo;
+}
+
 initScreens();
 function initScreens() {
   const layout = readConfig("layout", 0).toString();
   for (var i = 0; i < workspace.numScreens; i++) {
     switch (layout) {
-      case "1":
-        screens[i] = new Quarter(i);
-        break;
+      // case "1":
+      //  screens[i] = new Quarter(i);
+      //  break;
       // case "2":
       //  screens[i] = new Quarter(i);
       //  break;
@@ -43,6 +62,7 @@ function initScreens() {
   }
 }
 
+// KWin client.resourceClasses || client.rersourcNames that are not tiled
 const ignoredClients = [
   "albert",
   "kazam",
@@ -74,6 +94,8 @@ ignoredCaptions = ignoredCaptions.concat(
     .split(", ")
 );
 
+// Some Java programs may cause problems with tiling and can be difficult to ignore manually
+// Following code is meant to help adding Java programs to the ignore list
 if (readConfig("ignoreJava", false).toString() === "true") {
   ignoredClients.push("sun-awt-x11-xframepeer");
 }
@@ -142,6 +164,12 @@ function maximizeClient(client, h, v) {
   }
 }
 
+function fullScreenClient(client, fullScreen) {
+  if (fullScreen) {
+    removeClient(client);
+  }
+}
+
 function findClient(client, array) {
   for (var i = 0; i < array.length; i++) {
     if (array[i].windowId === client.windowId) {
@@ -164,8 +192,7 @@ function startMoveClient(client) {
 function findClosestClient(client) {
   var closest = [-1, 9999];
   for (var i = 0; i < snapshot.tiles.length; i++) {
-    const distance =
-      Math.abs(client.geometry.x - snapshot.tiles[i].x) + Math.abs(client.geometry.y - snapshot.tiles[i].y);
+    const distance = Math.abs(client.geometry.x - snapshot.tiles[i].x) + Math.abs(client.geometry.y - snapshot.tiles[i].y);
     if (distance < closest[1]) {
       closest = [i, distance];
     }
@@ -180,10 +207,7 @@ function finishMoveClient(client) {
     if (client.screen === snapshot.screen) {
       if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
         // Moves the client
-        swapClients(
-          findClient(snapshot.windows[index], windows),
-          findClient(snapshot.windows[findClosestClient(client)[0]], windows)
-        );
+        swapClients(findClient(snapshot.windows[index], windows), findClient(snapshot.windows[findClosestClient(client)[0]], windows));
       } else {
         // Resizes the client
         screens[snapshot.screen].resize(client);
@@ -225,19 +249,19 @@ function tileClients() {
 }
 
 // Workspace signals
-
 if (readConfig("autoTile", true).toString() === "true") {
   workspace.clientAdded.connect(addClient);
 }
 
 workspace.clientRemoved.connect(removeClient);
 workspace.clientMaximizeSet.connect(maximizeClient);
+workspace.clientFullScreenSet.connect(fullScreenClient);
+workspace.clientUnminimized.connect(addClient);
 workspace.clientMinimized.connect(removeClient);
 workspace.currentDesktopChanged.connect(tileClients);
 workspace.desktopPresenceChanged.connect(changeDesktop);
 
 // Keybindings
-
 registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function() {
   const client = workspace.activeClient;
   if (findClient(client, windows) > -1) {
@@ -255,9 +279,61 @@ registerShortcut("Quarter: Decrease Gap Size", "Quarter: Decrease Gap Size", "Me
   adjustGapSize(-2);
 });
 
+// Adds all the existing windows on startup
 workspace.clientList().forEach(addClient);
 
-// Original Quarter layout
+// Layouts
+
+// Grid
+//
 function Quarter(i) {
   const id = i;
+  const tiles = [];
+
+  this.getTiles = function(length) {
+    const geometry = getGeometry(id, true);
+    const tiles = [];
+
+    if (length > tiles.length) {
+      // for length - tiles.length
+      // add tiles
+    } else if (tiles.length > length) {
+      // for tiles.length - length
+      // remove tiles
+    }
+
+    return tiles;
+  };
+
+  this.getWindows = function() {
+    const included = windows.filter(function(window) {
+      return (
+        window.activities.indexOf(workspace.currentActivity > -1) && window.desktop === workspace.currentDesktop && window.screen === id
+      );
+    });
+
+    return included;
+  };
+
+  this.tile = function() {
+    const included = this.getWindows();
+    const tiles = this.getTiles(included.length);
+    for (var i = 0; i < included.length; i++) {
+      const tile = tiles[i];
+      tile.x += gap;
+      tile.y += gap;
+      tile.width -= gap * 2;
+      tile.height -= gap * 2;
+      included[i].geometry = tile;
+    }
+  };
+
+  this.resize = function(client) {
+    const included = this.getWindows();
+    const index = findClient(client, included);
+
+    if (index > -1) {
+      // Resizing logic here
+    }
+  };
 }
