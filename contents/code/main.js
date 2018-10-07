@@ -305,22 +305,37 @@ function Quarter(i) {
   this.getNeighbor = function(tile, dir) {
     for (var i = 0; i < tiles.length; i++) {
       const t = tiles[i];
-      if (dir === "left" && t.x === tile.x + tile.width) return t[i];
-      if (dir === "right" && tile.x === t[i].x + t[i].width) return t[i];
-      if (dir === "top" && t.y === tiles.y + tile.height) return t[i];
-      if (dir === "bottom" && tile.y === t[i].y + t[i].height) return t[i];
+      if (dir === "right" && t.x === tile.x + tile.width) return i;
+      if (dir === "left" && tile.x === t.x + t.width) return i;
+      if (dir === "bottom" && t.y === tile.y + tile.height) return i;
+      if (dir === "top" && tile.y === t.y + t.height) return i;
     }
     return null;
   };
 
   this.splitGeometry = function(parent, dir) {
     var child = copyGeometry(parent);
+
     if (dir === "h") {
       parent.width *= 0.5;
       child.width *= 0.5;
       child.x += parent.width;
+    } else if (dir === "v") {
+      parent.height *= 0.5;
+      child.height *= 0.5;
+      child.y += parent.height;
     }
+
     return child;
+  };
+
+  this.consumeGeometry = function(i) {
+    if (i !== 0) {
+      const parent = this.getParent(i);
+      parent.width *= this.getNeighbor(parent, "right") === i ? 2 : 1;
+      parent.height *= this.getNeighbor(parent, "bottom") === i ? 2 : 1;
+    }
+    tiles.splice(i, 1);
   };
 
   this.addTile = function(i, dir) {
@@ -328,18 +343,18 @@ function Quarter(i) {
   };
 
   this.removeTile = function(i) {
-    tiles.splice(i, 1);
+    this.consumeGeometry(i);
   };
 
   this.getTiles = function(length) {
     if (length > tiles.length) {
       for (var i = tiles.length; i < length; i++) {
-        this.addTile(i, "h");
+        this.addTile(i, !tiles[i - 1] ? null : tiles[i - 1].width > tiles[i - 1].height ? "h" : "v");
       }
     } else if (tiles.length > length) {
-      // for (var i = length; i <= tiles.length; i++) {
-      //  this.removeTile(i);
-      // }
+      for (var i = length; i < tiles.length; i++) {
+        this.removeTile(i);
+      }
     }
 
     return tiles;
