@@ -20,6 +20,15 @@ function adjustGapSize(amount) {
   tileClients();
 }
 
+function withGaps(geometry) {
+  const geoWithGaps = geometry;
+  geoWithGaps.x += gap;
+  geoWithGaps.y += gap;
+  geoWithGaps.width -= gap * 2;
+  geoWithGaps.height -= gap * 2;
+  return geoWithGaps;
+}
+
 var windows = [];
 var screens = [];
 
@@ -36,10 +45,11 @@ function getGeometry(id, gaps) {
   }
 
   if (gaps) {
+    // withGaps() not used because x and y are aware of the available area (e.g. Plasma bar), but the width and height are not
     availGeo.x += gap;
     availGeo.y += gap;
-    availGeo.width -= availGeo.width - (availGeo.width - availGeo.x) + gap; // x is aware of available area, width is not
-    availGeo.height -= availGeo.height - (availGeo.height - availGeo.y) + gap; // y is aware of available area, height is not
+    availGeo.width -= availGeo.width - (availGeo.width - availGeo.x) + gap;
+    availGeo.height -= availGeo.height - (availGeo.height - availGeo.y) + gap;
   }
 
   return availGeo;
@@ -284,11 +294,38 @@ workspace.clientList().forEach(addClient);
 
 // Layouts
 
-// Grid
-//
+// BSP
 function Quarter(i) {
   const id = i;
-  const tiles = [];
+  var tiles = [];
+
+  this.getParent = function(i) {
+    return i === 0 ? getGeometry(id, false) : i - 1;
+  };
+
+  this.getNeighbor = function(tile, dir) {
+    for (var i = 0; i < tiles.length; i++) {
+      const t = tiles[i];
+      if (dir === "left" && t.x === tile.x + tile.width) return t[i];
+      if (dir === "right" && tile.x === t[i].x + t[i].width) return t[i];
+      if (dir === "top" && t.y === tiles.y + tile.height) return t[i];
+      if (dir === "bottom" && tile.y === t[i].y + t[i].height) return t[i];
+    }
+    return null;
+  };
+
+  this.addTile = function(i) {
+    var tile = {
+      x: parent.x,
+      y: parent.y,
+      width: parent.width,
+      height: parent.height
+    };
+  };
+
+  this.removeTile = function(i) {
+    tiles.splice(i, 1);
+  };
 
   this.getTiles = function(length) {
     const geometry = getGeometry(id, true);
@@ -296,10 +333,10 @@ function Quarter(i) {
 
     if (length > tiles.length) {
       // for length - tiles.length
-      // add tiles
+      //  add tiles
     } else if (tiles.length > length) {
       // for tiles.length - length
-      // remove tiles
+      //  remove tiles
     }
 
     return tiles;
@@ -319,12 +356,7 @@ function Quarter(i) {
     const included = this.getWindows();
     const tiles = this.getTiles(included.length);
     for (var i = 0; i < included.length; i++) {
-      const tile = tiles[i];
-      tile.x += gap;
-      tile.y += gap;
-      tile.width -= gap * 2;
-      tile.height -= gap * 2;
-      included[i].geometry = tile;
+      included[i].geometry = withGaps(tiles[i]);
     }
   };
 
