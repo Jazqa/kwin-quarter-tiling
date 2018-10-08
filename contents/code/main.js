@@ -150,7 +150,7 @@ function addClient(client) {
     client.clientStartUserMovedResized.connect(startMoveClient);
     client.clientFinishUserMovedResized.connect(finishMoveClient);
 
-    screens[client.screen].tile();
+    screens[client.screen].tileClients();
   }
 }
 
@@ -163,7 +163,7 @@ function removeClient(client) {
     client.clientStartUserMovedResized.disconnect(startMoveClient);
     client.clientFinishUserMovedResized.disconnect(finishMoveClient);
 
-    screens[client.screen].tile();
+    screens[client.screen].tileClients();
   }
 }
 
@@ -253,7 +253,7 @@ function swapClients(i, j) {
 
 function tileClients() {
   for (var i = 0; i < screens.length; i++) {
-    screens[i].tile();
+    screens[i].tileClients();
   }
 }
 
@@ -298,29 +298,29 @@ function Quarter(i) {
   const id = i;
   var tiles = [];
 
-  this.getParent = function(i) {
-    return i === 0 ? getGeometry(id) : tiles[i - 1];
-  };
+  this.getNeighborIndex = function(i, dir) {
+    const tileA = tiles[i];
 
-  this.getNeighbor = function(tile, dir) {
-    for (var i = 0; i < tiles.length; i++) {
-      const t = tiles[i];
-      if (dir === "right" && t.x === tile.x + tile.width) return i;
-      if (dir === "left" && tile.x === t.x + t.width) return i;
-      if (dir === "bottom" && t.y === tile.y + tile.height) return i;
-      if (dir === "top" && tile.y === t.y + t.height) return i;
+    for (var j = 0; j < tiles.length; j++) {
+      const tileB = tiles[j];
+      if (dir === "right" && tileB.x === tileA.x + tileA.width) return j;
+      if (dir === "left" && tileA.x === tileB.x + tileB.width) return j;
+      if (dir === "bottom" && tileB.y === tile.y + tileA.height) return j;
+      if (dir === "top" && tileA.y === tileB.y + tileB.height) return j;
     }
+
     return null;
   };
 
-  this.splitGeometry = function(parent, dir) {
+  this.splitGeometry = function(i) {
+    var parent = tiles[i];
     var child = copyGeometry(parent);
 
-    if (dir === "h") {
+    if (parent.width > parent.height) {
       parent.width *= 0.5;
       child.width *= 0.5;
       child.x += parent.width;
-    } else if (dir === "v") {
+    } else {
       parent.height *= 0.5;
       child.height *= 0.5;
       child.y += parent.height;
@@ -329,30 +329,27 @@ function Quarter(i) {
     return child;
   };
 
-  this.consumeGeometry = function(i) {
-    if (i !== 0) {
-      const parent = this.getParent(i);
-      parent.width *= this.getNeighbor(parent, "right") === i ? 2 : 1;
-      parent.height *= this.getNeighbor(parent, "bottom") === i ? 2 : 1;
-    }
-    tiles.splice(i, 1);
-  };
-
-  this.addTile = function(i, dir) {
-    tiles[i] = i === 0 ? getGeometry(id) : this.splitGeometry(this.getParent(i), dir);
+  this.addTile = function(i) {
+    tiles[i] = i > 0 ? this.splitGeometry(i - 1) : getGeometry(id, false);
   };
 
   this.removeTile = function(i) {
-    this.consumeGeometry(i);
+    if (i > 0) {
+      var parent = tiles[i - 1];
+      parent.width *= this.getNeighborIndex(i, "left") === i - 1 ? 2 : 1;
+      parent.height *= this.getNeighborIndex(i, "top") === i - 1 ? 2 : 1;
+    }
+
+    tiles.splice(i, 1);
   };
 
-  this.getTiles = function(length) {
-    if (length > tiles.length) {
-      for (var i = tiles.length; i < length; i++) {
-        this.addTile(i, !tiles[i - 1] ? null : tiles[i - 1].width > tiles[i - 1].height ? "h" : "v");
+  this.getTiles = function(included) {
+    if (included.length > tiles.length) {
+      for (var i = tiles.length; i < included.length; i++) {
+        this.addTile(i);
       }
-    } else if (tiles.length > length) {
-      for (var i = length; i < tiles.length; i++) {
+    } else if (tiles.length > included.length) {
+      for (var i = included.length; i < tiles.length; i++) {
         this.removeTile(i);
       }
     }
@@ -370,15 +367,16 @@ function Quarter(i) {
     return included;
   };
 
-  this.tile = function() {
+  this.tileClients = function() {
     const included = this.getWindows();
-    const tiles = this.getTiles(included.length);
+    const tiles = this.getTiles(included);
+
     for (var i = 0; i < included.length; i++) {
-      included[i].geometry = withGaps(tiles[i], false);
+      included[i].geometry = withGaps(tiles[i]);
     }
   };
 
-  this.resize = function(client) {
+  this.resizeClient = function(client) {
     const included = this.getWindows();
     const index = findClient(client, included);
 
