@@ -1,6 +1,8 @@
 [Desktop Entry]
 Name=Quarter Tiling
+Name[zh_CN]=四分平铺
 Comment=Improves the workflow by automatically tiling windows and creating virtual desktops
+Comment[zh_CN]=自动平铺窗口及创建新虚拟桌面，以改善工作流
 Icon=preferences-system-windows-script-test
 
 X-Plasma-API=javascript
