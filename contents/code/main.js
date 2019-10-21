@@ -206,15 +206,19 @@ function findDesktopForClient(client) {
   const maxClients = screens[client.screen][client.desktop].getMaxClients();
 
   if (getScreenWindows(client.screen).length >= maxClients) {
-    for (var i = 1; i <= workspace.desktops; i++) {
-      if (getScreenWindows(client.screen, i).length < maxClients) {
-        newDesktop = i;
-        break;
+    if (readConfigString("dynamicDesktops", true) === "true") {
+      for (var i = 1; i <= workspace.desktops; i++) {
+        if (getScreenWindows(client.screen, i).length < maxClients) {
+          newDesktop = i;
+          break;
+        }
       }
-    }
 
-    if (newDesktop === client.desktop) {
-      newDesktop = createDesktop();
+      if (newDesktop === client.desktop) {
+        newDesktop = createDesktop();
+      }
+    } else {
+      return 0;
     }
   }
 
@@ -229,14 +233,18 @@ function findDesktopForClient(client) {
 
 function addClient(client) {
   if (isEligible(client)) {
-    client.desktop = findDesktopForClient(client);
+    const newDesktop = findDesktopForClient(client);
 
-    windows.push(client);
+    if (newDesktop) {
+      client.desktop = newDesktop;
 
-    client.clientStartUserMovedResized.connect(startMoveClient);
-    client.clientFinishUserMovedResized.connect(finishMoveClient);
+      windows.push(client);
 
-    screens[client.screen][client.desktop].tileClients();
+      client.clientStartUserMovedResized.connect(startMoveClient);
+      client.clientFinishUserMovedResized.connect(finishMoveClient);
+
+      screens[client.screen][client.desktop].tileClients();
+    }
   }
 }
 
