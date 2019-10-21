@@ -56,8 +56,8 @@ function getGeometry(id, gaps) {
   availGeo.width += fullGeo.x < availGeo.x ? availGeo.x - fullGeo.x : 0;
   availGeo.height += fullGeo.y < availGeo.y ? availGeo.y - fullGeo.y : 0;
 
-  availGeo.width -= availGeo.x >= availGeo.width ? availGeo.x - availGeo.width : availGeo.width - availGeo.x;
-  availGeo.height -= availGeo.y >= availGeo.height ? availGeo.y - availGeo.height : availGeo.height - availGeo.y;
+  availGeo.width -= availGeo.x >= availGeo.width ? availGeo.x - availGeo.width : availGeo.x;
+  availGeo.height -= availGeo.y >= availGeo.height ? availGeo.y - availGeo.height : availGeo.y;
 
   return withGaps(availGeo);
 }
@@ -83,7 +83,7 @@ function initScreens() {
       //  screens[i] = new QuarterLayout(i);
       //  break;
       default:
-        screens[i] = new QuarterLayout(i);
+        screens[i] = new QuarterVertical(i);
     }
   }
 }
@@ -315,7 +315,7 @@ if (readConfig("autoTile", true).toString() === "true") {
 }
 
 // Layouts
-function QuarterLayout(i) {
+function QuarterVertical(i) {
   const id = i;
   var tiles = [];
 
