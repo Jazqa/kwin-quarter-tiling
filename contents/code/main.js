@@ -60,18 +60,18 @@ function initScreens() {
   for (var i = 0; i < workspace.numScreens; i++) {
     switch (layout) {
       // case "1":
-      //  screens[i] = new Quarter(i);
+      //  screens[i] = new QuarterLayout(i);
       //  break;
       // case "2":
-      //  screens[i] = new Quarter(i);
+      //  screens[i] = new QuarterLayout(i);
       //  break;
       default:
-        screens[i] = new Quarter(i);
+        screens[i] = new QuarterLayout(i);
     }
   }
 }
 
-// KWin client.resourceClasses || client.rersourcNames that are not tiled
+// KWin client.resourceClasses || client.rersourceNames that are not tiled
 const ignoredClients = [
   "albert",
   "kazam",
@@ -201,7 +201,8 @@ function startMoveClient(client) {
 function findClosestClient(client) {
   var closest = [-1, 9999];
   for (var i = 0; i < snapshot.tiles.length; i++) {
-    const distance = Math.abs(client.geometry.x - snapshot.tiles[i].x) + Math.abs(client.geometry.y - snapshot.tiles[i].y);
+    const distance =
+      Math.abs(client.geometry.x - snapshot.tiles[i].x) + Math.abs(client.geometry.y - snapshot.tiles[i].y);
     if (distance < closest[1]) {
       closest = [i, distance];
     }
@@ -216,7 +217,10 @@ function finishMoveClient(client) {
     if (client.screen === snapshot.screen) {
       if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
         // Moves the client
-        swapClients(findClient(snapshot.windows[index], windows), findClient(snapshot.windows[findClosestClient(client)[0]], windows));
+        swapClients(
+          findClient(snapshot.windows[index], windows),
+          findClient(snapshot.windows[findClosestClient(client)[0]], windows)
+        );
       } else {
         // Resizes the client
         screens[snapshot.screen].resize(client);
@@ -289,12 +293,12 @@ registerShortcut("Quarter: Decrease Gap Size", "Quarter: Decrease Gap Size", "Me
 });
 
 // Adds all the existing windows on startup
-workspace.clientList().forEach(addClient);
+if (readConfig("autoTile", true).toString() === "true") {
+  workspace.clientList().forEach(addClient);
+}
 
 // Layouts
-
-// BSP
-function Quarter(i) {
+function QuarterLayout(i) {
   const id = i;
   var tiles = [];
 
@@ -360,7 +364,9 @@ function Quarter(i) {
   this.getWindows = function() {
     const included = windows.filter(function(window) {
       return (
-        window.activities.indexOf(workspace.currentActivity > -1) && window.desktop === workspace.currentDesktop && window.screen === id
+        window.activities.indexOf(workspace.currentActivity > -1) &&
+        window.desktop === workspace.currentDesktop &&
+        window.screen === id
       );
     });
 
