@@ -2,6 +2,16 @@
 // KWin - Quarter Tiling: A Tiling Script for the KWin Window Manager
 // -----------------------------------------------------------------
 
+// Options object doesn't exist when running the debugger
+const options = options ? options : {};
+
+// ReadConfig method doesn't exist when running the debugger
+const readConfig = readConfig
+  ? readConfig
+  : function(key, defaultValue) {
+      return defaultValue;
+    };
+
 options.windowSnapZone = 0;
 options.electricBorderMaximize = false;
 options.electricBorderTiling = false;
@@ -32,6 +42,13 @@ function withGaps(geometry) {
 var windows = [];
 var screens = [];
 
+function printGeo(geometry) {
+  print("x " + geometry.x);
+  print("y " + geometry.y);
+  print("width " + geometry.width);
+  print("height " + geometry.height);
+}
+
 function getGeometry(id, gaps) {
   const availGeo = workspace.clientArea(0, id, workspace.currentDesktop);
   const fullGeo = workspace.clientArea(1, id, workspace.currentDesktop);
@@ -39,8 +56,8 @@ function getGeometry(id, gaps) {
   availGeo.width += fullGeo.x < availGeo.x ? availGeo.x - fullGeo.x : 0;
   availGeo.height += fullGeo.y < availGeo.y ? availGeo.y - fullGeo.y : 0;
 
-  availGeo.width -= availGeo.width - (availGeo.width - availGeo.x);
-  availGeo.height -= availGeo.height - (availGeo.height - availGeo.y);
+  availGeo.width -= availGeo.x >= availGeo.width ? availGeo.x - availGeo.width : availGeo.width - availGeo.x;
+  availGeo.height -= availGeo.y >= availGeo.height ? availGeo.y - availGeo.height : availGeo.height - availGeo.y;
 
   return withGaps(availGeo);
 }
