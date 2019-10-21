@@ -1,6 +1,14 @@
-// -----------------------------------------------------------------
-// KWin - Quarter Tiling: A Tiling Script for the KWin Window Manager
-// -----------------------------------------------------------------
+// ------------
+// DEV-SPECIFIC
+// ------------
+
+// Prints x, y, width and height of a geometry
+function printGeo(geometry) {
+  print("x " + geometry.x);
+  print("y " + geometry.y);
+  print("width " + geometry.width);
+  print("height " + geometry.height);
+}
 
 // Options object doesn't exist when running the debugger
 const options = options ? options : {};
@@ -12,9 +20,14 @@ const readConfig = readConfig
       return defaultValue;
     };
 
-options.windowSnapZone = 0;
-options.electricBorderMaximize = false;
-options.electricBorderTiling = false;
+// -----------------------------------------------------------------
+// KWin - Quarter Tiling: A Tiling Script for the KWin Window Manager
+// -----------------------------------------------------------------
+
+var windows = [];
+var screens = [];
+
+// Gaps
 
 const gap = readConfig("gap", 8) * 0.5;
 
@@ -30,37 +43,7 @@ function adjustGapSize(amount) {
   tileClients();
 }
 
-function withGaps(geometry) {
-  const newGeo = copyGeometry(geometry);
-  newGeo.x += gap;
-  newGeo.y += gap;
-  newGeo.width -= gap * 2;
-  newGeo.height -= gap * 2;
-  return newGeo;
-}
-
-var windows = [];
-var screens = [];
-
-function printGeo(geometry) {
-  print("x " + geometry.x);
-  print("y " + geometry.y);
-  print("width " + geometry.width);
-  print("height " + geometry.height);
-}
-
-function getGeometry(id, gaps) {
-  const availGeo = workspace.clientArea(0, id, workspace.currentDesktop);
-  const fullGeo = workspace.clientArea(1, id, workspace.currentDesktop);
-
-  availGeo.width += fullGeo.x < availGeo.x ? availGeo.x - fullGeo.x : 0;
-  availGeo.height += fullGeo.y < availGeo.y ? availGeo.y - fullGeo.y : 0;
-
-  availGeo.width -= availGeo.x >= availGeo.width ? availGeo.x - availGeo.width : availGeo.x;
-  availGeo.height -= availGeo.y >= availGeo.height ? availGeo.y - availGeo.height : availGeo.y;
-
-  return withGaps(availGeo);
-}
+// Geometry
 
 function copyGeometry(geometry) {
   return {
@@ -71,7 +54,30 @@ function copyGeometry(geometry) {
   };
 }
 
-initScreens();
+function withGaps(geometry) {
+  const newGeo = copyGeometry(geometry);
+  newGeo.x += gap;
+  newGeo.y += gap;
+  newGeo.width -= gap * 2;
+  newGeo.height -= gap * 2;
+  return newGeo;
+}
+
+// Screen
+
+function getScreenGeometry(screenId) {
+  const availGeo = workspace.clientArea(0, screenId, workspace.currentDesktop);
+  const fullGeo = workspace.clientArea(1, screenId, workspace.currentDesktop);
+
+  availGeo.width += fullGeo.x < availGeo.x ? availGeo.x - fullGeo.x : 0;
+  availGeo.height += fullGeo.y < availGeo.y ? availGeo.y - fullGeo.y : 0;
+
+  availGeo.width -= availGeo.x >= availGeo.width ? availGeo.x - availGeo.width : availGeo.x;
+  availGeo.height -= availGeo.y >= availGeo.height ? availGeo.y - availGeo.height : availGeo.y;
+
+  return withGaps(availGeo);
+}
+
 function initScreens() {
   const layout = readConfig("layout", 0).toString();
   for (var i = 0; i < workspace.numScreens; i++) {
@@ -87,6 +93,8 @@ function initScreens() {
     }
   }
 }
+
+// Blacklist
 
 // KWin client.resourceClasses || client.rersourceNames that are not tiled
 const ignoredClients = [
@@ -131,6 +139,7 @@ const minimumGeometry = {
   height: readConfig("minHeight", 256)
 };
 
+// Client types, sizes etc. that are not tiled
 function isEligible(client) {
   return client.comboBox ||
     client.desktopWindow ||
@@ -159,11 +168,12 @@ function isEligible(client) {
     : true;
 }
 
+// Clients
+
 function addClient(client) {
   if (isEligible(client)) {
     windows.push(client);
 
-    // Connect
     client.clientStartUserMovedResized.connect(startMoveClient);
     client.clientFinishUserMovedResized.connect(finishMoveClient);
 
@@ -176,7 +186,6 @@ function removeClient(client) {
   if (index > -1) {
     windows.splice(index, 1);
 
-    // Disconnect
     client.clientStartUserMovedResized.disconnect(startMoveClient);
     client.clientFinishUserMovedResized.disconnect(finishMoveClient);
 
@@ -251,19 +260,6 @@ function finishMoveClient(client) {
   tileClients();
 }
 
-function changeDesktop(client, desktop) {
-  if (client) {
-    const index = findClient(client, windows);
-
-    if (index > -1) {
-      // Push the client to the end of the array
-      windows.push(windows.splice(index, 1)[0]);
-    }
-  }
-
-  tileClients();
-}
-
 function swapClients(i, j) {
   if (i !== j) {
     var t = windows[i];
@@ -278,43 +274,75 @@ function tileClients() {
   }
 }
 
-// Workspace signals
-if (readConfig("autoTile", true).toString() === "true") {
-  workspace.clientAdded.connect(addClient);
-}
+function changeDesktop(client, desktop) {
+  if (client) {
+    const index = findClient(client, windows);
 
-workspace.clientRemoved.connect(removeClient);
-workspace.clientMaximizeSet.connect(maximizeClient);
-workspace.clientFullScreenSet.connect(fullScreenClient);
-workspace.clientUnminimized.connect(addClient);
-workspace.clientMinimized.connect(removeClient);
-workspace.currentDesktopChanged.connect(tileClients);
-workspace.desktopPresenceChanged.connect(changeDesktop);
-
-// Keybindings
-registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function() {
-  const client = workspace.activeClient;
-  if (findClient(client, windows) > -1) {
-    removeClient(client);
-  } else {
-    addClient(client);
+    if (index > -1) {
+      // Push the client to the end of the array
+      windows.push(windows.splice(index, 1)[0]);
+    }
   }
-});
 
-registerShortcut("Quarter: Increase Gap Size", "Quarter: Increase Gap Size", "Meta+Shift+PgUp", function() {
-  adjustGapSize(2);
-});
-
-registerShortcut("Quarter: Decrease Gap Size", "Quarter: Decrease Gap Size", "Meta+Shift+PgDown", function() {
-  adjustGapSize(-2);
-});
-
-// Adds all the existing windows on startup
-if (readConfig("autoTile", true).toString() === "true") {
-  workspace.clientList().forEach(addClient);
+  tileClients();
 }
+
+// Init
+
+function connectWorkspace() {
+  if (readConfig("autoTile", true).toString() === "true") {
+    workspace.clientAdded.connect(addClient);
+  }
+
+  workspace.clientRemoved.connect(removeClient);
+  workspace.clientMaximizeSet.connect(maximizeClient);
+  workspace.clientFullScreenSet.connect(fullScreenClient);
+  workspace.clientUnminimized.connect(addClient);
+  workspace.clientMinimized.connect(removeClient);
+  workspace.currentDesktopChanged.connect(tileClients);
+  workspace.desktopPresenceChanged.connect(changeDesktop);
+}
+
+function registerShortcuts() {
+  // Float
+  registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function() {
+    const client = workspace.activeClient;
+    if (findClient(client, windows) > -1) {
+      removeClient(client);
+    } else {
+      addClient(client);
+    }
+  });
+
+  // Gap +
+  registerShortcut("Quarter: Increase Gap Size", "Quarter: Increase Gap Size", "Meta+Shift+PgUp", function() {
+    adjustGapSize(2);
+  });
+
+  // Gap -
+  registerShortcut("Quarter: Decrease Gap Size", "Quarter: Decrease Gap Size", "Meta+Shift+PgDown", function() {
+    adjustGapSize(-2);
+  });
+}
+
+function init() {
+  options.windowSnapZone = 0;
+  options.electricBorderMaximize = false;
+  options.electricBorderTiling = false;
+
+  connectWorkspace();
+  registerShortcuts();
+  initScreens();
+
+  if (readConfig("autoTile", true).toString() === "true") {
+    workspace.clientList().forEach(addClient);
+  }
+}
+
+init();
 
 // Layouts
+
 function QuarterVertical(i) {
   const id = i;
   var tiles = [];
@@ -351,7 +379,7 @@ function QuarterVertical(i) {
   };
 
   this.addTile = function(i) {
-    tiles[i] = i > 0 ? this.splitGeometry(i - 1) : getGeometry(id, false);
+    tiles[i] = i > 0 ? this.splitGeometry(i - 1) : getScreenGeometry(id, false);
   };
 
   this.removeTile = function(i) {
