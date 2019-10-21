@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>256</width>
-    <height>260</height>
+    <width>293</width>
+    <height>300</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -18,14 +18,14 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>256</width>
-    <height>260</height>
+    <width>293</width>
+    <height>300</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>256</width>
-    <height>260</height>
+    <width>293</width>
+    <height>300</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -53,7 +53,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -61,13 +61,13 @@
      <property name="minimumSize">
       <size>
        <width>250</width>
-       <height>256</height>
+       <height>275</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>250</width>
-       <height>256</height>
+       <width>9999</width>
+       <height>9999</height>
       </size>
      </property>
      <property name="autoFillBackground">
@@ -77,6 +77,12 @@
       <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Values</string>
       </attribute>
@@ -85,8 +91,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>241</width>
-         <height>221</height>
+         <width>284</width>
+         <height>261</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -118,6 +124,27 @@
            <widget class="QCheckBox" name="kcfg_ignoreJava">
             <property name="text">
              <string>Ignore Java</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QCheckBox" name="kcfg_dynamicDesktops">
+            <property name="text">
+             <string>Dynamic Desktops</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="kcfg_followClients">
+            <property name="text">
+             <string>Follow clients</string>
             </property>
            </widget>
           </item>
@@ -178,19 +205,14 @@
           <item>
            <widget class="QComboBox" name="kcfg_layout">
             <property name="currentText">
-             <string>Tall</string>
+             <string>Quarter</string>
             </property>
             <property name="frame">
              <bool>true</bool>
             </property>
             <item>
              <property name="text">
-              <string>Tall</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Wide</string>
+              <string>Quarter</string>
              </property>
             </item>
            </widget>
@@ -297,10 +319,154 @@
           </item>
          </layout>
         </item>
+        <item>
+         <spacer name="verticalSpacer_7">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <attribute name="title">
+       <string>Apps</string>
+      </attribute>
+      <widget class="QWidget" name="verticalLayoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>281</width>
+         <height>261</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="leftMargin">
+         <number>12</number>
+        </property>
+        <property name="topMargin">
+         <number>6</number>
+        </property>
+        <property name="rightMargin">
+         <number>12</number>
+        </property>
+        <property name="bottomMargin">
+         <number>6</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="ignoredProgramsLabel">
+          <property name="text">
+           <string>Ignored programs</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="kcfg_ignoredClients">
+          <property name="placeholderText">
+           <string>wine, kate, spotify</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="ignoredCaptionsLabel">
+          <property name="text">
+           <string>Ignored captions</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="kcfg_ignoredCaptions">
+          <property name="placeholderText">
+           <string>Move to trash, Quit GIMP</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_6">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="smallProgramsLabel">
+          <property name="text">
+           <string>Small programs</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="kcfg_smallPrograms">
+          <property name="placeholderText">
+           <string>kcalc, telegram</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
        </layout>
       </widget>
      </widget>
      <widget class="QWidget" name="tab_3">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <attribute name="title">
        <string>Page</string>
       </attribute>
@@ -309,11 +475,11 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>241</width>
-         <height>221</height>
+         <width>281</width>
+         <height>261</height>
         </rect>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
+       <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0,0">
         <property name="leftMargin">
          <number>12</number>
         </property>
@@ -385,86 +551,6 @@
            </size>
           </property>
          </spacer>
-        </item>
-       </layout>
-      </widget>
-     </widget>
-     <widget class="QWidget" name="tab_2">
-      <attribute name="title">
-       <string>Apps</string>
-      </attribute>
-      <widget class="QWidget" name="verticalLayoutWidget">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>241</width>
-         <height>221</height>
-        </rect>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <property name="leftMargin">
-         <number>12</number>
-        </property>
-        <property name="topMargin">
-         <number>6</number>
-        </property>
-        <property name="rightMargin">
-         <number>12</number>
-        </property>
-        <property name="bottomMargin">
-         <number>6</number>
-        </property>
-        <item>
-         <widget class="QLabel" name="ignoredProgramsLabel">
-          <property name="text">
-           <string>Ignored programs</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="kcfg_ignoredClients">
-          <property name="placeholderText">
-           <string>wine, kate, spotify</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="ignoredCaptionsLabel">
-          <property name="text">
-           <string>Ignored captions</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="kcfg_ignoredCaptions">
-          <property name="placeholderText">
-           <string>Move to trash, Quit GIMP</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="smallProgramsLabel">
-          <property name="text">
-           <string>Small programs</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="kcfg_smallPrograms">
-          <property name="placeholderText">
-           <string>kcalc, telegram</string>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>

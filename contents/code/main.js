@@ -20,6 +20,10 @@ const readConfig = readConfig
       return defaultValue;
     };
 
+function readConfigString(key, defaultValue) {
+  return readConfig(key, defaultValue).toString();
+}
+
 // -----------------------------------------------------------------
 // KWin - Quarter Tiling: A Tiling Script for the KWin Window Manager
 // -----------------------------------------------------------------
@@ -65,13 +69,11 @@ function withGaps(geometry) {
 
 // Screen
 
-function getScreenWindows(screenId, desktopId) {
-  desktopId = desktopId ? desktopId : workspace.currentDesktop;
-
+function getScreenWindows(screenId) {
   const included = windows.filter(function(window) {
     return (
       window.activities.indexOf(workspace.currentActivity > -1) &&
-      window.desktop === desktopId &&
+      window.desktop === workspace.currentDesktop &&
       window.screen === screenId
     );
   });
@@ -93,7 +95,7 @@ function getScreenGeometry(screenId, gaps) {
 }
 
 function initScreens() {
-  const layout = readConfig("layout", 0).toString();
+  const layout = readConfigString("layout", 0);
   for (var i = 0; i < workspace.numScreens; i++) {
     switch (layout) {
       // case "1":
@@ -127,24 +129,18 @@ const ignoredClients = [
   "yakuake"
 ];
 
-ignoredClients = ignoredClients.concat(
-  readConfig("ignoredClients", "wine, steam, kate")
-    .toString()
-    .split(", ")
-);
+ignoredClients = ignoredClients.concat(readConfigString("ignoredClients", "wine, steam, kate").split(", "));
 
 // KWin client.captions that are not tiled
 const ignoredCaptions = ["File Upload", "Move to Trash", "Quit GIMP", "Create a New Image", "QEMU"];
 
 ignoredCaptions = ignoredCaptions.concat(
-  readConfig("ignoredCaptions", "Quit GIMP, Create a New Image")
-    .toString()
-    .split(", ")
+  readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image").split(", ")
 );
 
 // Some Java programs may cause problems with tiling and can be difficult to ignore manually
 // Following code is meant to help adding Java programs to the ignore list
-if (readConfig("ignoreJava", false).toString() === "true") {
+if (readConfigString("ignoreJava", false) === "true") {
   ignoredClients.push("sun-awt-x11-xframepeer");
 }
 
@@ -155,7 +151,8 @@ const minimumGeometry = {
 
 // Client types, sizes etc. that are not tiled
 function isEligible(client) {
-  return client.comboBox ||
+  return getScreenWindows(client.screen, client.desktop).length === screens[client.screen].getMaxClients() ||
+    client.comboBox ||
     client.desktopWindow ||
     client.dialog ||
     client.dndIcon ||
@@ -206,7 +203,7 @@ function findDesktopForClient(client) {
     }
   }
 
-  if (newDesktop !== client.desktop) {
+  if (newDesktop !== client.desktop && readConfigString("followClients", true) === "true") {
     workspace.currentDesktop = newDesktop;
   }
 
@@ -335,7 +332,7 @@ function changeDesktop(client, desktop) {
 // Init
 
 function connectWorkspace() {
-  if (readConfig("autoTile", true).toString() === "true") {
+  if (readConfigString("autoTile", true) === "true") {
     workspace.clientAdded.connect(addClient);
   }
 
@@ -346,7 +343,6 @@ function connectWorkspace() {
   workspace.clientMinimized.connect(removeClient);
   workspace.currentDesktopChanged.connect(tileClients);
   workspace.desktopPresenceChanged.connect(changeDesktop);
-  workspace.numberDesktopsChanged.connect(tileClients);
 }
 
 function registerShortcuts() {
@@ -380,7 +376,7 @@ function init() {
   registerShortcuts();
   initScreens();
 
-  if (readConfig("autoTile", true).toString() === "true") {
+  if (readConfigString("autoTile", true) === "true") {
     workspace.clientList().forEach(addClient);
   }
 }
@@ -437,6 +433,7 @@ function QuarterVertical(i) {
   };
 
   this.removeTile = function(i) {
+    print(i);
     switch (i) {
       case 1:
         tiles[0].width += tiles[i].width;

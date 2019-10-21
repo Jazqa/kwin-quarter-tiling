@@ -13,6 +13,14 @@
         <label>Ignore all Java windows</label>
         <default>false</default>
       </entry>
+      <entry name="dynamicDesktops" type="bool">
+        <label>Dynamic desktops</label>
+        <default>true</default>
+      </entry>
+      <entry name="followClients" type="bool">
+        <label>Follow clients across desktops</label>
+        <default>true</default>
+      </entry>
     	<entry name="gap" type="int">
         <label>Pixels between the windows and screen edges</label>
         <default>8</default>
