@@ -200,10 +200,30 @@ function createDesktop() {
   return workspace.desktops.length;
 }
 
-function findDesktopForClient(client) {
-  var newDesktop = client.desktop;
+function removeDesktop(screenId) {
+  const oldDesktop = workspace.desktops;
 
-  const maxClients = screens[client.screen][client.desktop].getMaxClients();
+  if (
+    workspace.currentDesktop > 1 &&
+    workspace.currentDesktop === oldDesktop &&
+    readConfigString("followClients", true) === "true"
+  ) {
+    for (var i = 0; i < workspace.numScreens; i++) {
+      if (i !== screenId && getScreenWindows(i, workspace.currentDesktop).length > 0) {
+        return;
+      }
+    }
+
+    workspace.currentDesktop--;
+
+    screens.forEach(function(screen) {
+      screen.splice(oldDesktop, 1);
+    });
+  }
+}
+
+function findDesktopForClient(client, maxClients) {
+  var newDesktop = client.desktop;
 
   if (getScreenWindows(client.screen).length >= maxClients) {
     if (readConfigString("dynamicDesktops", true) === "true") {
@@ -229,11 +249,34 @@ function findDesktopForClient(client) {
   return newDesktop;
 }
 
+function findScreenForClient(client, maxClients) {
+  for (var i = 0; i < workspace.numScreens; i++) {
+    if (i !== client.screen) {
+      if (getScreenWindows(i, client.desktop).length < maxClients) {
+        client.geometry = copyGeometry(getScreenGeometry(i, true));
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function findSpaceForClient(client) {
+  const maxClients = screens[client.screen][client.desktop].getMaxClients();
+
+  if (getScreenWindows(client.screen).length >= maxClients && !findScreenForClient(client, maxClients)) {
+    return findDesktopForClient(client, maxClients);
+  } else {
+    return client.desktop;
+  }
+}
+
 // Clients
 
 function addClient(client) {
   if (isEligible(client)) {
-    const newDesktop = findDesktopForClient(client);
+    const newDesktop = findSpaceForClient(client);
 
     if (newDesktop) {
       client.desktop = newDesktop;
@@ -248,7 +291,7 @@ function addClient(client) {
   }
 }
 
-function removeClient(client) {
+function removeClient(client, destroy) {
   const index = findClient(client, windows);
   if (index > -1) {
     windows.splice(index, 1);
@@ -256,8 +299,16 @@ function removeClient(client) {
     client.clientStartUserMovedResized.disconnect(startMoveClient);
     client.clientFinishUserMovedResized.disconnect(finishMoveClient);
 
-    screens[client.screen][client.desktop].tileClients();
+    if (getScreenWindows(client.screen, client.desktop).length > 0) {
+      screens[client.screen][client.desktop].tileClients();
+    } else if (destroy) {
+      removeDesktop(client.screen);
+    }
   }
+}
+
+function removeClientDestroy(client) {
+  removeClient(client, true);
 }
 
 function maximizeClient(client, h, v) {
@@ -362,7 +413,7 @@ function connectWorkspace() {
     workspace.clientAdded.connect(addClient);
   }
 
-  workspace.clientRemoved.connect(removeClient);
+  workspace.clientRemoved.connect(removeClientDestroy);
   workspace.clientMaximizeSet.connect(maximizeClient);
   workspace.clientFullScreenSet.connect(fullScreenClient);
   workspace.clientUnminimized.connect(addClient);
@@ -442,7 +493,7 @@ function QuarterVertical(i) {
 
     switch (i) {
       case 0:
-        tile = getScreenGeometry(screenId, false);
+        tile = getScreenGeometry(screenId, true);
         break;
       case 1:
         tile = this.splitTile(0);
@@ -459,7 +510,6 @@ function QuarterVertical(i) {
   };
 
   this.removeTile = function(i) {
-    print(i);
     switch (i) {
       case 1:
         tiles[0].width += tiles[i].width;
