@@ -1,0 +1,25 @@
+{
+  "name": "kwin-quarter-tiling",
+  "version": "2.0.0",
+  "description": "A tiling script for KWin",
+  "main": "contents/code/main.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jazqa/kwin-quarter-tiling.git"
+  },
+  "author": "Jazqa",
+  "license": "GPL-2.0",
+  "bugs": {
+    "url": "https://github.com/Jazqa/kwin-quarter-tiling/issues"
+  },
+  "homepage": "https://github.com/Jazqa/kwin-quarter-tiling#readme",
+  "dependencies": {
+    "@babel/cli": "^7.7.0",
+    "@babel/core": "^7.7.2",
+    "@babel/preset-flow": "^7.0.0",
+    "babel-cli": "^6.26.0",
+    "flow-bin": "^0.112.0"
+  },
+  "babel": {}
+}
