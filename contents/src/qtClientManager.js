@@ -35,13 +35,20 @@ class QTClientManager {
   }
 
   // Add/Remove clients
-  findClient = (client: KWClient) => {
-    return this.clients.findIndex((tiledClient: KWClient) => {
-      return client.windowId === tiledClient.windowId;
+  findClient = (client: KWClient): number => {
+    var index = -1;
+
+    this.clients.some((tiledClient: KWClient, tiledIndex: number) => {
+      if (client.windowId === tiledClient.windowId) {
+        index = tiledIndex;
+        return true;
+      }
     });
+
+    return index;
   };
 
-  addClient = (client: KWClient) => {
+  addClient = (client: KWClient): void => {
     if (isEligible(client)) {
       this.clients.push(client);
 
@@ -52,7 +59,7 @@ class QTClientManager {
     }
   };
 
-  removeClient = (client: KWClient) => {
+  removeClient = (client: KWClient): void => {
     const index = this.findClient(client);
 
     if (index > -1) {
@@ -65,7 +72,7 @@ class QTClientManager {
     }
   };
 
-  floatClient = (client: KWClient) => {
+  floatClient = (client: KWClient): void => {
     const index = this.findClient(client);
 
     if (index > -1) {
@@ -76,26 +83,25 @@ class QTClientManager {
   };
 
   // Move/Resize clients
-  maximizeClient = (client: KWClient, h: boolean, v: boolean) => {
+  maximizeClient = (client: KWClient, h: boolean, v: boolean): void => {
     if (h && v) {
       this.removeClient(client);
     }
   };
 
-  fullScreenClient = (client: KWClient, fullScreen: boolean) => {
+  fullScreenClient = (client: KWClient, fullScreen: boolean): void => {
     if (fullScreen) {
       this.removeClient(client);
     }
   };
 
-  snapshot: { geometry: KWGeometry, screen: number };
-
-  startMoveClient = (client: KWClient) => {
+  snapshot: { geometry: KWGeometry, screen: number } = {};
+  startMoveClient = (client: KWClient): void => {
     this.snapshot.geometry = client.geometry;
     this.snapshot.screen = client.screen;
   };
 
-  finishMoveClient = (client: KWClient) => {
+  finishMoveClient = (client: KWClient): void => {
     const index = this.findClient(client);
 
     if (index > -1) {

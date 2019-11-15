@@ -11,11 +11,13 @@ export class QTLayout {
   screenId: number;
   desktopId: number;
   tilingLayout: TilingLayout;
+  maxClients: number;
 
   constructor(screenId: number, desktopId: number) {
     this.screenId = screenId;
     this.desktopId = desktopId;
     this.tilingLayout = new SelectedTilingLayout(this.getGeometry());
+    this.maxClients = this.tilingLayout.maxClients;
   }
 
   getGeometry = (): KWGeometry => {
@@ -44,11 +46,11 @@ export class QTLayout {
     });
   };
 
-  maxClients = this.tilingLayout.maxClients;
-
-  tileClients = () => {
+  tileClients = (): void => {
     this.tilingLayout.tileClients(this.getClients());
   };
 
-  resizeClient = this.tilingLayout.resizeClient;
+  resizeClient = (client: KWClient, snapshot: KWGeometry): void => {
+    this.tilingLayout.resizeClient(client, snapshot);
+  };
 }

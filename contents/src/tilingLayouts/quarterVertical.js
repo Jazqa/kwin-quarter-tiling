@@ -24,7 +24,7 @@ export class QuarterVertical implements TilingLayout {
     this.tiles = this.getTiles();
   }
 
-  getTiles = () => {
+  getTiles = (): Array<KWGeometry> => {
     const { x, y, width, height } = this.availableGeometry;
 
     return [
@@ -55,12 +55,12 @@ export class QuarterVertical implements TilingLayout {
     ];
   };
 
-  tileClients = (clients: Array<KWClient>) => {
+  tileClients = (clients: Array<KWClient>): void => {
     this.tiles = this.getTiles();
     clients.slice(0, this.maxClients - 1).forEach((client, index) => {
       client.geometry = this.tiles[index];
     });
   };
 
-  resizeClient = (client: KWClient, snapshot: KWGeometry) => {};
+  resizeClient = (client: KWClient, snapshot: KWGeometry): void => {};
 }

@@ -14,19 +14,19 @@ class QTLayoutManager {
       }
     }
 
-    kwWorkspace.currentDesktopChanged.connect(this.tileLayoutForDesktop);
+    kwWorkspace.currentDesktopChanged.connect(this.tileScreens);
     // kwWorkspace.desktopPresenceChanged.connect(changeDesktop);
   }
 
-  resizeClient = (client: KWClient, snapshot: KWGeometry) => {
+  resizeClient = (client: KWClient, snapshot: KWGeometry): void => {
     this.layouts[client.screen][client.desktop].resizeClient(client, snapshot);
   };
 
-  tileLayout = (screen: number, desktop: number) => {
+  tileLayout = (screen: number, desktop: number): void => {
     this.layouts[screen][desktop].tileClients();
   };
 
-  tileLayoutForDesktop = (desktop: number) => {
+  tileScreens = (desktop: number): void => {
     this.layouts.forEach(screen => {
       screen.forEach(desktop => {
         desktop.tileClients();
@@ -34,14 +34,14 @@ class QTLayoutManager {
     });
   };
 
-  createDesktop = () => {
+  createDesktop = (): void => {
     kwWorkspace.desktops += 1;
     for (var i = 0; i > kwWorkspace.numScreens; i++) {
       this.layouts[i][kwWorkspace.desktops] = new QTLayout(i, kwWorkspace.desktops);
     }
   };
 
-  removeDesktop = () => {
+  removeDesktop = (): void => {
     this.layouts.forEach(screen => {
       screen.splice(kwWorkspace.currentDesktop, 1);
     });

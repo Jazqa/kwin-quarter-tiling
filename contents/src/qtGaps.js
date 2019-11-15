@@ -4,7 +4,7 @@ import type { KWGeometry } from "./kwTypes";
 
 export var gaps = kwReadConfig("gaps", 8);
 
-export const adjustGaps = (amount: number) => {
+export const adjustGaps = (amount: number): void => {
   // Note: Gap size can't be zero, because it would screw up the maximized window logic
   const minGaps = 2;
   const maxGaps = 64;
@@ -12,15 +12,15 @@ export const adjustGaps = (amount: number) => {
   gaps = Math.min(Math.max(gaps + amount, minGaps), maxGaps);
 };
 
-const increaseGap = () => {
+const increaseGap = (): void => {
   adjustGaps(2);
 };
 
-const decreaseGap = () => {
+const decreaseGap = (): void => {
   adjustGaps(-2);
 };
 
-const registerShortcuts = () => {
+const registerShortcuts = (): void => {
   kwRegisterShortcut("Quarter: Increase Gap Size", "Quarter: Increase Gap Size", "Meta+Shift+PgUp", increaseGap);
   kwRegisterShortcut("Quarter: Decrease Gap Size", "Quarter: Decrease Gap Size", "Meta+Shift+PgDown", decreaseGap);
 };
