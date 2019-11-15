@@ -11,7 +11,7 @@ const calculateDistance = (geometryA: KWGeometry, geometryB: KWGeometry) => {
 const swapClientGeometry = (clientA: KWClient, clientB: KWClient) => {
   if (clientA.windowId !== clientB.windowId) {
     const temporaryGeometry = { ...clientB.geometry };
-    clientB.geometry = clientA.geometry;
+    clientB.geometry = { ...clientA.geometry };
     clientA.geometry = temporaryGeometry;
   }
 };
