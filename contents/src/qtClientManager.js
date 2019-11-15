@@ -32,6 +32,11 @@ class QTClientManager {
     kwWorkspace.clientFullScreenSet.connect(this.fullScreenClient);
     kwWorkspace.clientUnminimized.connect(this.addClient);
     kwWorkspace.clientMinimized.connect(this.removeClient);
+
+    kwWorkspace.currentDesktopChanged.connect((desktop: number) => {
+      QTLayoutManager.tileScreens(this.clients, desktop);
+    });
+    // kwWorkspace.desktopPresenceChanged.connect(changeDesktop);
   }
 
   // Add/Remove clients
@@ -55,7 +60,7 @@ class QTClientManager {
       client.clientStartUserMovedResized.connect(this.startMoveClient);
       client.clientFinishUserMovedResized.connect(this.finishMoveClient);
 
-      QTLayoutManager.tileLayout(client.screen, client.desktop);
+      QTLayoutManager.tileLayout(this.clients, client.screen, client.desktop);
     }
   };
 
@@ -68,7 +73,7 @@ class QTClientManager {
       client.clientStartUserMovedResized.disconnect(this.startMoveClient);
       client.clientFinishUserMovedResized.disconnect(this.finishMoveClient);
 
-      QTLayoutManager.tileLayout(client.screen, client.desktop);
+      QTLayoutManager.tileLayout(this.clients, client.screen, client.desktop);
     }
   };
 
@@ -115,8 +120,8 @@ class QTClientManager {
           QTLayoutManager.resizeClient(client, this.snapshot.geometry);
         }
       } else {
-        QTLayoutManager.tileLayout(client.screen, client.desktop);
-        QTLayoutManager.tileLayout(this.snapshot.screen, client.desktop);
+        QTLayoutManager.tileLayout(this.clients, client.screen, client.desktop);
+        QTLayoutManager.tileLayout(this.clients, this.snapshot.screen, client.desktop);
       }
     }
   };

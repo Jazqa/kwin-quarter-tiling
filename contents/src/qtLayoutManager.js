@@ -1,5 +1,5 @@
 // @flow
-import { kwWorkspace } from "./kwGlobals";
+import { kwWorkspace, kwPrint } from "./kwGlobals";
 import { QTLayout } from "./qtLayout";
 import type { KWClient, KWGeometry } from "./kwTypes";
 
@@ -22,14 +22,22 @@ class QTLayoutManager {
     this.layouts[client.screen][client.desktop].resizeClient(client, snapshot);
   };
 
-  tileLayout = (screen: number, desktop: number): void => {
-    this.layouts[screen][desktop].tileClients();
+  tileLayout = (clients: Array<KWClient>, screen: number, desktop: number): void => {
+    this.layouts[screen][desktop].tileClients(clients);
   };
 
-  tileScreens = (desktop: number): void => {
-    this.layouts.forEach(screen => {
-      screen.forEach(desktop => {
-        desktop.tileClients();
+  tileScreens = (clients: Array<KWClient>, desktop: number): void => {
+    const clientsOnDesktop = clients.filter((client: KWClient) => {
+      return client.desktop === desktop;
+    });
+
+    this.layouts.forEach((screen: Array<QTLayout>) => {
+      const clientsOnScreen = clientsOnDesktop.filter((client: KWClient) => {
+        return client.screen === screen;
+      });
+
+      screen.forEach((desktop: QTLayout) => {
+        desktop.tileClients(clients);
       });
     });
   };

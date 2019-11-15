@@ -23,7 +23,7 @@ var minWidth = kwReadConfig("minWidth", 256);
 var minHeight = kwReadConfig("minHeight", 256);
 var isEligible = function isEligible(client) {
   var isFullScreen = client.geometry.width === kwWorkspace.clientArea(0, client.screen, 0).width && client.geometry.height === kwWorkspace.clientArea(0, client.screen, 0).height;
-  return isFullScreen || client.comboBox || client.desktopWindow || client.dialog || client.dndIcon || client.dock || client.dropdownMenu || client.menu || client.minimized || client.notification || client.popupMenu || client.specialWindow || client.splash || client.toolbar || client.tooltip || client.utility || client["transient"] || client.geometry.width < minWidth || client.geometry.height < minHeight || captionBlacklist.indexOf(client.caption.toString()) > -1 || clientBlacklist.indexOf(client.resourceClass.toString()) > -1 || clientBlacklist.indexOf(client.resourceName.toString()) > -1;
+  return isFullScreen || client.comboBox || client.desktopWindow || client.dialog || client.dndIcon || client.dock || client.dropdownMenu || client.menu || client.minimized || client.notification || client.popupMenu || client.specialWindow || client.splash || client.toolbar || client.tooltip || client.utility || client["transient"] || client.desktop < 1 || client.screen < 0 || client.geometry.width < minWidth || client.geometry.height < minHeight || captionBlacklist.indexOf(client.caption.toString()) > -1 || clientBlacklist.indexOf(client.resourceClass.toString()) > -1 || clientBlacklist.indexOf(client.resourceName.toString()) > -1 ? false : true;
 };
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -108,6 +108,8 @@ var QTLayout = function QTLayout(screenId, desktopId) {
 
   _defineProperty$1(this, "tilingLayout", void 0);
 
+  _defineProperty$1(this, "maxClients", void 0);
+
   _defineProperty$1(this, "getGeometry", function () {
     var fullGeometry = kwWorkspace.clientArea(1, _this.screenId, kwWorkspace.desktopId);
     var availableGeometry = kwWorkspace.clientArea(0, _this.screenId, kwWorkspace.desktopId);
@@ -118,23 +120,20 @@ var QTLayout = function QTLayout(screenId, desktopId) {
     return availableGeometry;
   });
 
-  _defineProperty$1(this, "getClients", function () {
-    return QTClientManager$1.clients.filter(function (client) {
+  _defineProperty$1(this, "tileClients", function (clients) {
+    _this.tilingLayout.tileClients(clients.filter(function (client) {
       return client.screen === _this.screenId && client.desktop === _this.desktopId;
-    });
+    }));
   });
 
-  _defineProperty$1(this, "maxClients", this.tilingLayout.maxClients);
-
-  _defineProperty$1(this, "tileClients", function () {
-    _this.tilingLayout.tileClients(_this.getClients());
+  _defineProperty$1(this, "resizeClient", function (client, snapshot) {
+    _this.tilingLayout.resizeClient(client, snapshot);
   });
-
-  _defineProperty$1(this, "resizeClient", this.tilingLayout.resizeClient);
 
   this.screenId = screenId;
   this.desktopId = desktopId;
   this.tilingLayout = new SelectedTilingLayout(this.getGeometry());
+  this.maxClients = this.tilingLayout.maxClients;
 };
 
 function _classCallCheck$2(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -152,14 +151,21 @@ var QTLayoutManager = function QTLayoutManager() {
     _this.layouts[client.screen][client.desktop].resizeClient(client, snapshot);
   });
 
-  _defineProperty$2(this, "tileLayout", function (screen, desktop) {
-    _this.layouts[screen][desktop].tileClients();
+  _defineProperty$2(this, "tileLayout", function (clients, screen, desktop) {
+    _this.layouts[screen][desktop].tileClients(clients);
   });
 
-  _defineProperty$2(this, "tileLayoutForDesktop", function (desktop) {
+  _defineProperty$2(this, "tileScreens", function (clients, desktop) {
+    var clientsOnDesktop = clients.filter(function (client) {
+      return client.desktop === desktop;
+    });
+
     _this.layouts.forEach(function (screen) {
+      var clientsOnScreen = clientsOnDesktop.filter(function (client) {
+        return client.screen === screen;
+      });
       screen.forEach(function (desktop) {
-        desktop.tileClients();
+        desktop.tileClients(clients);
       });
     });
   });
@@ -186,7 +192,7 @@ var QTLayoutManager = function QTLayoutManager() {
     }
   }
 
-  kwWorkspace.currentDesktopChanged.connect(this.tileLayoutForDesktop); // kwWorkspace.desktopPresenceChanged.connect(changeDesktop);
+  kwWorkspace.currentDesktopChanged.connect(this.tileScreens); // kwWorkspace.desktopPresenceChanged.connect(changeDesktop);
 };
 
 var QTLayoutManager$1 = new QTLayoutManager();
@@ -220,9 +226,16 @@ var QTClientManager = function QTClientManager() {
   _defineProperty$3(this, "clients", []);
 
   _defineProperty$3(this, "findClient", function (client) {
-    return _this.clients.findIndex(function (tiledClient) {
-      return client.windowId === tiledClient.windowId;
+    var index = -1;
+
+    _this.clients.some(function (tiledClient, tiledIndex) {
+      if (client.windowId === tiledClient.windowId) {
+        index = tiledIndex;
+        return true;
+      }
     });
+
+    return index;
   });
 
   _defineProperty$3(this, "addClient", function (client) {
@@ -231,7 +244,7 @@ var QTClientManager = function QTClientManager() {
 
       client.clientStartUserMovedResized.connect(_this.startMoveClient);
       client.clientFinishUserMovedResized.connect(_this.finishMoveClient);
-      QTLayoutManager$1.tileLayout(client.screen, client.desktop);
+      QTLayoutManager$1.tileLayout(_this.clients, client.screen, client.desktop);
     }
   });
 
@@ -243,7 +256,7 @@ var QTClientManager = function QTClientManager() {
 
       client.clientStartUserMovedResized.disconnect(_this.startMoveClient);
       client.clientFinishUserMovedResized.disconnect(_this.finishMoveClient);
-      QTLayoutManager$1.tileLayout(client.screen, client.desktop);
+      QTLayoutManager$1.tileLayout(_this.clients, client.screen, client.desktop);
     }
   });
 
@@ -269,7 +282,7 @@ var QTClientManager = function QTClientManager() {
     }
   });
 
-  _defineProperty$3(this, "snapshot", void 0);
+  _defineProperty$3(this, "snapshot", {});
 
   _defineProperty$3(this, "startMoveClient", function (client) {
     _this.snapshot.geometry = client.geometry;
@@ -287,8 +300,8 @@ var QTClientManager = function QTClientManager() {
           QTLayoutManager$1.resizeClient(client, _this.snapshot.geometry);
         }
       } else {
-        QTLayoutManager$1.tileLayout(client.screen, client.desktop);
-        QTLayoutManager$1.tileLayout(_this.snapshot.screen, client.desktop);
+        QTLayoutManager$1.tileLayout(_this.clients, client.screen, client.desktop);
+        QTLayoutManager$1.tileLayout(_this.clients, _this.snapshot.screen, client.desktop);
       }
     }
   });
@@ -323,7 +336,10 @@ var QTClientManager = function QTClientManager() {
   kwWorkspace.clientFullScreenSet.connect(this.fullScreenClient);
   kwWorkspace.clientUnminimized.connect(this.addClient);
   kwWorkspace.clientMinimized.connect(this.removeClient);
+  kwWorkspace.currentDesktopChanged.connect(function (desktop) {
+    QTLayoutManager$1.tileScreens(_this.clients, desktop);
+  }); // kwWorkspace.desktopPresenceChanged.connect(changeDesktop);
 } // Add/Remove clients
 ;
 
-var QTClientManager$1 = new QTClientManager();
+new QTClientManager();

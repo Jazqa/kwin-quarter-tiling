@@ -37,8 +37,7 @@ export const isEligible = (client: KWClient): boolean => {
     client.geometry.width === kwWorkspace.clientArea(0, client.screen, 0).width &&
     client.geometry.height === kwWorkspace.clientArea(0, client.screen, 0).height;
 
-  return (
-    isFullScreen ||
+  return isFullScreen ||
     client.comboBox ||
     client.desktopWindow ||
     client.dialog ||
@@ -55,10 +54,13 @@ export const isEligible = (client: KWClient): boolean => {
     client.tooltip ||
     client.utility ||
     client.transient ||
+    client.desktop < 1 ||
+    client.screen < 0 ||
     client.geometry.width < minWidth ||
     client.geometry.height < minHeight ||
     captionBlacklist.indexOf(client.caption.toString()) > -1 ||
     clientBlacklist.indexOf(client.resourceClass.toString()) > -1 ||
     clientBlacklist.indexOf(client.resourceName.toString()) > -1
-  );
+    ? false
+    : true;
 };

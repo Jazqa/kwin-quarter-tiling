@@ -1,6 +1,5 @@
 // @flow
 import { kwReadConfigString, kwWorkspace } from "./kwGlobals";
-import QTClientManager from "./qtClientManager";
 import tilingLayouts from "./tilingLayouts";
 import type { TilingLayout } from "./tilingLayouts/types";
 import type { KWClient, KWGeometry } from "./kwTypes";
@@ -40,14 +39,12 @@ export class QTLayout {
     return availableGeometry;
   };
 
-  getClients = (): Array<KWClient> => {
-    return QTClientManager.clients.filter((client: KWClient) => {
-      return client.screen === this.screenId && client.desktop === this.desktopId;
-    });
-  };
-
-  tileClients = (): void => {
-    this.tilingLayout.tileClients(this.getClients());
+  tileClients = (clients: Array<KWClient>): void => {
+    this.tilingLayout.tileClients(
+      clients.filter((client: KWClient) => {
+        return client.screen === this.screenId && client.desktop === this.desktopId;
+      })
+    );
   };
 
   resizeClient = (client: KWClient, snapshot: KWGeometry): void => {
