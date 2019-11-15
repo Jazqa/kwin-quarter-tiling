@@ -43,7 +43,37 @@ var QuarterVertical = function QuarterVertical(availableGeometry) {
 
   _defineProperty(this, "tiles", []);
 
+  _defineProperty(this, "getTiles", function () {
+    var _this$availableGeomet = _this.availableGeometry,
+        x = _this$availableGeomet.x,
+        y = _this$availableGeomet.y,
+        width = _this$availableGeomet.width,
+        height = _this$availableGeomet.height;
+    return [{
+      x: x,
+      y: y,
+      width: _this.separators.v - x,
+      height: _this.separators.h[0] - y
+    }, {
+      x: _this.separators.v,
+      y: y,
+      width: x + width - _this.separators.v,
+      height: _this.separators.h[1] - y
+    }, {
+      x: _this.separators.v,
+      y: _this.separators.h[1],
+      width: x + width - _this.separators.v,
+      height: y + height - _this.separators.h[1]
+    }, {
+      x: x,
+      y: _this.separators.h[0],
+      width: _this.separators.v - x,
+      height: y + height - _this.separators.h[0]
+    }];
+  });
+
   _defineProperty(this, "tileClients", function (clients) {
+    _this.tiles = _this.getTiles();
     clients.slice(0, _this.maxClients - 1).forEach(function (client, index) {
       client.geometry = _this.tiles[index];
     });
@@ -52,12 +82,13 @@ var QuarterVertical = function QuarterVertical(availableGeometry) {
   _defineProperty(this, "resizeClient", function (client, snapshot) {});
 
   this.availableGeometry = availableGeometry;
-  var hs = this.availableGeometry.x + this.availableGeometry.width * 0.5;
-  var vs = this.availableGeometry.y + this.availableGeometry.height * 0.5;
+  var hs = availableGeometry.x + availableGeometry.width * 0.5;
+  var vs = availableGeometry.y + availableGeometry.height * 0.5;
   this.separators = {
     h: [hs, hs],
     v: vs
   };
+  this.tiles = this.getTiles();
 };
 
 var tilingLayouts = [QuarterVertical];

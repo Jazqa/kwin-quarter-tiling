@@ -16,13 +16,47 @@ export class QuarterVertical implements TilingLayout {
   constructor(availableGeometry: KWGeometry) {
     this.availableGeometry = availableGeometry;
 
-    const hs = this.availableGeometry.x + this.availableGeometry.width * 0.5;
-    const vs = this.availableGeometry.y + this.availableGeometry.height * 0.5;
+    const hs = availableGeometry.x + availableGeometry.width * 0.5;
+    const vs = availableGeometry.y + availableGeometry.height * 0.5;
 
     this.separators = { h: [hs, hs], v: vs };
+
+    this.tiles = this.getTiles();
   }
 
+  getTiles = () => {
+    const { x, y, width, height } = this.availableGeometry;
+
+    return [
+      {
+        x,
+        y,
+        width: this.separators.v - x,
+        height: this.separators.h[0] - y
+      },
+      {
+        x: this.separators.v,
+        y,
+        width: x + width - this.separators.v,
+        height: this.separators.h[1] - y
+      },
+      {
+        x: this.separators.v,
+        y: this.separators.h[1],
+        width: x + width - this.separators.v,
+        height: y + height - this.separators.h[1]
+      },
+      {
+        x,
+        y: this.separators.h[0],
+        width: this.separators.v - x,
+        height: y + height - this.separators.h[0]
+      }
+    ];
+  };
+
   tileClients = (clients: Array<KWClient>) => {
+    this.tiles = this.getTiles();
     clients.slice(0, this.maxClients - 1).forEach((client, index) => {
       client.geometry = this.tiles[index];
     });
