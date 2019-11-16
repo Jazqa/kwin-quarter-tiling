@@ -4,7 +4,7 @@
   "description": "A tiling script for KWin",
   "main": "contents/code/main.js",
   "scripts": {
-    "compile": "node ./node_modules/@babel/cli/bin/babel.js contents/src --out-dir contents/compiled && ./node_modules/.bin/rollup -c"
+    "compile": "./node_modules/typescript/bin/tsc  && ./node_modules/.bin/rollup -c"
   },
   "repository": {
     "type": "git",
@@ -17,16 +17,8 @@
   },
   "homepage": "https://github.com/Jazqa/kwin-quarter-tiling#readme",
   "devDependencies": {
-    "@babel/cli": "^7.7.0",
-    "@babel/core": "^7.7.2",
-    "@babel/plugin-proposal-class-properties": "^7.7.0",
-    "@babel/plugin-transform-classes": "^7.7.0",
-    "@babel/preset-env": "^7.7.1",
-    "@babel/preset-flow": "^7.0.0",
-    "flow-bin": "^0.112.0",
     "rollup": "^1.27.0",
-    "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0"
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "typescript": "^3.7.2"
   }
 }
