@@ -1,6 +1,7 @@
 import { Toplevel, toplevel } from "./toplevel";
 import { workspace } from "./globals";
 
+// toplevels[screen][desktop]: Toplevel
 const toplevels: Array<Array<Toplevel>> = [];
 
 function add(): void {

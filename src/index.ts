@@ -1,7 +1,9 @@
 import { clientManager } from "./clientManager";
+import { toplevelManager } from "./toplevelManager";
 import { shortcuts } from "./shortcuts";
 import { signals } from "./signals";
 
-clientManager.addClients();
+clientManager.addAll();
+toplevelManager.addAll();
 shortcuts.registerShortcuts();
 signals.registerSignals();

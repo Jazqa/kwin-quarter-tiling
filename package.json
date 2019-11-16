@@ -4,7 +4,7 @@
   "description": "A tiling script for KWin",
   "main": "contents/code/main.js",
   "scripts": {
-    "compile": "./node_modules/typescript/bin/tsc  && ./node_modules/.bin/rollup -c"
+    "transpile": "./node_modules/typescript/bin/tsc  && ./node_modules/.bin/rollup -c"
   },
   "repository": {
     "type": "git",
