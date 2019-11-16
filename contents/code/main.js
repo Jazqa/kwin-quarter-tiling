@@ -97,7 +97,24 @@ var blacklist = {
     includes: includes
 };
 
-var gaps$1 = config.gaps;
+var size = config.gaps;
+var adjust = function (amount) {
+    // Note: Gap size can't be zero, because it would screw up the maximized window logic
+    var min = 2;
+    var max = 64;
+    size = Math.min(Math.max(size + amount, min), max);
+};
+function increase() {
+    adjust(2);
+}
+function decrease() {
+    adjust(-2);
+}
+var gaps$1 = {
+    size: size,
+    increase: increase,
+    decrease: decrease
+};
 
 function clone(geometry) {
     var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
@@ -107,11 +124,12 @@ function distance(geometryA, geometryB) {
     return Math.abs(geometryA.x - geometryB.x) + Math.abs(geometryA.y - geometryB.y);
 }
 function gapArea(geometry) {
+    var size = gaps$1.size;
     var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    x += gaps$1;
-    y += gaps$1;
-    width -= gaps$1 * 2;
-    height -= gaps$1 * 2;
+    x += size;
+    y += size;
+    width -= size * 2;
+    height -= size * 2;
     return { x: x, y: y, width: width, height: height };
 }
 function freeArea(geometryA, geometryB) {
@@ -121,7 +139,7 @@ function freeArea(geometryA, geometryB) {
     geometryA.height -= geometryA.y >= geometryA.height ? geometryA.y - geometryA.height : geometryA.y;
     return geometryA;
 }
-var geometry = {
+var geometric = {
     clone: clone,
     distance: distance,
     gapArea: gapArea,
@@ -183,13 +201,13 @@ function fullScreen(client, fullScreen) {
 var snapshot = { geometry: { x: 0, y: 0, width: 0, height: 0 }, screen: -1 };
 function findClosest(indexA, clientA) {
     var closestClientIndex = indexA;
-    var closestDistance = geometry.distance(clientA.geometry, this.snapshot.geometry);
+    var closestDistance = geometric.distance(clientA.geometry, this.snapshot.geometry);
     clients.forEach(function (clientB, indexB) {
         if (clientA.windowId !== clientB.windowId &&
             clientA.screen === clientB.screen &&
             clientA.desktop &&
             clientB.desktop) {
-            var distance = geometry.distance(clientA.geometry, clientB.geometry);
+            var distance = geometric.distance(clientA.geometry, clientB.geometry);
             if (distance < closestDistance) {
                 closestClientIndex = indexB;
                 closestDistance = distance;
@@ -261,24 +279,25 @@ function getTiles(geometry, separators) {
 function QuarterVertical(geometry) {
     var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
     var maxClients = 4;
-    var hs = x + width * 0.5;
-    var vs = y + height * 0.5;
+    var hs = y + height * 0.5;
+    var vs = x + width * 0.5;
     var separators = { h: [hs, hs], v: vs };
     function tileClients(clients) {
         var tiles = getTiles(geometry, separators);
-        clients.slice(0, maxClients - 1).forEach(function (client, index) {
-            client.geometry = tiles[index];
+        var includedClients = clients.slice(0, maxClients - 1);
+        includedClients.forEach(function (client, index) {
+            var tile = tiles[index];
+            client.geometry = geometric.gapArea(tile);
         });
     }
     function resizeClient(client, previousGeometry) { }
-    var layout = {
+    return {
         maxClients: maxClients,
         tileClients: tileClients,
         resizeClient: resizeClient,
         geometry: geometry,
         separators: separators
     };
-    return layout;
 }
 
 /*
@@ -296,14 +315,13 @@ var layouts = { "0": QuarterVertical };
 
 var SelectedLayout = layouts[config.layout];
 function toplevel(screen, desktop) {
-    var screenGeometry = geometry.freeArea(workspace.clientArea(1, screen, desktop), workspace.clientArea(0, screen, desktop));
+    var screenGeometry = geometric.freeArea(workspace.clientArea(1, screen, desktop), workspace.clientArea(0, screen, desktop));
     var layout = new SelectedLayout(screenGeometry);
-    var toplevel = {
+    return {
         screen: screen,
         desktop: desktop,
         layout: layout
     };
-    return toplevel;
 }
 
 // toplevels[screen][desktop]: Toplevel

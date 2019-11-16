@@ -1,7 +1,8 @@
 import { blacklist } from "./blacklist";
 import { Client } from "./client";
 import { config } from "./config";
-import { Geometry, geometry } from "./geometry";
+import { Geometry } from "./geometry";
+import { geometric } from "./geometric";
 import { workspace } from "./globals";
 
 const clients: Array<Client> = [];
@@ -75,7 +76,7 @@ const snapshot: { geometry: Geometry; screen: number } = { geometry: { x: 0, y: 
 
 function findClosest(indexA: number, clientA: Client): number {
   var closestClientIndex = indexA;
-  var closestDistance = geometry.distance(clientA.geometry, this.snapshot.geometry);
+  var closestDistance = geometric.distance(clientA.geometry, this.snapshot.geometry);
 
   clients.forEach((clientB: Client, indexB: number) => {
     if (
@@ -84,7 +85,7 @@ function findClosest(indexA: number, clientA: Client): number {
       clientA.desktop &&
       clientB.desktop
     ) {
-      const distance = geometry.distance(clientA.geometry, clientB.geometry);
+      const distance = geometric.distance(clientA.geometry, clientB.geometry);
       if (distance < closestDistance) {
         closestClientIndex = indexB;
         closestDistance = distance;

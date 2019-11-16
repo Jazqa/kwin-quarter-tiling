@@ -1,5 +1,5 @@
 import { config } from "./config";
-import { geometry } from "./geometry";
+import { geometric } from "./geometric";
 import { workspace } from "./globals";
 import { Layout } from "./layout";
 import { layouts } from "./layouts/layouts";
@@ -13,18 +13,16 @@ export interface Toplevel {
 }
 
 export function toplevel(screen: number, desktop: number): Toplevel {
-  const screenGeometry = geometry.freeArea(
+  const screenGeometry = geometric.freeArea(
     workspace.clientArea(1, screen, desktop),
     workspace.clientArea(0, screen, desktop)
   );
 
   const layout = new SelectedLayout(screenGeometry);
 
-  const toplevel: Toplevel = {
+  return {
     screen,
     desktop,
     layout
   };
-
-  return toplevel;
 }

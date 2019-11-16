@@ -1,5 +1,6 @@
 import { Client } from "../client";
 import { Geometry } from "../geometry";
+import { geometric } from "../geometric";
 import { Layout } from "../layout";
 
 interface Separators {
@@ -49,27 +50,27 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
 
   const maxClients = 4;
 
-  const hs = x + width * 0.5;
-  const vs = y + height * 0.5;
+  const hs = y + height * 0.5;
+  const vs = x + width * 0.5;
   const separators = { h: [hs, hs], v: vs };
 
   function tileClients(clients: Array<Client>): void {
     const tiles = getTiles(geometry, separators);
-    clients.slice(0, maxClients - 1).forEach((client: Client, index: number) => {
-      client.geometry = tiles[index];
+    const includedClients = clients.slice(0, maxClients - 1);
+
+    includedClients.forEach((client: Client, index: number) => {
+      const tile = tiles[index];
+      client.geometry = geometric.gapArea(tile);
     });
   }
 
   function resizeClient(client: Client, previousGeometry: Geometry): void {}
 
-  const layout: QuarterVerticalLayout = {
+  return {
     maxClients,
     tileClients,
     resizeClient,
-
     geometry,
     separators
   };
-
-  return layout;
 }
