@@ -194,7 +194,7 @@ function QuarterVertical(geometry) {
     var separators = { h: [hs, hs], v: vs };
     function tileClients(clients) {
         var tiles = getTiles(geometry, separators);
-        var includedClients = clients.slice(0, maxClients - 1);
+        var includedClients = clients.slice(0, maxClients);
         includedClients.forEach(function (client, index) {
             var tile = tiles[index];
             client.geometry = geometric.gapArea(tile);
@@ -410,6 +410,7 @@ function finishMove(client) {
             else {
                 toplevelManager.resizeClient(client, snapshot.geometry);
             }
+            toplevelManager.tileClients(filter(client.screen, client.desktop));
         }
         else {
             toplevelManager.tileClients(filter(client.screen, client.desktop));

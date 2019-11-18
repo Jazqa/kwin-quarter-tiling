@@ -126,6 +126,8 @@ function finishMove(client: Client): void {
       } else {
         toplevelManager.resizeClient(client, snapshot.geometry);
       }
+
+      toplevelManager.tileClients(filter(client.screen, client.desktop));
     } else {
       toplevelManager.tileClients(filter(client.screen, client.desktop));
       toplevelManager.tileClients(filter(snapshot.screen, client.desktop));

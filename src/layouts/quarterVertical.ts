@@ -57,7 +57,7 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
 
   function tileClients(clients: Array<Client>): void {
     const tiles = getTiles(geometry, separators);
-    const includedClients = clients.slice(0, maxClients - 1);
+    const includedClients = clients.slice(0, maxClients);
 
     includedClients.forEach((client: Client, index: number) => {
       const tile = tiles[index];
