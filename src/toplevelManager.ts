@@ -1,5 +1,7 @@
-import { Toplevel, toplevel } from "./toplevel";
+import { Client } from "./client";
+import { Geometry } from "./geometry";
 import { workspace } from "./globals";
+import { Toplevel, toplevel } from "./toplevel";
 
 // toplevels[screen][desktop]: Toplevel
 const toplevels: Array<Array<Toplevel>> = [];
@@ -26,8 +28,40 @@ function remove(): void {
   });
 }
 
+function tileClients(clients: Array<Client>) {
+  const screens = [];
+  const desktops = [];
+
+  clients.forEach((client: Client) => {
+    if (screens.indexOf(client.screen) === -1) {
+      screens.push(client.screen);
+    }
+    if (desktops.indexOf(client.desktop) === -1) {
+      desktops.push(client.desktop);
+    }
+  });
+
+  screens.forEach((screen: number) => {
+    desktops.forEach((desktop: number) => {
+      if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
+        toplevels[screen][desktop].layout.tileClients(clients);
+      }
+    });
+  });
+}
+
+function resizeClient(client: Client, previousGeometry: Geometry) {
+  const { screen, desktop } = client;
+
+  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
+    toplevels[screen][desktop].layout.resizeClient(client, previousGeometry);
+  }
+}
+
 export const toplevelManager = {
   add,
   addAll,
-  remove
+  remove,
+  tileClients,
+  resizeClient
 };

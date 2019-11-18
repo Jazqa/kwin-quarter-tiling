@@ -4,8 +4,11 @@
   "description": "A tiling script for KWin",
   "main": "contents/code/main.js",
   "scripts": {
-    "transpile": "./node_modules/typescript/bin/tsc  && ./node_modules/.bin/rollup -c"
+    "transpile": "./node_modules/typescript/bin/tsc  && ./node_modules/.bin/rollup -c && git add ./contents/code/main.js"
   },
+  "pre-commit": [
+    "transpile"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Jazqa/kwin-quarter-tiling.git"
@@ -17,6 +20,7 @@
   },
   "homepage": "https://github.com/Jazqa/kwin-quarter-tiling#readme",
   "devDependencies": {
+    "pre-commit": "^1.2.2",
     "rollup": "^1.27.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "typescript": "^3.7.2"

@@ -4,8 +4,17 @@ import { config } from "./config";
 import { Geometry } from "./geometry";
 import { geometric } from "./geometric";
 import { workspace } from "./globals";
+import { toplevelManager } from "./toplevelManager";
 
 const clients: Array<Client> = [];
+
+function filter(screen: number, desktop: number): Array<Client> {
+  const includedClients = clients.filter((client: Client) => {
+    return client.screen === screen && client.desktop && desktop;
+  });
+
+  return includedClients;
+}
 
 function find(client: Client): number {
   var index = -1;
@@ -27,7 +36,7 @@ function add(client: Client) {
     client.clientStartUserMovedResized.connect(startMove);
     client.clientFinishUserMovedResized.connect(finishMove);
 
-    // TODO: tile(clients, client.screen, client.desktop);
+    toplevelManager.tileClients(filter(client.screen, client.desktop));
   }
 }
 
@@ -46,7 +55,7 @@ function remove(client: Client) {
     client.clientStartUserMovedResized.disconnect(startMove);
     client.clientFinishUserMovedResized.disconnect(finishMove);
 
-    // TODO: tile(clients, client.screen, client.desktop);
+    toplevelManager.tileClients(filter(client.screen, client.desktop));
   }
 }
 
@@ -115,11 +124,11 @@ function finishMove(client: Client): void {
       if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
         swap(index, findClosest(index, client));
       } else {
-        // TODO: resize(client, snapshot.geometry);
+        toplevelManager.resizeClient(client, snapshot.geometry);
       }
     } else {
-      // TODO: tile(clients, client.screen, client.desktop);
-      // TODO: tile(clients, snapshot.screen, client.desktop);
+      toplevelManager.tileClients(filter(client.screen, client.desktop));
+      toplevelManager.tileClients(filter(snapshot.screen, client.desktop));
     }
   }
 }
