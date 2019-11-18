@@ -201,14 +201,14 @@ function QuarterVertical(geometry) {
         });
     }
     function resizeClient(client, previousGeometry) {
-        var newGeometry = geometric.fullArea(client.geometry);
-        previousGeometry = geometric.fullArea(previousGeometry);
+        var newGeometry = client.geometry;
+        previousGeometry = previousGeometry;
         if (previousGeometry.x >= separators.v) {
             // Right
-            separators.v += newGeometry.y - previousGeometry.y;
+            separators.v += newGeometry.x - previousGeometry.x;
             if (previousGeometry.y >= separators.h[1]) {
                 // Bottom right
-                separators.h[1] += newGeometry.x - previousGeometry.x;
+                separators.h[1] += newGeometry.y - previousGeometry.y;
             }
             else {
                 // Top right
@@ -220,7 +220,7 @@ function QuarterVertical(geometry) {
             // Left
             if (previousGeometry.y >= separators.h[0]) {
                 // Bottom left
-                separators.h[0] += newGeometry.x - previousGeometry.x;
+                separators.h[0] += newGeometry.y - previousGeometry.y;
             }
             else {
                 // Top left

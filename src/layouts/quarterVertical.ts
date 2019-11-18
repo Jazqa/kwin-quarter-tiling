@@ -66,15 +66,15 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
   }
 
   function resizeClient(client: Client, previousGeometry: Geometry): void {
-    const newGeometry = geometric.fullArea(client.geometry);
-    previousGeometry = geometric.fullArea(previousGeometry);
+    const newGeometry = client.geometry;
+    previousGeometry = previousGeometry;
 
     if (previousGeometry.x >= separators.v) {
       // Right
-      separators.v += newGeometry.y - previousGeometry.y;
+      separators.v += newGeometry.x - previousGeometry.x;
       if (previousGeometry.y >= separators.h[1]) {
         // Bottom right
-        separators.h[1] += newGeometry.x - previousGeometry.x;
+        separators.h[1] += newGeometry.y - previousGeometry.y;
       } else {
         // Top right
         separators.h[1] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
@@ -84,7 +84,7 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
       // Left
       if (previousGeometry.y >= separators.h[0]) {
         // Bottom left
-        separators.h[0] += newGeometry.x - previousGeometry.x;
+        separators.h[0] += newGeometry.y - previousGeometry.y;
       } else {
         // Top left
         separators.h[0] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
