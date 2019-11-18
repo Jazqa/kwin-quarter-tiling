@@ -13,9 +13,9 @@ function add(): void {
 
 function addAll(): void {
   for (var i = 0; i < workspace.numScreens; i++) {
-    this.layouts[i] = [];
+    toplevels[i] = [];
     for (var j = 1; j <= workspace.desktops; j++) {
-      this.layouts[i][j] = toplevel(i, j);
+      toplevels[i][j] = toplevel(i, j);
     }
   }
 }

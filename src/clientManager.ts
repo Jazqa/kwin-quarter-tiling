@@ -10,7 +10,7 @@ const clients: Array<Client> = [];
 function find(client: Client): number {
   var index = -1;
 
-  this.clients.some((includedClient: Client, includedIndex: number) => {
+  clients.some((includedClient: Client, includedIndex: number) => {
     if (client.windowId === includedClient.windowId) {
       index = includedIndex;
       return true;
@@ -24,8 +24,8 @@ function add(client: Client) {
   if (!blacklist.includes(client)) {
     clients.push(client);
 
-    client.clientStartUserMovedResized.connect(this.startMoveClient);
-    client.clientFinishUserMovedResized.connect(this.finishMoveClient);
+    client.clientStartUserMovedResized.connect(startMove);
+    client.clientFinishUserMovedResized.connect(finishMove);
 
     // TODO: tile(clients, client.screen, client.desktop);
   }
@@ -38,45 +38,45 @@ function addAll() {
 }
 
 function remove(client: Client) {
-  const index = this.findClient(client);
+  const index = find(client);
 
   if (index > -1) {
-    this.clients.splice(index, 1);
+    clients.splice(index, 1);
 
-    client.clientStartUserMovedResized.disconnect(this.startMoveClient);
-    client.clientFinishUserMovedResized.disconnect(this.finishMoveClient);
+    client.clientStartUserMovedResized.disconnect(startMove);
+    client.clientFinishUserMovedResized.disconnect(finishMove);
 
     // TODO: tile(clients, client.screen, client.desktop);
   }
 }
 
 function toggle(client: Client): void {
-  const index = this.findClient(client);
+  const index = find(client);
 
   if (index > -1) {
-    this.removeClient(client);
+    remove(client);
   } else {
-    this.addClient(client);
+    add(client);
   }
 }
 
 function maximize(client: Client, h: boolean, v: boolean): void {
   if (h && v) {
-    this.removeClient(client);
+    remove(client);
   }
 }
 
 function fullScreen(client: Client, fullScreen: boolean): void {
   if (fullScreen) {
-    this.removeClient(client);
+    remove(client);
   }
 }
 
-const snapshot: { geometry: Geometry; screen: number } = { geometry: { x: 0, y: 0, width: 0, height: 0 }, screen: -1 };
+var snapshot: { geometry: Geometry; screen: number } = { geometry: { x: 0, y: 0, width: 0, height: 0 }, screen: -1 };
 
 function findClosest(indexA: number, clientA: Client): number {
   var closestClientIndex = indexA;
-  var closestDistance = geometric.distance(clientA.geometry, this.snapshot.geometry);
+  var closestDistance = geometric.distance(clientA.geometry, snapshot.geometry);
 
   clients.forEach((clientB: Client, indexB: number) => {
     if (

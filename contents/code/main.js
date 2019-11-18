@@ -149,7 +149,7 @@ var geometric = {
 var clients = [];
 function find(client) {
     var index = -1;
-    this.clients.some(function (includedClient, includedIndex) {
+    clients.some(function (includedClient, includedIndex) {
         if (client.windowId === includedClient.windowId) {
             index = includedIndex;
             return true;
@@ -160,8 +160,8 @@ function find(client) {
 function add(client) {
     if (!blacklist.includes(client)) {
         clients.push(client);
-        client.clientStartUserMovedResized.connect(this.startMoveClient);
-        client.clientFinishUserMovedResized.connect(this.finishMoveClient);
+        client.clientStartUserMovedResized.connect(startMove);
+        client.clientFinishUserMovedResized.connect(finishMove);
         // TODO: tile(clients, client.screen, client.desktop);
     }
 }
@@ -171,37 +171,37 @@ function addAll() {
     }
 }
 function remove(client) {
-    var index = this.findClient(client);
+    var index = find(client);
     if (index > -1) {
-        this.clients.splice(index, 1);
-        client.clientStartUserMovedResized.disconnect(this.startMoveClient);
-        client.clientFinishUserMovedResized.disconnect(this.finishMoveClient);
+        clients.splice(index, 1);
+        client.clientStartUserMovedResized.disconnect(startMove);
+        client.clientFinishUserMovedResized.disconnect(finishMove);
         // TODO: tile(clients, client.screen, client.desktop);
     }
 }
 function toggle(client) {
-    var index = this.findClient(client);
+    var index = find(client);
     if (index > -1) {
-        this.removeClient(client);
+        remove(client);
     }
     else {
-        this.addClient(client);
+        add(client);
     }
 }
 function maximize(client, h, v) {
     if (h && v) {
-        this.removeClient(client);
+        remove(client);
     }
 }
 function fullScreen(client, fullScreen) {
     if (fullScreen) {
-        this.removeClient(client);
+        remove(client);
     }
 }
 var snapshot = { geometry: { x: 0, y: 0, width: 0, height: 0 }, screen: -1 };
 function findClosest(indexA, clientA) {
     var closestClientIndex = indexA;
-    var closestDistance = geometric.distance(clientA.geometry, this.snapshot.geometry);
+    var closestDistance = geometric.distance(clientA.geometry, snapshot.geometry);
     clients.forEach(function (clientB, indexB) {
         if (clientA.windowId !== clientB.windowId &&
             clientA.screen === clientB.screen &&
@@ -334,9 +334,9 @@ function add$1() {
 }
 function addAll$1() {
     for (var i = 0; i < workspace.numScreens; i++) {
-        this.layouts[i] = [];
+        toplevels[i] = [];
         for (var j = 1; j <= workspace.desktops; j++) {
-            this.layouts[i][j] = toplevel(i, j);
+            toplevels[i][j] = toplevel(i, j);
         }
     }
 }
