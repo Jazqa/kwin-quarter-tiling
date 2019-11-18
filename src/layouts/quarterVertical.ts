@@ -1,6 +1,6 @@
 import { Client } from "../client";
-import { Geometry } from "../geometry";
 import { geometric } from "../geometric";
+import { Geometry } from "../geometry";
 import { Layout } from "../layout";
 
 interface Separators {
@@ -10,6 +10,7 @@ interface Separators {
 
 interface QuarterVerticalLayout extends Layout {
   geometry: Geometry;
+
   separators: Separators;
 }
 
@@ -64,7 +65,32 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
     });
   }
 
-  function resizeClient(client: Client, previousGeometry: Geometry): void {}
+  function resizeClient(client: Client, previousGeometry: Geometry): void {
+    const newGeometry = geometric.fullArea(client.geometry);
+    previousGeometry = geometric.fullArea(previousGeometry);
+
+    if (previousGeometry.x >= separators.v) {
+      // Right
+      separators.v += newGeometry.y - previousGeometry.y;
+      if (previousGeometry.y >= separators.h[1]) {
+        // Bottom right
+        separators.h[1] += newGeometry.x - previousGeometry.x;
+      } else {
+        // Top right
+        separators.h[1] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
+      }
+    } else {
+      separators.v += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
+      // Left
+      if (previousGeometry.y >= separators.h[0]) {
+        // Bottom left
+        separators.h[0] += newGeometry.x - previousGeometry.x;
+      } else {
+        // Top left
+        separators.h[0] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
+      }
+    }
+  }
 
   return {
     maxClients,
