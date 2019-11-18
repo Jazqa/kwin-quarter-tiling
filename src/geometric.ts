@@ -34,20 +34,9 @@ function fullArea(geometry: Geometry): Geometry {
   return { x, y, width, height };
 }
 
-function freeArea(geometryA: Geometry, geometryB: Geometry) {
-  geometryA.width += geometryB.x < geometryA.x ? geometryA.x - geometryB.x : 0;
-  geometryA.height += geometryB.y < geometryA.y ? geometryA.y - geometryB.y : 0;
-
-  geometryA.width -= geometryA.x >= geometryA.width ? geometryA.x - geometryA.width : geometryA.x;
-  geometryA.height -= geometryA.y >= geometryA.height ? geometryA.y - geometryA.height : geometryA.y;
-
-  return geometryA;
-}
-
 export const geometric = {
   clone,
   distance,
   gapArea,
-  fullArea,
-  freeArea
+  fullArea
 };

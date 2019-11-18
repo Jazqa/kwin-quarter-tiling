@@ -90,6 +90,16 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
         separators.h[0] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
       }
     }
+
+    const maxV = 0.9 * (x + width);
+    const minV = x + width * 0.1;
+
+    const maxH = 0.9 * (y + height);
+    const minH = y + height * 0.1;
+
+    separators.v = Math.min(Math.max(minV, separators.v), maxV);
+    separators.h[0] = Math.min(Math.max(minH, separators.h[0]), maxH);
+    separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
   }
 
   return {

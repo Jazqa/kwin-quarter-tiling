@@ -13,12 +13,7 @@ export interface Toplevel {
 }
 
 export function toplevel(screen: number, desktop: number): Toplevel {
-  const screenGeometry = geometric.freeArea(
-    workspace.clientArea(1, screen, desktop),
-    workspace.clientArea(0, screen, desktop)
-  );
-
-  const layout = new SelectedLayout(screenGeometry);
+  const layout = new SelectedLayout(workspace.clientArea(0, screen, desktop));
 
   return {
     screen,

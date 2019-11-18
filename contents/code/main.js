@@ -141,19 +141,11 @@ function fullArea(geometry) {
     height += size * 2;
     return { x: x, y: y, width: width, height: height };
 }
-function freeArea(geometryA, geometryB) {
-    geometryA.width += geometryB.x < geometryA.x ? geometryA.x - geometryB.x : 0;
-    geometryA.height += geometryB.y < geometryA.y ? geometryA.y - geometryB.y : 0;
-    geometryA.width -= geometryA.x >= geometryA.width ? geometryA.x - geometryA.width : geometryA.x;
-    geometryA.height -= geometryA.y >= geometryA.height ? geometryA.y - geometryA.height : geometryA.y;
-    return geometryA;
-}
 var geometric = {
     clone: clone,
     distance: distance,
     gapArea: gapArea,
-    fullArea: fullArea,
-    freeArea: freeArea
+    fullArea: fullArea
 };
 
 function getTiles(geometry, separators) {
@@ -227,6 +219,13 @@ function QuarterVertical(geometry) {
                 separators.h[0] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
             }
         }
+        var maxV = 0.9 * (x + width);
+        var minV = x + width * 0.1;
+        var maxH = 0.9 * (y + height);
+        var minH = y + height * 0.1;
+        separators.v = Math.min(Math.max(minV, separators.v), maxV);
+        separators.h[0] = Math.min(Math.max(minH, separators.h[0]), maxH);
+        separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
     }
     return {
         maxClients: maxClients,
@@ -252,8 +251,7 @@ var layouts = { "0": QuarterVertical };
 
 var SelectedLayout = layouts[config.layout];
 function toplevel(screen, desktop) {
-    var screenGeometry = geometric.freeArea(workspace.clientArea(1, screen, desktop), workspace.clientArea(0, screen, desktop));
-    var layout = new SelectedLayout(screenGeometry);
+    var layout = new SelectedLayout(workspace.clientArea(0, screen, desktop));
     return {
         screen: screen,
         desktop: desktop,
