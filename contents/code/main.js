@@ -200,6 +200,12 @@ function QuarterVertical(geometry) {
     var hs = geometry.y + geometry.height * 0.5;
     var vs = geometry.x + geometry.width * 0.5;
     var separators = { h: [hs, hs], v: vs };
+    function adjustGeometry(newGeometry) {
+        separators.v += (geometry.width - newGeometry.width) * 0.5;
+        separators.h[0] += (geometry.height - newGeometry.height) * 0.5;
+        separators.h[1] += (geometry.height - newGeometry.height) * 0.5;
+        geometry = newGeometry;
+    }
     function tileClients(clients) {
         var includedClients = clients.slice(0, maxClients);
         var tiles = getTiles(geometry, separators, includedClients.length);
@@ -248,7 +254,8 @@ function QuarterVertical(geometry) {
         tileClients: tileClients,
         resizeClient: resizeClient,
         geometry: geometry,
-        separators: separators
+        separators: separators,
+        adjustGeometry: adjustGeometry
     };
 }
 
@@ -280,8 +287,8 @@ function toplevel(screen, desktop) {
     function tileClients(clients) {
         var currentGeometry = workspace.clientArea(0, screen, desktop);
         if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
+            layout.adjustGeometry(adjustGeometry(currentGeometry));
             geometry = currentGeometry;
-            layout = new SelectedLayout(adjustGeometry(geometry));
         }
         layout.tileClients(clients);
     }

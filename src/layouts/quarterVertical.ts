@@ -66,6 +66,13 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
   const vs = geometry.x + geometry.width * 0.5;
   const separators = { h: [hs, hs], v: vs };
 
+  function adjustGeometry(newGeometry: Geometry): void {
+    separators.v += (geometry.width - newGeometry.width) * 0.5;
+    separators.h[0] += (geometry.height - newGeometry.height) * 0.5;
+    separators.h[1] += (geometry.height - newGeometry.height) * 0.5;
+    geometry = newGeometry;
+  }
+
   function tileClients(clients: Array<Client>): void {
     const includedClients = clients.slice(0, maxClients);
     const tiles = getTiles(geometry, separators, includedClients.length);
@@ -119,6 +126,7 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
     tileClients,
     resizeClient,
     geometry,
-    separators
+    separators,
+    adjustGeometry
   };
 }

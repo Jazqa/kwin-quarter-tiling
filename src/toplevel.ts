@@ -37,8 +37,8 @@ export function toplevel(screen: number, desktop: number): Toplevel {
     const currentGeometry = workspace.clientArea(0, screen, desktop);
 
     if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
+      layout.adjustGeometry(adjustGeometry(currentGeometry));
       geometry = currentGeometry;
-      layout = new SelectedLayout(adjustGeometry(geometry));
     }
 
     layout.tileClients(clients);

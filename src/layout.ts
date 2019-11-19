@@ -25,4 +25,6 @@ export interface Layout {
    *  @param previousGeometry - Geometry of the client when clientStartUserMovedResized was triggered (clientManager.snapshot.geometry)
    */
   resizeClient: (clientOnLayout: Client, previousGeometry: Geometry) => void;
+
+  adjustGeometry: (geometry: Geometry) => void;
 }
