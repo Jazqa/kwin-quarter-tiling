@@ -516,20 +516,20 @@ registerShortcut ||
         workspace.currentDesktop = workspace.currentDesktop;
     };
 function registerShortcuts() {
-    registerShortcut("Quarter: Increase Gap Size", "Quarter: Increase Gap Size", "Meta+Shift+PgUp", function () {
+    registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function () {
+        return clientManager.toggle(workspace.activeClient);
+    });
+    registerShortcut("Quarter: + Gap Size", "Quarter: + Gap Size", "Meta+Shift+PgUp", function () {
         gaps$1.increase();
         for (var i = 0; i < workspace.numScreens; i++) {
             clientManager.tileAll(i, workspace.currentDesktop);
         }
     });
-    registerShortcut("Quarter: Decrease Gap Size", "Quarter: Decrease Gap Size", "Meta+Shift+PgDown", function () {
+    registerShortcut("Quarter: - Gap Size", "Quarter: - Gap Size", "Meta+Shift+PgDown", function () {
         gaps$1.decrease();
         for (var i = 0; i < workspace.numScreens; i++) {
             clientManager.tileAll(i, workspace.currentDesktop);
         }
-    });
-    registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function () {
-        return clientManager.toggle(workspace.activeClient);
     });
 }
 var shortcuts = {
