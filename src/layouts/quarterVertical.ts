@@ -10,7 +10,6 @@ interface Separators {
 
 interface QuarterVerticalLayout extends Layout {
   geometry: Geometry;
-
   separators: Separators;
 }
 
@@ -61,12 +60,10 @@ function getTiles(geometry: Geometry, separators: Separators, count: number): Ar
 }
 
 export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
-  const { x, y, width, height } = geometry;
-
   const maxClients = 4;
 
-  const hs = y + height * 0.5;
-  const vs = x + width * 0.5;
+  const hs = geometry.y + geometry.height * 0.5;
+  const vs = geometry.x + geometry.width * 0.5;
   const separators = { h: [hs, hs], v: vs };
 
   function tileClients(clients: Array<Client>): void {
@@ -105,11 +102,11 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
       }
     }
 
-    const maxV = 0.9 * (x + width);
-    const minV = x + width * 0.1;
+    const maxV = 0.9 * (geometry.x + geometry.width);
+    const minV = geometry.x + geometry.width * 0.1;
 
-    const maxH = 0.9 * (y + height);
-    const minH = y + height * 0.1;
+    const maxH = 0.9 * (geometry.y + geometry.height);
+    const minH = geometry.y + geometry.height * 0.1;
 
     separators.v = Math.min(Math.max(minV, separators.v), maxV);
 

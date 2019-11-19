@@ -196,10 +196,9 @@ function getTiles(geometry, separators, count) {
     return tiles;
 }
 function QuarterVertical(geometry) {
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
     var maxClients = 4;
-    var hs = y + height * 0.5;
-    var vs = x + width * 0.5;
+    var hs = geometry.y + geometry.height * 0.5;
+    var vs = geometry.x + geometry.width * 0.5;
     var separators = { h: [hs, hs], v: vs };
     function tileClients(clients) {
         var includedClients = clients.slice(0, maxClients);
@@ -236,10 +235,10 @@ function QuarterVertical(geometry) {
                 separators.h[0] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
             }
         }
-        var maxV = 0.9 * (x + width);
-        var minV = x + width * 0.1;
-        var maxH = 0.9 * (y + height);
-        var minH = y + height * 0.1;
+        var maxV = 0.9 * (geometry.x + geometry.width);
+        var minV = geometry.x + geometry.width * 0.1;
+        var maxH = 0.9 * (geometry.y + geometry.height);
+        var minH = geometry.y + geometry.height * 0.1;
         separators.v = Math.min(Math.max(minV, separators.v), maxV);
         separators.h[0] = Math.min(Math.max(minH, separators.h[0]), maxH);
         separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
@@ -267,18 +266,30 @@ function QuarterVertical(geometry) {
 var layouts = { "0": QuarterVertical };
 
 var SelectedLayout = layouts[config.layout];
+function adjustGeometry(geometry) {
+    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
+    y += gaps$1.size + config.margins.top;
+    x += gaps$1.size + config.margins.left;
+    height -= gaps$1.size * 2 + config.margins.top + config.margins.bottom;
+    width -= gaps$1.size * 2 + config.margins.left + config.margins.right;
+    return { x: x, y: y, width: width, height: height };
+}
 function toplevel(screen, desktop) {
     var geometry = workspace.clientArea(0, screen, desktop);
-    geometry.y += gaps$1.size + config.margins.top;
-    geometry.x += gaps$1.size + config.margins.left;
-    geometry.height -= gaps$1.size * 2 + config.margins.top + config.margins.bottom;
-    geometry.width -= gaps$1.size * 2 + config.margins.left + config.margins.right;
-    var layout = new SelectedLayout(geometry);
+    var layout = new SelectedLayout(adjustGeometry(geometry));
+    function tileClients(clients) {
+        var currentGeometry = workspace.clientArea(0, screen, desktop);
+        if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
+            geometry = currentGeometry;
+            layout = new SelectedLayout(adjustGeometry(geometry));
+        }
+        layout.tileClients(clients);
+    }
     return {
         screen: screen,
         desktop: desktop,
         layout: layout,
-        geometry: geometry
+        tileClients: tileClients
     };
 }
 
@@ -317,7 +328,7 @@ function tileClients(clients) {
     screens.forEach(function (screen) {
         desktops.forEach(function (desktop) {
             if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-                toplevels[screen][desktop].layout.tileClients(clients.filter(function (client) {
+                toplevels[screen][desktop].tileClients(clients.filter(function (client) {
                     return client.screen === screen && client.desktop === desktop;
                 }));
             }
@@ -374,15 +385,12 @@ function find(client) {
     return index;
 }
 function add$1(client) {
-    var currentClients = filter(client.screen, client.desktop);
     var screen = client.screen, desktop = client.desktop;
     if (!blacklist.includes(client)) {
-        if (!toplevelManager.isFull(currentClients, screen, desktop)) {
-            clients.push(client);
-            client.clientStartUserMovedResized.connect(startMove);
-            client.clientFinishUserMovedResized.connect(finishMove);
-            tileAll(screen, desktop);
-        }
+        clients.push(client);
+        client.clientStartUserMovedResized.connect(startMove);
+        client.clientFinishUserMovedResized.connect(finishMove);
+        tileAll(screen, desktop);
     }
 }
 function addAll$1() {

@@ -30,20 +30,15 @@ function find(client: Client): number {
 }
 
 function add(client: Client) {
-  const currentClients = filter(client.screen, client.desktop);
-
   const { screen, desktop } = client;
 
   if (!blacklist.includes(client)) {
-    if (!toplevelManager.isFull(currentClients, screen, desktop)) {
-      clients.push(client);
+    clients.push(client);
 
-      client.clientStartUserMovedResized.connect(startMove);
-      client.clientFinishUserMovedResized.connect(finishMove);
+    client.clientStartUserMovedResized.connect(startMove);
+    client.clientFinishUserMovedResized.connect(finishMove);
 
-      tileAll(screen, desktop);
-    } else {
-    }
+    tileAll(screen, desktop);
   }
 }
 

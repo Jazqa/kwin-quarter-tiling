@@ -4,6 +4,9 @@ import { Layout } from "./layout";
 import { layouts } from "./layouts/layouts";
 import { gaps } from "./gaps";
 import { Geometry } from "./geometry";
+import { geometric } from "./geometric";
+
+import { Client } from "./client";
 
 const SelectedLayout = layouts[config.layout];
 
@@ -11,24 +14,40 @@ export interface Toplevel {
   screen: number;
   desktop: number;
   layout: Layout;
-  geometry: Geometry;
+  tileClients: (clients: Array<Client>) => void;
+}
+
+function adjustGeometry(geometry: Geometry): Geometry {
+  var { x, y, width, height } = geometry;
+
+  y += gaps.size + config.margins.top;
+  x += gaps.size + config.margins.left;
+
+  height -= gaps.size * 2 + config.margins.top + config.margins.bottom;
+  width -= gaps.size * 2 + config.margins.left + config.margins.right;
+
+  return { x, y, width, height };
 }
 
 export function toplevel(screen: number, desktop: number): Toplevel {
-  const geometry = workspace.clientArea(0, screen, desktop);
+  var geometry = workspace.clientArea(0, screen, desktop);
+  var layout = new SelectedLayout(adjustGeometry(geometry));
 
-  geometry.y += gaps.size + config.margins.top;
-  geometry.x += gaps.size + config.margins.left;
+  function tileClients(clients: Array<Client>): void {
+    const currentGeometry = workspace.clientArea(0, screen, desktop);
 
-  geometry.height -= gaps.size * 2 + config.margins.top + config.margins.bottom;
-  geometry.width -= gaps.size * 2 + config.margins.left + config.margins.right;
+    if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
+      geometry = currentGeometry;
+      layout = new SelectedLayout(adjustGeometry(geometry));
+    }
 
-  const layout = new SelectedLayout(geometry);
+    layout.tileClients(clients);
+  }
 
   return {
     screen,
     desktop,
     layout,
-    geometry
+    tileClients
   };
 }
