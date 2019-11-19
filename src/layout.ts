@@ -26,5 +26,10 @@ export interface Layout {
    */
   resizeClient: (clientOnLayout: Client, previousGeometry: Geometry) => void;
 
+  /*
+   *  Adjusts the available tiling space of the Layout
+   *
+   *  @param geometry - Available space for clients (screen area - panels - gaps - margins)
+   */
   adjustGeometry: (geometry: Geometry) => void;
 }

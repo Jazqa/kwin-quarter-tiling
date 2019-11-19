@@ -273,7 +273,7 @@ function QuarterVertical(geometry) {
 var layouts = { "0": QuarterVertical };
 
 var SelectedLayout = layouts[config.layout];
-function adjustGeometry(geometry) {
+function availableArea(geometry) {
     var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
     y += gaps$1.size + config.margins.top;
     x += gaps$1.size + config.margins.left;
@@ -283,11 +283,11 @@ function adjustGeometry(geometry) {
 }
 function toplevel(screen, desktop) {
     var geometry = workspace.clientArea(0, screen, desktop);
-    var layout = new SelectedLayout(adjustGeometry(geometry));
+    var layout = new SelectedLayout(availableArea(geometry));
     function tileClients(clients) {
         var currentGeometry = workspace.clientArea(0, screen, desktop);
         if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
-            layout.adjustGeometry(adjustGeometry(currentGeometry));
+            layout.adjustGeometry(availableArea(currentGeometry));
             geometry = currentGeometry;
         }
         layout.tileClients(clients);

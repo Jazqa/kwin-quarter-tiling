@@ -17,7 +17,7 @@ export interface Toplevel {
   tileClients: (clients: Array<Client>) => void;
 }
 
-function adjustGeometry(geometry: Geometry): Geometry {
+function availableArea(geometry: Geometry): Geometry {
   var { x, y, width, height } = geometry;
 
   y += gaps.size + config.margins.top;
@@ -31,13 +31,13 @@ function adjustGeometry(geometry: Geometry): Geometry {
 
 export function toplevel(screen: number, desktop: number): Toplevel {
   var geometry = workspace.clientArea(0, screen, desktop);
-  var layout = new SelectedLayout(adjustGeometry(geometry));
+  var layout = new SelectedLayout(availableArea(geometry));
 
   function tileClients(clients: Array<Client>): void {
     const currentGeometry = workspace.clientArea(0, screen, desktop);
 
     if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
-      layout.adjustGeometry(adjustGeometry(currentGeometry));
+      layout.adjustGeometry(availableArea(currentGeometry));
       geometry = currentGeometry;
     }
 
