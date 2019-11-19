@@ -44,7 +44,11 @@ function tileClients(clients: Array<Client>) {
   screens.forEach((screen: number) => {
     desktops.forEach((desktop: number) => {
       if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        toplevels[screen][desktop].layout.tileClients(clients);
+        toplevels[screen][desktop].layout.tileClients(
+          clients.filter((client: Client) => {
+            return client.screen === screen && client.desktop === desktop;
+          })
+        );
       }
     });
   });

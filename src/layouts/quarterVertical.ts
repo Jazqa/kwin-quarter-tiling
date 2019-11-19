@@ -46,15 +46,15 @@ function getTiles(geometry: Geometry, separators: Separators, count: number): Ar
   ];
 
   if (count < 4) {
-    tiles[0].height = tiles[0].y + tiles[3].y + tiles[3].height;
+    tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
   }
 
   if (count < 3) {
-    tiles[1].height = tiles[1].y + tiles[2].y + tiles[2].height;
+    tiles[1].height = tiles[2].y + tiles[2].height - tiles[1].y;
   }
 
   if (count < 2) {
-    tiles[0].width = tiles[0].x + tiles[1].x + tiles[1].width;
+    tiles[0].width = tiles[1].x + tiles[1].width - tiles[0].x;
   }
 
   return tiles;

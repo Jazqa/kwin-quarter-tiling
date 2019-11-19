@@ -12,8 +12,8 @@ export function registerSignals(): void {
   workspace.clientFullScreenSet.connect(clientManager.fullScreen);
   workspace.clientUnminimized.connect(clientManager.add);
   workspace.clientMinimized.connect(clientManager.remove);
-  // workspace.currentDesktopChanged.connect(currentDesktopChanged);
-  // workspace.desktopPresenceChanged.connect(desktopPresenceChanged);
+  // workspace.currentDesktopChanged.connect();
+  // workspace.desktopPresenceChanged.connect();
 }
 
 export const signals = {

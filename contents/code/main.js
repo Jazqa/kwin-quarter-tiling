@@ -178,13 +178,13 @@ function getTiles(geometry, separators, count) {
         }
     ];
     if (count < 4) {
-        tiles[0].height = tiles[0].y + tiles[3].y + tiles[3].height;
+        tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
     }
     if (count < 3) {
-        tiles[1].height = tiles[1].y + tiles[2].y + tiles[2].height;
+        tiles[1].height = tiles[2].y + tiles[2].height - tiles[1].y;
     }
     if (count < 2) {
-        tiles[0].width = tiles[0].x + tiles[1].x + tiles[1].width;
+        tiles[0].width = tiles[1].x + tiles[1].width - tiles[0].x;
     }
     return tiles;
 }
@@ -304,7 +304,9 @@ function tileClients(clients) {
     screens.forEach(function (screen) {
         desktops.forEach(function (desktop) {
             if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-                toplevels[screen][desktop].layout.tileClients(clients);
+                toplevels[screen][desktop].layout.tileClients(clients.filter(function (client) {
+                    return client.screen === screen && client.desktop === desktop;
+                }));
             }
         });
     });
@@ -345,7 +347,7 @@ function add$1(client) {
         clients.push(client);
         client.clientStartUserMovedResized.connect(startMove);
         client.clientFinishUserMovedResized.connect(finishMove);
-        toplevelManager.tileClients(filter(client.screen, client.desktop));
+        tileAll(client.screen, client.desktop);
     }
 }
 function addAll$1() {
@@ -359,7 +361,7 @@ function remove$1(client) {
         clients.splice(index, 1);
         client.clientStartUserMovedResized.disconnect(startMove);
         client.clientFinishUserMovedResized.disconnect(finishMove);
-        toplevelManager.tileClients(filter(client.screen, client.desktop));
+        tileAll(client.screen, client.desktop);
     }
 }
 function toggle(client) {
@@ -416,15 +418,21 @@ function finishMove(client) {
                 swap(index, findClosest(index, client));
             }
             else {
-                toplevelManager.resizeClient(client, snapshot.geometry);
+                resize(client, snapshot.geometry);
             }
-            toplevelManager.tileClients(filter(client.screen, client.desktop));
+            tileAll(client.screen, client.desktop);
         }
         else {
-            toplevelManager.tileClients(filter(client.screen, client.desktop));
-            toplevelManager.tileClients(filter(snapshot.screen, client.desktop));
+            tileAll(client.screen, client.desktop);
+            tileAll(snapshot.screen, client.desktop);
         }
     }
+}
+function resize(client, previousGeometry) {
+    toplevelManager.resizeClient(client, previousGeometry);
+}
+function tileAll(screen, desktop) {
+    toplevelManager.tileClients(filter(screen, desktop));
 }
 var clientManager = {
     add: add$1,
@@ -434,7 +442,9 @@ var clientManager = {
     maximize: maximize,
     fullScreen: fullScreen,
     startMove: startMove,
-    finishMove: finishMove
+    finishMove: finishMove,
+    resize: resize,
+    tileAll: tileAll
 };
 
 function registerSignals() {
@@ -446,8 +456,8 @@ function registerSignals() {
     workspace.clientFullScreenSet.connect(clientManager.fullScreen);
     workspace.clientUnminimized.connect(clientManager.add);
     workspace.clientMinimized.connect(clientManager.remove);
-    // workspace.currentDesktopChanged.connect(currentDesktopChanged);
-    // workspace.desktopPresenceChanged.connect(desktopPresenceChanged);
+    // workspace.currentDesktopChanged.connect();
+    // workspace.desktopPresenceChanged.connect();
 }
 var signals = {
     registerSignals: registerSignals

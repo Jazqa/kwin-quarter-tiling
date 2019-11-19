@@ -36,7 +36,7 @@ function add(client: Client) {
     client.clientStartUserMovedResized.connect(startMove);
     client.clientFinishUserMovedResized.connect(finishMove);
 
-    toplevelManager.tileClients(filter(client.screen, client.desktop));
+    tileAll(client.screen, client.desktop);
   }
 }
 
@@ -55,7 +55,7 @@ function remove(client: Client) {
     client.clientStartUserMovedResized.disconnect(startMove);
     client.clientFinishUserMovedResized.disconnect(finishMove);
 
-    toplevelManager.tileClients(filter(client.screen, client.desktop));
+    tileAll(client.screen, client.desktop);
   }
 }
 
@@ -124,15 +124,23 @@ function finishMove(client: Client): void {
       if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
         swap(index, findClosest(index, client));
       } else {
-        toplevelManager.resizeClient(client, snapshot.geometry);
+        resize(client, snapshot.geometry);
       }
 
-      toplevelManager.tileClients(filter(client.screen, client.desktop));
+      tileAll(client.screen, client.desktop);
     } else {
-      toplevelManager.tileClients(filter(client.screen, client.desktop));
-      toplevelManager.tileClients(filter(snapshot.screen, client.desktop));
+      tileAll(client.screen, client.desktop);
+      tileAll(snapshot.screen, client.desktop);
     }
   }
+}
+
+function resize(client: Client, previousGeometry: Geometry) {
+  toplevelManager.resizeClient(client, previousGeometry);
+}
+
+function tileAll(screen: number, desktop: number) {
+  toplevelManager.tileClients(filter(screen, desktop));
 }
 
 export const clientManager = {
@@ -143,5 +151,7 @@ export const clientManager = {
   maximize,
   fullScreen,
   startMove,
-  finishMove
+  finishMove,
+  resize,
+  tileAll
 };
