@@ -45,6 +45,12 @@ var minHeight = readConfig("minHeight", 256);
 var gaps = readConfig("gaps", 8);
 var autoTile = readConfigString("autoTile", true) === "true";
 var layout = readConfigString("layout", 0);
+var margins = {
+    top: readConfig("marginTop", 0),
+    left: readConfig("marginLeft", 0),
+    bottom: readConfig("marginBottom", 0),
+    right: readConfig("marginRight", 0)
+};
 var config = {
     ignoredCaptions: ignoredCaptions,
     ignoredClients: ignoredClients,
@@ -53,6 +59,7 @@ var config = {
     minWidth: minWidth,
     minHeight: minHeight,
     gaps: gaps,
+    margins: margins,
     autoTile: autoTile,
     layout: layout
 };
@@ -261,7 +268,12 @@ var layouts = { "0": QuarterVertical };
 
 var SelectedLayout = layouts[config.layout];
 function toplevel(screen, desktop) {
-    var layout = new SelectedLayout(workspace.clientArea(0, screen, desktop));
+    var _a = workspace.clientArea(0, screen, desktop), x = _a.x, y = _a.y, width = _a.width, height = _a.height;
+    y += gaps$1.size + config.margins.top;
+    x += gaps$1.size + config.margins.left;
+    height -= gaps$1.size * 2 + config.margins.top + config.margins.bottom;
+    width -= gaps$1.size * 2 + config.margins.left + config.margins.right;
+    var layout = new SelectedLayout({ x: x, y: y, width: width, height: height });
     return {
         screen: screen,
         desktop: desktop,

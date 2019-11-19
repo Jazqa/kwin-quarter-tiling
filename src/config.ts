@@ -48,6 +48,13 @@ const autoTile: boolean = readConfigString("autoTile", true) === "true";
 
 const layout: string = readConfigString("layout", 0);
 
+const margins: { top: number; left: number; bottom: number; right: number } = {
+  top: readConfig("marginTop", 0),
+  left: readConfig("marginLeft", 0),
+  bottom: readConfig("marginBottom", 0),
+  right: readConfig("marginRight", 0)
+};
+
 export const config = {
   ignoredCaptions,
   ignoredClients,
@@ -56,6 +63,7 @@ export const config = {
   minWidth,
   minHeight,
   gaps,
+  margins,
   autoTile,
   layout
 };

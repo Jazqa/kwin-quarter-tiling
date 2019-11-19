@@ -25,6 +25,22 @@
         <label>Pixels between the windows and screen edges</label>
         <default>8</default>
 		  </entry>
+      <entry name="marginTop" type="int">
+        <label>Additional pixels from the top of the screen</label>
+        <default>0</default>
+		  </entry>
+      <entry name="marginLeft" type="int">
+        <label>Additional pixels from the left of the screen</label>
+        <default>0</default>
+		  </entry>
+      <entry name="marginBottom" type="int">
+        <label>Additional pixels from the bottom of the screen</label>
+        <default>0</default>
+		  </entry>
+      <entry name="marginRight" type="int">
+        <label>Additional pixels from the right of the screen</label>
+        <default>0</default>
+		  </entry>
       <entry name="layout" type="int">
         <label>Tiling layout</label>
         <default>0</default>
