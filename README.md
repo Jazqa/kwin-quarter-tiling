@@ -50,7 +50,7 @@ Arch users can keep the script updated through AUR.
 
 `plasmapkg2 --type kwinscript -r .local/share/kwin/scripts/quarter-tiling`
 
-## Modyfying the script and contributing to the project
+## Modifying the script and contributing to the project
 
 As of 2.0, the script is written in TypeScript and transpiled to JavaScript for KWin to understand. If you modify the `.ts` files, you have to run `npm install && npm run transpile` to apply the changes.
 
