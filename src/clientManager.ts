@@ -30,13 +30,19 @@ function find(client: Client): number {
 }
 
 function add(client: Client) {
+  const currentClients = filter(client.screen, client.desktop);
+  const { screen, desktop } = client;
+
   if (!blacklist.includes(client)) {
-    clients.push(client);
+    if (!toplevelManager.isFull(currentClients, screen, desktop)) {
+      clients.push(client);
 
-    client.clientStartUserMovedResized.connect(startMove);
-    client.clientFinishUserMovedResized.connect(finishMove);
+      client.clientStartUserMovedResized.connect(startMove);
+      client.clientFinishUserMovedResized.connect(finishMove);
 
-    tileAll(client.screen, client.desktop);
+      tileAll(screen, desktop);
+    } else {
+    }
   }
 }
 
@@ -72,6 +78,8 @@ function toggle(client: Client): void {
 function maximize(client: Client, h: boolean, v: boolean): void {
   if (h && v) {
     remove(client);
+  } else if (!h && !v) {
+    add(client);
   }
 }
 
@@ -105,12 +113,6 @@ function findClosest(indexA: number, clientA: Client): number {
   return closestClientIndex;
 }
 
-function swap(i: number, j: number) {
-  const t: Client = clients[i];
-  clients[i] = clients[j];
-  clients[j] = t;
-}
-
 function startMove(client: Client): void {
   snapshot.geometry = client.geometry;
   snapshot.screen = client.screen;
@@ -118,21 +120,44 @@ function startMove(client: Client): void {
 
 function finishMove(client: Client): void {
   const index = find(client);
+  const { screen, desktop, geometry } = client;
 
   if (index > -1) {
-    if (client.screen === snapshot.screen) {
-      if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
-        swap(index, findClosest(index, client));
-      } else {
-        resize(client, snapshot.geometry);
-      }
-
-      tileAll(client.screen, client.desktop);
+    if (screen === snapshot.screen) {
+      finishMoveSameScreen(index, client);
     } else {
-      tileAll(client.screen, client.desktop);
-      tileAll(snapshot.screen, client.desktop);
+      finishMoveOtherScreen(index, client);
     }
   }
+}
+
+function finishMoveSameScreen(index: number, client: Client) {
+  if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
+    swap(index, findClosest(index, client));
+  } else {
+    resize(client, snapshot.geometry);
+  }
+
+  tileAll(client.screen, client.desktop);
+}
+
+function finishMoveOtherScreen(index: number, client: Client) {
+  const { screen, desktop } = client;
+
+  // isFull is not used, because the length has to be above maxClients (the client has already been moved to the new screen)
+  if (filter(screen, desktop).length > toplevelManager.maxClients(screen, desktop)) {
+    remove(client);
+  } else {
+    tileAll(screen, desktop);
+  }
+
+  tileAll(snapshot.screen, desktop);
+}
+
+function swap(i: number, j: number) {
+  const t: Client = clients[i];
+  clients[i] = clients[j];
+  clients[j] = t;
 }
 
 function resize(client: Client, previousGeometry: Geometry) {

@@ -3,7 +3,7 @@ import { toplevelManager } from "./toplevelManager";
 import { shortcuts } from "./shortcuts";
 import { signals } from "./signals";
 
-clientManager.addAll();
 toplevelManager.addAll();
+clientManager.addAll();
 shortcuts.registerShortcuts();
 signals.registerSignals();

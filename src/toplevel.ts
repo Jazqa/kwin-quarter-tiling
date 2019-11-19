@@ -3,6 +3,7 @@ import { workspace } from "./globals";
 import { Layout } from "./layout";
 import { layouts } from "./layouts/layouts";
 import { gaps } from "./gaps";
+import { Geometry } from "./geometry";
 
 const SelectedLayout = layouts[config.layout];
 
@@ -10,22 +11,24 @@ export interface Toplevel {
   screen: number;
   desktop: number;
   layout: Layout;
+  geometry: Geometry;
 }
 
 export function toplevel(screen: number, desktop: number): Toplevel {
-  var { x, y, width, height } = workspace.clientArea(0, screen, desktop);
+  const geometry = workspace.clientArea(0, screen, desktop);
 
-  y += gaps.size + config.margins.top;
-  x += gaps.size + config.margins.left;
+  geometry.y += gaps.size + config.margins.top;
+  geometry.x += gaps.size + config.margins.left;
 
-  height -= gaps.size * 2 + config.margins.top + config.margins.bottom;
-  width -= gaps.size * 2 + config.margins.left + config.margins.right;
+  geometry.height -= gaps.size * 2 + config.margins.top + config.margins.bottom;
+  geometry.width -= gaps.size * 2 + config.margins.left + config.margins.right;
 
-  const layout = new SelectedLayout({ x, y, width, height });
+  const layout = new SelectedLayout(geometry);
 
   return {
     screen,
     desktop,
-    layout
+    layout,
+    geometry
   };
 }

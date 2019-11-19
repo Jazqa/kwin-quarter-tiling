@@ -62,10 +62,31 @@ function resizeClient(client: Client, previousGeometry: Geometry) {
   }
 }
 
+function maxClients(screen: number, desktop: number): number {
+  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
+    return toplevels[screen][desktop].layout.maxClients;
+  }
+}
+
+function isFull(clients: Array<Client>, screen: number, desktop: number): boolean {
+  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
+    return clients.length >= toplevels[screen][desktop].layout.maxClients;
+  }
+}
+
+function isEmpty(clients: Array<Client>, screen: number, desktop: number): boolean {
+  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
+    return clients.length === 0;
+  }
+}
+
 export const toplevelManager = {
   add,
   addAll,
   remove,
   tileClients,
-  resizeClient
+  resizeClient,
+  maxClients,
+  isFull,
+  isEmpty
 };
