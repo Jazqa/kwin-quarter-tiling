@@ -1,18 +1,8 @@
 import { Geometry } from "./geometry";
 
 export interface ClientSignal {
-  connect: (callback: (client: Client) => void) => void;
-  disconnect: (callback: (client: Client) => void) => void;
-}
-
-export interface ClientFullScreenSignal {
-  connect: (callback: (client: Client, fullScreen: boolean) => void) => void;
-  disconnect: (callback: (client: Client, fullScreen: boolean) => void) => void;
-}
-
-export interface ClientMaximizeSignal {
-  connect: (callback: (client: Client, h: boolean, v: boolean) => void) => void;
-  disconnect: (callback: (client: Client, h: boolean, v: boolean) => void) => void;
+  connect: (cb: (client: Client) => void) => void;
+  disconnect: (cb: (client: Client) => void) => void;
 }
 
 export interface Client {

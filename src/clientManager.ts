@@ -48,8 +48,8 @@ function addAll() {
   }
 }
 
-function remove(client: Client) {
-  const index = find(client);
+function remove(client: Client, index?: number) {
+  index = index || find(client);
 
   if (index > -1) {
     clients.splice(index, 1);
@@ -61,27 +61,13 @@ function remove(client: Client) {
   }
 }
 
-function toggle(client: Client): void {
-  const index = find(client);
+function toggle(client: Client, index?: number): void {
+  index = index || find(client);
 
   if (index > -1) {
-    remove(client);
+    remove(client, index);
   } else {
     add(client);
-  }
-}
-
-function maximize(client: Client, h: boolean, v: boolean): void {
-  if (h && v) {
-    remove(client);
-  } else if (!h && !v) {
-    add(client);
-  }
-}
-
-function fullScreen(client: Client, fullScreen: boolean): void {
-  if (fullScreen) {
-    remove(client);
   }
 }
 
@@ -159,8 +145,6 @@ export const clientManager = {
   addAll,
   remove,
   toggle,
-  maximize,
-  fullScreen,
   startMove,
   finishMove,
   resize,

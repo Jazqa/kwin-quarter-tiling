@@ -1,4 +1,4 @@
-import { Client, ClientFullScreenSignal, ClientMaximizeSignal, ClientSignal } from "./client";
+import { Client, ClientSignal } from "./client";
 import { Geometry } from "./geometry";
 
 interface Options {
@@ -7,16 +7,34 @@ interface Options {
   electricBorderTiling: boolean;
 }
 
-type DesktopPresenceChangedCb = (client: Client, desktop: number) => void;
-interface DesktopPresenceChangeSignal {
-  connect: (cb: DesktopPresenceChangedCb) => void;
-  disconnect: (cb: DesktopPresenceChangedCb) => void;
+export interface ClientFullScreenSignal {
+  connect: (cb: (client: Client, fs: boolean) => void) => void;
+  disconnect: (cb: (client: Client, fs: boolean) => void) => void;
 }
 
-type CurrentDesktopChangeCb = (desktop: number, client: Client) => void;
+export interface ClientMaximizeSignal {
+  connect: (cb: (client: Client, h: boolean, v: boolean) => void) => void;
+  disconnect: (cb: (client: Client, h: boolean, v: boolean) => void) => void;
+}
+
+interface DesktopPresenceChangeSignal {
+  connect: (cb: (client: Client, desktop: number) => void) => void;
+  disconnect: (cb: (client: Client, desktop: number) => void) => void;
+}
+
 interface CurrentDesktopChangedSignal {
-  connect: (cb: CurrentDesktopChangeCb) => void;
-  disconnect: (cb: CurrentDesktopChangeCb) => void;
+  connect: (cb: (desktop: number, client: Client) => void) => void;
+  disconnect: (cb: (desktop: number, client: Client) => void) => void;
+}
+
+interface ScreenResizedSignal {
+  connect: (cb: (screen: number) => void) => void;
+  disconnect: (cb: (screen: number) => void) => void;
+}
+
+interface ClientActivatedSignal {
+  connect: (cb: (client: Client) => void) => void;
+  disconnect: (cb: (client: Client) => void) => void;
 }
 
 interface Workspace {
@@ -33,12 +51,14 @@ interface Workspace {
 
   clientAdded: ClientSignal;
   clientRemoved: ClientSignal;
-  clientMaximizeSet: ClientMaximizeSignal;
-  clientFullScreenSet: ClientFullScreenSignal;
   clientUnminimized: ClientSignal;
   clientMinimized: ClientSignal;
+  clientMaximizeSet: ClientMaximizeSignal;
+  clientFullScreenSet: ClientFullScreenSignal;
+  clientActivated: ClientActivatedSignal;
   currentDesktopChanged: CurrentDesktopChangedSignal;
   desktopPresenceChanged: DesktopPresenceChangeSignal;
+  screenResized: ScreenResizedSignal;
 }
 
 // @ts-ignore, KWin global

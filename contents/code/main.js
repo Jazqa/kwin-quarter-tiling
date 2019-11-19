@@ -407,8 +407,8 @@ function addAll$1() {
         workspace.clientList().forEach(add$1);
     }
 }
-function remove$1(client) {
-    var index = find(client);
+function remove$1(client, index) {
+    index = index || find(client);
     if (index > -1) {
         clients.splice(index, 1);
         client.clientStartUserMovedResized.disconnect(startMove);
@@ -416,26 +416,13 @@ function remove$1(client) {
         tileAll(client.screen, client.desktop);
     }
 }
-function toggle(client) {
-    var index = find(client);
+function toggle(client, index) {
+    index = index || find(client);
     if (index > -1) {
-        remove$1(client);
+        remove$1(client, index);
     }
     else {
         add$1(client);
-    }
-}
-function maximize(client, h, v) {
-    if (h && v) {
-        remove$1(client);
-    }
-    else if (!h && !v) {
-        add$1(client);
-    }
-}
-function fullScreen(client, fullScreen) {
-    if (fullScreen) {
-        remove$1(client);
     }
 }
 var snapshot = { geometry: { x: 0, y: 0, width: 0, height: 0 }, screen: -1 };
@@ -499,8 +486,6 @@ var clientManager = {
     addAll: addAll$1,
     remove: remove$1,
     toggle: toggle,
-    maximize: maximize,
-    fullScreen: fullScreen,
     startMove: startMove,
     finishMove: finishMove,
     resize: resize,
@@ -538,21 +523,63 @@ var shortcuts = {
 
 function registerSignals() {
     if (config.autoTile) {
-        workspace.clientAdded.connect(clientManager.add);
+        workspace.clientAdded.connect(function (client) {
+            if (client) {
+                clientManager.add(client);
+            }
+        });
     }
-    workspace.clientRemoved.connect(clientManager.remove);
-    workspace.clientMaximizeSet.connect(clientManager.maximize);
-    workspace.clientFullScreenSet.connect(clientManager.fullScreen);
-    workspace.clientUnminimized.connect(clientManager.add);
-    workspace.clientMinimized.connect(clientManager.remove);
-    workspace.currentDesktopChanged.connect(function (desktop, client) {
-        for (var i = 0; i < workspace.numScreens; i++) {
-            clientManager.tileAll(i, desktop);
+    workspace.clientUnminimized.connect(function (client) {
+        if (client) {
+            clientManager.add(client);
+        }
+    });
+    workspace.clientRemoved.connect(function (client) {
+        if (client) {
+            clientManager.remove(client);
+        }
+    });
+    workspace.clientMinimized.connect(function (client) {
+        if (client) {
+            clientManager.remove(client);
+        }
+    });
+    workspace.clientMaximizeSet.connect(function (client, h, v) {
+        if (client && h && v) {
+            clientManager.remove(client);
+        }
+        else if (client && !h && !v) {
+            clientManager.add(client);
+        }
+    });
+    workspace.clientFullScreenSet.connect(function (client, fs) {
+        if (client && fs) {
+            clientManager.remove(client);
         }
     });
     workspace.desktopPresenceChanged.connect(function (client, desktop) {
-        clientManager.tileAll(client.screen, desktop);
+        if (client) {
+            clientManager.tileAll(client.screen, desktop);
+        }
     });
+    workspace.clientActivated.connect(function (client) {
+        if (client) {
+            clientManager.tileAll(client.screen, client.desktop);
+        }
+    });
+    /*
+  
+    workspace.screenResized.connect((screen: number) => {
+      clientManager.tileAll(screen, workspace.currentDesktop);
+    });
+  
+    workspace.currentDesktopChanged.connect((desktop: number, client: Client) => {
+      for (var i = 0; i < workspace.numScreens; i++) {
+        clientManager.tileAll(i, desktop);
+      }
+    });
+  
+    */
 }
 var signals = {
     registerSignals: registerSignals
