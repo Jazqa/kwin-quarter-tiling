@@ -1,4 +1,5 @@
 import { clientManager } from "./clientManager";
+import { Client } from "./client";
 import { config } from "./config";
 import { workspace } from "./globals";
 
@@ -12,8 +13,16 @@ export function registerSignals(): void {
   workspace.clientFullScreenSet.connect(clientManager.fullScreen);
   workspace.clientUnminimized.connect(clientManager.add);
   workspace.clientMinimized.connect(clientManager.remove);
-  // workspace.currentDesktopChanged.connect();
-  // workspace.desktopPresenceChanged.connect();
+
+  workspace.currentDesktopChanged.connect((desktop: number, client: Client) => {
+    for (var i = 0; i < workspace.numScreens; i++) {
+      clientManager.tileAll(i, desktop);
+    }
+  });
+
+  workspace.desktopPresenceChanged.connect((client: Client, desktop: number) => {
+    clientManager.tileAll(client.screen, desktop);
+  });
 }
 
 export const signals = {

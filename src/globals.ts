@@ -7,9 +7,16 @@ interface Options {
   electricBorderTiling: boolean;
 }
 
-interface WorkspaceSignal {
-  connect: () => void;
-  disconnect: () => void;
+type DesktopPresenceChangedCb = (client: Client, desktop: number) => void;
+interface DesktopPresenceChangeSignal {
+  connect: (cb: DesktopPresenceChangedCb) => void;
+  disconnect: (cb: DesktopPresenceChangedCb) => void;
+}
+
+type CurrentDesktopChangeCb = (desktop: number, client: Client) => void;
+interface CurrentDesktopChangedSignal {
+  connect: (cb: CurrentDesktopChangeCb) => void;
+  disconnect: (cb: CurrentDesktopChangeCb) => void;
 }
 
 interface Workspace {
@@ -30,8 +37,8 @@ interface Workspace {
   clientFullScreenSet: ClientFullScreenSignal;
   clientUnminimized: ClientSignal;
   clientMinimized: ClientSignal;
-  currentDesktopChanged: WorkspaceSignal;
-  desktopPresenceChanged: WorkspaceSignal;
+  currentDesktopChanged: CurrentDesktopChangedSignal;
+  desktopPresenceChanged: DesktopPresenceChangeSignal;
 }
 
 // @ts-ignore, KWin global

@@ -456,8 +456,14 @@ function registerSignals() {
     workspace.clientFullScreenSet.connect(clientManager.fullScreen);
     workspace.clientUnminimized.connect(clientManager.add);
     workspace.clientMinimized.connect(clientManager.remove);
-    // workspace.currentDesktopChanged.connect();
-    // workspace.desktopPresenceChanged.connect();
+    workspace.currentDesktopChanged.connect(function (desktop, client) {
+        for (var i = 0; i < workspace.numScreens; i++) {
+            clientManager.tileAll(i, desktop);
+        }
+    });
+    workspace.desktopPresenceChanged.connect(function (client, desktop) {
+        clientManager.tileAll(client.screen, desktop);
+    });
 }
 var signals = {
     registerSignals: registerSignals
