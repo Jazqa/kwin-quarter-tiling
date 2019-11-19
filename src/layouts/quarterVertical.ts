@@ -14,11 +14,11 @@ interface QuarterVerticalLayout extends Layout {
   separators: Separators;
 }
 
-function getTiles(geometry: Geometry, separators: Separators): Array<Geometry> {
+function getTiles(geometry: Geometry, separators: Separators, count: number): Array<Geometry> {
   const { x, y, width, height } = geometry;
   const { v, h } = separators;
 
-  return [
+  const tiles = [
     {
       x,
       y,
@@ -44,6 +44,20 @@ function getTiles(geometry: Geometry, separators: Separators): Array<Geometry> {
       height: y + height - h[0]
     }
   ];
+
+  if (count < 4) {
+    tiles[0].height = tiles[0].y + tiles[3].y + tiles[3].height;
+  }
+
+  if (count < 3) {
+    tiles[1].height = tiles[1].y + tiles[2].y + tiles[2].height;
+  }
+
+  if (count < 2) {
+    tiles[0].width = tiles[0].x + tiles[1].x + tiles[1].width;
+  }
+
+  return tiles;
 }
 
 export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
@@ -56,8 +70,8 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
   const separators = { h: [hs, hs], v: vs };
 
   function tileClients(clients: Array<Client>): void {
-    const tiles = getTiles(geometry, separators);
     const includedClients = clients.slice(0, maxClients);
+    const tiles = getTiles(geometry, separators, includedClients.length);
 
     includedClients.forEach((client: Client, index: number) => {
       const tile = tiles[index];
@@ -98,6 +112,7 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
     const minH = y + height * 0.1;
 
     separators.v = Math.min(Math.max(minV, separators.v), maxV);
+
     separators.h[0] = Math.min(Math.max(minH, separators.h[0]), maxH);
     separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
   }

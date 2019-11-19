@@ -148,10 +148,10 @@ var geometric = {
     fullArea: fullArea
 };
 
-function getTiles(geometry, separators) {
+function getTiles(geometry, separators, count) {
     var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
     var v = separators.v, h = separators.h;
-    return [
+    var tiles = [
         {
             x: x,
             y: y,
@@ -177,6 +177,16 @@ function getTiles(geometry, separators) {
             height: y + height - h[0]
         }
     ];
+    if (count < 4) {
+        tiles[0].height = tiles[0].y + tiles[3].y + tiles[3].height;
+    }
+    if (count < 3) {
+        tiles[1].height = tiles[1].y + tiles[2].y + tiles[2].height;
+    }
+    if (count < 2) {
+        tiles[0].width = tiles[0].x + tiles[1].x + tiles[1].width;
+    }
+    return tiles;
 }
 function QuarterVertical(geometry) {
     var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
@@ -185,8 +195,8 @@ function QuarterVertical(geometry) {
     var vs = x + width * 0.5;
     var separators = { h: [hs, hs], v: vs };
     function tileClients(clients) {
-        var tiles = getTiles(geometry, separators);
         var includedClients = clients.slice(0, maxClients);
+        var tiles = getTiles(geometry, separators, includedClients.length);
         includedClients.forEach(function (client, index) {
             var tile = tiles[index];
             client.geometry = geometric.gapArea(tile);
