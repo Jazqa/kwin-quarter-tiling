@@ -30,14 +30,14 @@ function availableArea(geometry: Geometry): Geometry {
 }
 
 export function toplevel(screen: number, desktop: number): Toplevel {
-  var geometry = workspace.clientArea(0, screen, desktop);
-  var layout = new SelectedLayout(availableArea(geometry));
+  var geometry = availableArea(workspace.clientArea(0, screen, desktop));
+  var layout = new SelectedLayout(geometry);
 
   function tileClients(clients: Array<Client>): void {
-    const currentGeometry = workspace.clientArea(0, screen, desktop);
+    const currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
 
     if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
-      layout.adjustGeometry(availableArea(currentGeometry));
+      layout.adjustGeometry(currentGeometry);
       geometry = currentGeometry;
     }
 

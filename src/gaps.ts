@@ -19,7 +19,9 @@ function decrease(): void {
 }
 
 export const gaps = {
-  size,
   increase,
-  decrease
+  decrease,
+  get size() {
+    return size;
+  }
 };

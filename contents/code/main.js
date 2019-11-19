@@ -118,9 +118,11 @@ function decrease() {
     adjust(-2);
 }
 var gaps$1 = {
-    size: size,
     increase: increase,
-    decrease: decrease
+    decrease: decrease,
+    get size() {
+        return size;
+    }
 };
 
 function clone(geometry) {
@@ -282,12 +284,12 @@ function availableArea(geometry) {
     return { x: x, y: y, width: width, height: height };
 }
 function toplevel(screen, desktop) {
-    var geometry = workspace.clientArea(0, screen, desktop);
-    var layout = new SelectedLayout(availableArea(geometry));
+    var geometry = availableArea(workspace.clientArea(0, screen, desktop));
+    var layout = new SelectedLayout(geometry);
     function tileClients(clients) {
-        var currentGeometry = workspace.clientArea(0, screen, desktop);
+        var currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
         if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
-            layout.adjustGeometry(availableArea(currentGeometry));
+            layout.adjustGeometry(currentGeometry);
             geometry = currentGeometry;
         }
         layout.tileClients(clients);
@@ -505,6 +507,35 @@ var clientManager = {
     tileAll: tileAll
 };
 
+var registerShortcut = 
+// @ts-ignore, KWin global
+registerShortcut ||
+    function () {
+        // This is never called
+        // Exists as a dumb workaround to make this file have a "side-effect" on the project and be included in rollup
+        workspace.currentDesktop = workspace.currentDesktop;
+    };
+function registerShortcuts() {
+    registerShortcut("Quarter: Increase Gap Size", "Quarter: Increase Gap Size", "Meta+Shift+PgUp", function () {
+        gaps$1.increase();
+        for (var i = 0; i < workspace.numScreens; i++) {
+            clientManager.tileAll(i, workspace.currentDesktop);
+        }
+    });
+    registerShortcut("Quarter: Decrease Gap Size", "Quarter: Decrease Gap Size", "Meta+Shift+PgDown", function () {
+        gaps$1.decrease();
+        for (var i = 0; i < workspace.numScreens; i++) {
+            clientManager.tileAll(i, workspace.currentDesktop);
+        }
+    });
+    registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function () {
+        return clientManager.toggle(workspace.activeClient);
+    });
+}
+var shortcuts = {
+    registerShortcuts: registerShortcuts
+};
+
 function registerSignals() {
     if (config.autoTile) {
         workspace.clientAdded.connect(clientManager.add);
@@ -529,4 +560,5 @@ var signals = {
 
 toplevelManager.addAll();
 clientManager.addAll();
+shortcuts.registerShortcuts();
 signals.registerSignals();
