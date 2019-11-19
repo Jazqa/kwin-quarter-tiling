@@ -445,35 +445,20 @@ function startMove(client) {
 }
 function finishMove(client) {
     var index = find(client);
-    var screen = client.screen, desktop = client.desktop, geometry = client.geometry;
     if (index > -1) {
-        if (screen === snapshot.screen) {
-            finishMoveSameScreen(index, client);
+        if (client.screen === snapshot.screen) {
+            if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
+                swap(index, findClosest(index, client));
+            }
+            else {
+                resize(client, snapshot.geometry);
+            }
         }
         else {
-            finishMoveOtherScreen(index, client);
+            tileAll(snapshot.screen, client.desktop);
         }
+        tileAll(client.screen, client.desktop);
     }
-}
-function finishMoveSameScreen(index, client) {
-    if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
-        swap(index, findClosest(index, client));
-    }
-    else {
-        resize(client, snapshot.geometry);
-    }
-    tileAll(client.screen, client.desktop);
-}
-function finishMoveOtherScreen(index, client) {
-    var screen = client.screen, desktop = client.desktop;
-    // isFull is not used, because the length has to be above maxClients (the client has already been moved to the new screen)
-    if (filter(screen, desktop).length > toplevelManager.maxClients(screen, desktop)) {
-        remove$1(client);
-    }
-    else {
-        tileAll(screen, desktop);
-    }
-    tileAll(snapshot.screen, desktop);
 }
 function swap(i, j) {
     var t = clients[i];
@@ -484,7 +469,13 @@ function resize(client, previousGeometry) {
     toplevelManager.resizeClient(client, previousGeometry);
 }
 function tileAll(screen, desktop) {
-    toplevelManager.tileClients(filter(screen, desktop));
+    var includedClients = filter(screen, desktop);
+    // Removes extra clients that exist on the toplevel
+    while (includedClients.length > toplevelManager.maxClients(screen, desktop)) {
+        var removableClient = includedClients.splice(includedClients.length - 1, 1)[0];
+        remove$1(removableClient);
+    }
+    toplevelManager.tileClients(includedClients);
 }
 var clientManager = {
     add: add$1,

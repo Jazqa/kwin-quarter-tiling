@@ -121,38 +121,20 @@ function startMove(client: Client): void {
 
 function finishMove(client: Client): void {
   const index = find(client);
-  const { screen, desktop, geometry } = client;
 
   if (index > -1) {
-    if (screen === snapshot.screen) {
-      finishMoveSameScreen(index, client);
+    if (client.screen === snapshot.screen) {
+      if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
+        swap(index, findClosest(index, client));
+      } else {
+        resize(client, snapshot.geometry);
+      }
     } else {
-      finishMoveOtherScreen(index, client);
+      tileAll(snapshot.screen, client.desktop);
     }
+
+    tileAll(client.screen, client.desktop);
   }
-}
-
-function finishMoveSameScreen(index: number, client: Client) {
-  if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
-    swap(index, findClosest(index, client));
-  } else {
-    resize(client, snapshot.geometry);
-  }
-
-  tileAll(client.screen, client.desktop);
-}
-
-function finishMoveOtherScreen(index: number, client: Client) {
-  const { screen, desktop } = client;
-
-  // isFull is not used, because the length has to be above maxClients (the client has already been moved to the new screen)
-  if (filter(screen, desktop).length > toplevelManager.maxClients(screen, desktop)) {
-    remove(client);
-  } else {
-    tileAll(screen, desktop);
-  }
-
-  tileAll(snapshot.screen, desktop);
 }
 
 function swap(i: number, j: number) {
@@ -166,7 +148,15 @@ function resize(client: Client, previousGeometry: Geometry) {
 }
 
 function tileAll(screen: number, desktop: number) {
-  toplevelManager.tileClients(filter(screen, desktop));
+  const includedClients = filter(screen, desktop);
+
+  // Removes extra clients that exist on the toplevel
+  while (includedClients.length > toplevelManager.maxClients(screen, desktop)) {
+    const removableClient = includedClients.splice(includedClients.length - 1, 1)[0];
+    remove(removableClient);
+  }
+
+  toplevelManager.tileClients(includedClients);
 }
 
 export const clientManager = {
