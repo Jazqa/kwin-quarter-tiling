@@ -10,7 +10,7 @@ const clients: Array<Client> = [];
 
 function filter(screen: number, desktop: number): Array<Client> {
   const includedClients = clients.filter((client: Client) => {
-    return client.screen === screen && client.desktop && desktop;
+    return client.screen === screen && client.desktop === desktop;
   });
 
   return includedClients;
@@ -31,6 +31,7 @@ function find(client: Client): number {
 
 function add(client: Client) {
   const currentClients = filter(client.screen, client.desktop);
+
   const { screen, desktop } = client;
 
   if (!blacklist.includes(client)) {

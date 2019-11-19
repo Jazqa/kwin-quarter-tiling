@@ -359,7 +359,7 @@ var toplevelManager = {
 var clients = [];
 function filter(screen, desktop) {
     var includedClients = clients.filter(function (client) {
-        return client.screen === screen && client.desktop && desktop;
+        return client.screen === screen && client.desktop === desktop;
     });
     return includedClients;
 }
