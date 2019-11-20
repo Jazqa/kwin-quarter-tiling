@@ -1,8 +1,7 @@
 import { blacklist } from "./blacklist";
 import { Client } from "./client";
 import { config } from "./config";
-import { Geometry } from "./geometry";
-import { geometric } from "./geometric";
+import { Geometry, geometric } from "./geometry";
 import { workspace } from "./globals";
 import { toplevelManager } from "./toplevelManager";
 
@@ -73,16 +72,15 @@ function toggle(client: Client, index?: number): void {
 
 var snapshot: { geometry: Geometry; screen: number } = { geometry: { x: 0, y: 0, width: 0, height: 0 }, screen: -1 };
 
-function findClosest(indexA: number, clientA: Client): number {
-  var closestClientIndex = indexA;
+function findClosest(clientA: Client, indexA?: number): number {
+  var closestClientIndex = indexA || find(clientA);
   var closestDistance = geometric.distance(clientA.geometry, snapshot.geometry);
 
   clients.forEach((clientB: Client, indexB: number) => {
     if (
       clientA.windowId !== clientB.windowId &&
       clientA.screen === clientB.screen &&
-      clientA.desktop &&
-      clientB.desktop
+      clientA.desktop === clientB.desktop
     ) {
       const distance = geometric.distance(clientA.geometry, clientB.geometry);
       if (distance < closestDistance) {
@@ -106,7 +104,7 @@ function finishMove(client: Client): void {
   if (index > -1) {
     if (client.screen === snapshot.screen) {
       if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
-        swap(index, findClosest(index, client));
+        swap(index, findClosest(client, index));
       } else {
         resize(client, snapshot.geometry);
       }
@@ -143,10 +141,13 @@ function tileAll(screen: number, desktop: number) {
 export const clientManager = {
   add,
   addAll,
+  find,
+  filter,
   remove,
   toggle,
   startMove,
   finishMove,
+  swap,
   resize,
   tileAll
 };

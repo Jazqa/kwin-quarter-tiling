@@ -1,6 +1,5 @@
 import { Client } from "../client";
-import { geometric } from "../geometric";
-import { Geometry } from "../geometry";
+import { Geometry, geometric } from "../geometry";
 import { Layout } from "../layout";
 
 interface Separators {

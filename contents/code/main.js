@@ -426,14 +426,13 @@ function toggle(client, index) {
     }
 }
 var snapshot = { geometry: { x: 0, y: 0, width: 0, height: 0 }, screen: -1 };
-function findClosest(indexA, clientA) {
-    var closestClientIndex = indexA;
+function findClosest(clientA, indexA) {
+    var closestClientIndex = indexA || find(clientA);
     var closestDistance = geometric.distance(clientA.geometry, snapshot.geometry);
     clients.forEach(function (clientB, indexB) {
         if (clientA.windowId !== clientB.windowId &&
             clientA.screen === clientB.screen &&
-            clientA.desktop &&
-            clientB.desktop) {
+            clientA.desktop === clientB.desktop) {
             var distance = geometric.distance(clientA.geometry, clientB.geometry);
             if (distance < closestDistance) {
                 closestClientIndex = indexB;
@@ -452,7 +451,7 @@ function finishMove(client) {
     if (index > -1) {
         if (client.screen === snapshot.screen) {
             if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
-                swap(index, findClosest(index, client));
+                swap(index, findClosest(client, index));
             }
             else {
                 resize(client, snapshot.geometry);
@@ -484,20 +483,34 @@ function tileAll(screen, desktop) {
 var clientManager = {
     add: add$1,
     addAll: addAll$1,
+    find: find,
+    filter: filter,
     remove: remove$1,
     toggle: toggle,
     startMove: startMove,
     finishMove: finishMove,
+    swap: swap,
     resize: resize,
     tileAll: tileAll
 };
 
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var resizeStep = 20;
 var registerShortcut = 
 // @ts-ignore, KWin global
 registerShortcut ||
     function () {
-        // This is never called
-        // Exists as a dumb workaround to make this file have a "side-effect" on the project and be included in rollup
+        // This is never called, exists only as a dumb workaround to include this file in rollup
         workspace.currentDesktop = workspace.currentDesktop;
     };
 function registerShortcuts() {
@@ -515,6 +528,99 @@ function registerShortcuts() {
         for (var i = 0; i < workspace.numScreens; i++) {
             clientManager.tileAll(i, workspace.currentDesktop);
         }
+    });
+    // Resize
+    function resizeClient(direction, amount) {
+        var client = workspace.activeClient;
+        var newGeometry = client.geometry;
+        var oldGeometry = client.geometry;
+        var index = clientManager.find(client);
+        if (index > -1) {
+            switch (direction) {
+                case "top":
+                    newGeometry.y += -amount;
+                    newGeometry.height += amount > 0 ? amount : 0;
+                    break;
+                case "left":
+                    newGeometry.x += -amount;
+                    newGeometry.width += amount > 0 ? amount : 0;
+                    break;
+                case "bottom":
+                    newGeometry.height += amount;
+                    break;
+                case "right":
+                    newGeometry.width += amount;
+                    break;
+            }
+            clientManager.resize(__assign(__assign({}, client), { geometry: newGeometry }), oldGeometry);
+            clientManager.tileAll(client.screen, client.desktop);
+        }
+    }
+    registerShortcut("Quarter: + Window Size Top", "Quarter: + Window Size Top", "Meta+K", function () {
+        resizeClient("top", resizeStep);
+    });
+    registerShortcut("Quarter: - Window Size Top", "Quarter: - Window Size Top", "Meta+Shift+K", function () {
+        resizeClient("top", -resizeStep);
+    });
+    registerShortcut("Quarter: + Window Size Left", "Quarter: + Window Size Left", "Meta+H", function () {
+        resizeClient("left", resizeStep);
+    });
+    registerShortcut("Quarter: - Window Size Left", "Quarter: - Window Size Left", "Meta+Shift+H", function () {
+        resizeClient("left", -resizeStep);
+    });
+    registerShortcut("Quarter: + Window Size Right", "Quarter: + Window Size Right", "Meta+L", function () {
+        resizeClient("right", resizeStep);
+    });
+    registerShortcut("Quarter: - Window Size Right", "Quarter: - Window Size Right", "Meta+Shift+L", function () {
+        resizeClient("right", -resizeStep);
+    });
+    registerShortcut("Quarter: + Window Size Bottom", "Quarter: + Window Size Bottom", "Meta+J", function () {
+        resizeClient("top", resizeStep);
+    });
+    registerShortcut("Quarter: - Window Size Bottom", "Quarter: - Window Size Bottom", "Meta+Shift+J", function () {
+        resizeClient("top", -resizeStep);
+    });
+    // Move
+    function nextClient(direction) {
+        var activeClient = workspace.activeClient;
+        var clients = clientManager.filter(activeClient.screen, activeClient.desktop);
+        clients = clients.filter(function (client) {
+            switch (direction) {
+                case "top":
+                    return client.geometry.y < activeClient.geometry.y;
+                case "left":
+                    return client.geometry.x < activeClient.geometry.x;
+                case "bottom":
+                    return client.geometry.y > activeClient.geometry.y;
+                case "right":
+                    return client.geometry.x > activeClient.geometry.x;
+            }
+        });
+        clients.sort(function (clientA, clientB) {
+            return (geometric.distance(activeClient.geometry, clientA.geometry) -
+                geometric.distance(activeClient.geometry, clientB.geometry));
+        });
+        return clients[0];
+    }
+    function moveClient(direction) {
+        var i = clientManager.find(workspace.activeClient);
+        var j = clientManager.find(nextClient(direction));
+        if (i > -1 && j > -1) {
+            clientManager.swap(i, j);
+            clientManager.tileAll(workspace.activeScreen, workspace.currentDesktop);
+        }
+    }
+    registerShortcut("Quarter: Move Up", "Quarter: Move Up", "Alt+Shift+K", function () {
+        moveClient("top");
+    });
+    registerShortcut("Quarter: Move Left", "Quarter: Move Left", "Alt+Shift+H", function () {
+        moveClient("left");
+    });
+    registerShortcut("Quarter: Move Down", "Quarter: Move Down", "Alt+Shift+J", function () {
+        moveClient("bottom");
+    });
+    registerShortcut("Quarter: Move Right", "Quarter: Move Right", "Alt+Shift+L", function () {
+        moveClient("right");
     });
 }
 var shortcuts = {

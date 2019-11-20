@@ -54,6 +54,6 @@ Arch users can keep the script updated through AUR.
 
 As of 2.0, the script is written in TypeScript and transpiled to JavaScript for KWin to understand. If you modify the `.ts` files, you have to run `npm install && npm run transpile` to apply the changes.
 
-New tiling layouts can be created without delving deeper into the existing code. New layouts should be new files under `src/layouts` and as long as they implement the interface described in `src/layouts/layouts.ts` they should work with the script.
+New tiling layouts can be created without delving deeper into the existing code. New layouts should be new files under `src/layouts` and as long as they implement the interface described in `src/layout.ts` they should work with the script.
 
 #### Suggestions and bug reports are welcome!
