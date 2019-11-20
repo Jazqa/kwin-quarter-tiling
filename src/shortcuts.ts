@@ -152,6 +152,33 @@ function registerShortcuts(): void {
   registerShortcut("Quarter: Move Right", "Quarter: Move Right", "Alt+Shift+L", function() {
     moveClient("right");
   });
+
+  function focusClient(direction: Direction) {
+    const focusableClient = nextClient(direction);
+
+    workspace.clientList().some((client: Client) => {
+      if (focusableClient.windowId === client.windowId) {
+        workspace.activeClient = client;
+        return true;
+      }
+    });
+  }
+
+  registerShortcut("Quarter: Focus Up", "Quarter: Focus Up", "Alt+K", function() {
+    focusClient("top");
+  });
+
+  registerShortcut("Quarter: Focus Left", "Quarter: Focus Left", "Alt+H", function() {
+    focusClient("left");
+  });
+
+  registerShortcut("Quarter: Focus Down", "Quarter: Focus Down", "Alt+J", function() {
+    focusClient("bottom");
+  });
+
+  registerShortcut("Quarter: Focus Right", "Quarter: Focus Right", "Alt+L", function() {
+    focusClient("right");
+  });
 }
 
 export const shortcuts = {

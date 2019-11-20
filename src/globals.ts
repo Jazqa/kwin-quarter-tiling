@@ -38,7 +38,7 @@ interface ClientActivatedSignal {
 }
 
 interface Workspace {
-  readonly activeClient: Client;
+  activeClient: Client;
   readonly activeScreen: number;
 
   readonly numScreens: number;
