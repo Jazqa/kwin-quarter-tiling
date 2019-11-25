@@ -46,6 +46,52 @@ function add(client: Client) {
   }
 }
 
+function addWithForce(client: Client) {
+  if (!blacklist.includes(client)) {
+    add(client);
+
+    if (find(client) === -1) {
+      var freeScreen = -1;
+
+      toplevelManager.forEachScreen(client.desktop, (screen: number, desktop: number) => {
+        if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
+          freeScreen = screen;
+          return;
+        }
+      });
+
+      if (freeScreen > -1) {
+        const geometry: Geometry = workspace.clientArea(1, freeScreen, client.desktop);
+        geometry.height = client.geometry.height;
+        geometry.width = client.geometry.width;
+        client.geometry = geometry;
+
+        add(client);
+      } else {
+        var freeDesktop = -1;
+
+        toplevelManager.forEach((screen: number, desktop: number) => {
+          if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
+            freeScreen = screen;
+            freeDesktop = desktop;
+            return;
+          }
+        });
+
+        if (freeScreen > -1 && freeDesktop > -1) {
+          const geometry: Geometry = workspace.clientArea(1, freeScreen, freeDesktop);
+          geometry.height = client.geometry.height;
+          geometry.width = client.geometry.width;
+          client.geometry = geometry;
+          client.desktop = freeDesktop;
+
+          add(client);
+        }
+      }
+    }
+  }
+}
+
 function addAll() {
   if (config.autoTile) {
     workspace.clientList().forEach(add);
@@ -145,6 +191,7 @@ function tileAll(screen: number, desktop: number) {
 
 export const clientManager = {
   add,
+  addWithForce,
   addAll,
   find,
   filter,

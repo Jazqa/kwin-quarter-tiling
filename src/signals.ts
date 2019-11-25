@@ -7,7 +7,7 @@ export function registerSignals(): void {
   if (config.autoTile) {
     workspace.clientAdded.connect((client: Client) => {
       if (client) {
-        clientManager.add(client);
+        clientManager.addWithForce(client);
       }
     });
   }

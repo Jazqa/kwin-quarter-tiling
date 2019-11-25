@@ -74,12 +74,42 @@ function maxClients(screen: number, desktop: number): number {
 function isFull(clients: Array<Client>, screen: number, desktop: number): boolean {
   if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
     return clients.length >= toplevels[screen][desktop].layout.maxClients;
+  } else {
+    return true;
   }
 }
 
 function isEmpty(clients: Array<Client>, screen: number, desktop: number): boolean {
   if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
     return clients.length === 0;
+  } else {
+    return false;
+  }
+}
+
+function forEach(callback: (screen: number, desktop: number) => unknown) {
+  for (var i = 0; i < workspace.numScreens; i++) {
+    for (var j = 1; j <= workspace.desktops; j++) {
+      if (toplevels && toplevels[i] && toplevels[i][j]) {
+        callback(i, j);
+      }
+    }
+  }
+}
+
+function forEachScreen(desktop: number, callback: (screen: number, desktop: number) => unknown) {
+  for (var i = 0; i < workspace.numScreens; i++) {
+    if (toplevels && toplevels[i] && toplevels[i][desktop]) {
+      callback(i, desktop);
+    }
+  }
+}
+
+function forEachDesktop(screen: number, callback: (screen: number, desktop: number) => unknown) {
+  for (var i = 1; i <= workspace.desktops; i++) {
+    if (toplevels && toplevels[screen] && toplevels[screen][i]) {
+      callback(screen, i);
+    }
   }
 }
 
@@ -91,5 +121,8 @@ export const toplevelManager = {
   resizeClient,
   maxClients,
   isFull,
-  isEmpty
+  isEmpty,
+  forEach,
+  forEachScreen,
+  forEachDesktop
 };

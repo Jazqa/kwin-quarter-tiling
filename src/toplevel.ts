@@ -3,7 +3,7 @@ import { workspace } from "./globals";
 import { Layout } from "./layout";
 import { layouts } from "./layouts/layouts";
 import { gaps } from "./gaps";
-import { Geometry, geometric } from "./geometry";
+import { Geometry } from "./geometry";
 
 import { Client } from "./client";
 
