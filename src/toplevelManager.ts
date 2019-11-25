@@ -2,9 +2,10 @@ import { Client } from "./client";
 import { Geometry } from "./geometry";
 import { workspace } from "./globals";
 import { Toplevel, toplevel } from "./toplevel";
+import { config } from "./config";
 
 // toplevels[screen][desktop]: Toplevel
-const toplevels: Array<Array<Toplevel>> = [];
+const toplevels: Array<Array<Toplevel | null>> = [];
 
 function add(): void {
   workspace.desktops += 1;
@@ -64,7 +65,9 @@ function resizeClient(client: Client, previousGeometry: Geometry) {
 
 function maxClients(screen: number, desktop: number): number {
   if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-    return toplevels[screen][desktop].layout.maxClients;
+    return config.maxClients > -1 ? config.maxClients : toplevels[screen][desktop].layout.maxClients;
+  } else {
+    return 0;
   }
 }
 

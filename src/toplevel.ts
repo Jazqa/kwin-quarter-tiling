@@ -28,9 +28,14 @@ function availableArea(geometry: Geometry): Geometry {
   return { x, y, width, height };
 }
 
-export function toplevel(screen: number, desktop: number): Toplevel {
+export function toplevel(screen: number, desktop: number): Toplevel | null {
+  if (config.isIgnoredScreen(screen) || config.isIgnoredDesktop(desktop)) {
+    return null;
+  }
+
   var geometry = availableArea(workspace.clientArea(0, screen, desktop));
-  var layout = new SelectedLayout(geometry);
+
+  var layout = SelectedLayout(geometry);
 
   function tileClients(clients: Array<Client>): void {
     const currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));

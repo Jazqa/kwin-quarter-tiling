@@ -40,10 +40,19 @@ var ignoredClients = __spreadArrays([
 ], readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image").split(", "), [readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""]);
 var ignoredDesktops = readConfigString("ignoredDesktops", "").split(", ");
 var ignoredScreens = readConfigString("ignoredScreens", "").split(", ");
+function isIgnoredDesktop(desktop) {
+    return ignoredDesktops.indexOf(desktop.toString()) > -1;
+}
+function isIgnoredScreen(screen) {
+    return ignoredScreens.indexOf(screen.toString()) > -1;
+}
 var minWidth = readConfig("minWidth", 256);
 var minHeight = readConfig("minHeight", 256);
 var gaps = readConfig("gaps", 8);
+var maxClients = readConfig("maxClients", -1);
 var autoTile = readConfigString("autoTile", true) === "true";
+var dynamicDesktops = readConfigString("dynamicDesktops", true) === "true";
+var followClients = readConfigString("followClients", true) === "true";
 var layout = readConfigString("layout", 0);
 var margins = {
     top: readConfig("marginTop", 0),
@@ -56,11 +65,16 @@ var config = {
     ignoredClients: ignoredClients,
     ignoredDesktops: ignoredDesktops,
     ignoredScreens: ignoredScreens,
+    isIgnoredDesktop: isIgnoredDesktop,
+    isIgnoredScreen: isIgnoredScreen,
     minWidth: minWidth,
     minHeight: minHeight,
     gaps: gaps,
+    maxClients: maxClients,
     margins: margins,
     autoTile: autoTile,
+    dynamicDesktops: dynamicDesktops,
+    followClients: followClients,
     layout: layout
 };
 
@@ -95,8 +109,8 @@ function includes(client) {
         config.ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
         config.ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
         config.ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
-        config.ignoredDesktops.indexOf(client.desktop.toString()) > -1 ||
-        config.ignoredScreens.indexOf(client.screen.toString()) > -1
+        config.isIgnoredDesktop(client.desktop) ||
+        config.isIgnoredScreen(client.screen)
         ? true
         : false;
 }
@@ -284,8 +298,11 @@ function availableArea(geometry) {
     return { x: x, y: y, width: width, height: height };
 }
 function toplevel(screen, desktop) {
+    if (config.isIgnoredScreen(screen) || config.isIgnoredDesktop(desktop)) {
+        return null;
+    }
     var geometry = availableArea(workspace.clientArea(0, screen, desktop));
-    var layout = new SelectedLayout(geometry);
+    var layout = SelectedLayout(geometry);
     function tileClients(clients) {
         var currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
         if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
@@ -350,9 +367,12 @@ function resizeClient(client, previousGeometry) {
         toplevels[screen][desktop].layout.resizeClient(client, previousGeometry);
     }
 }
-function maxClients(screen, desktop) {
+function maxClients$1(screen, desktop) {
     if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        return toplevels[screen][desktop].layout.maxClients;
+        return config.maxClients > -1 ? config.maxClients : toplevels[screen][desktop].layout.maxClients;
+    }
+    else {
+        return 0;
     }
 }
 function isFull(clients, screen, desktop) {
@@ -371,7 +391,7 @@ var toplevelManager = {
     remove: remove,
     tileClients: tileClients,
     resizeClient: resizeClient,
-    maxClients: maxClients,
+    maxClients: maxClients$1,
     isFull: isFull,
     isEmpty: isEmpty
 };

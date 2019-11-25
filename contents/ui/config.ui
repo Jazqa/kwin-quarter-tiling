@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>293</width>
+    <width>300</width>
     <height>400</height>
    </rect>
   </property>
@@ -18,13 +18,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>293</width>
+    <width>300</width>
     <height>400</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>293</width>
+    <width>300</width>
     <height>400</height>
    </size>
   </property>
@@ -60,7 +60,7 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>250</width>
+       <width>275</width>
        <height>275</height>
       </size>
      </property>
@@ -74,7 +74,7 @@
       <bool>false</bool>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <property name="sizePolicy">
@@ -91,7 +91,7 @@
         <rect>
          <x>-7</x>
          <y>0</y>
-         <width>291</width>
+         <width>301</width>
          <height>361</height>
         </rect>
        </property>
@@ -171,7 +171,20 @@
              <string>Gaps</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="toolTip">
+             <string>Set to -1 if you want the layout to manage maximum clients</string>
+            </property>
+            <property name="text">
+             <string>Max clients</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -181,7 +194,7 @@
              <string>Layout</string>
             </property>
             <property name="alignment">
-             <set>Qt::AlignBottom|Qt::AlignHCenter</set>
+             <set>Qt::AlignCenter</set>
             </property>
            </widget>
           </item>
@@ -191,6 +204,12 @@
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QSpinBox" name="kcfg_gap">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="suffix">
+             <string> px</string>
+            </property>
             <property name="minimum">
              <number>2</number>
             </property>
@@ -199,6 +218,25 @@
             </property>
             <property name="singleStep">
              <number>2</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="kcfg_maxClients">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="showGroupSeparator" stdset="0">
+             <bool>false</bool>
+            </property>
+            <property name="suffix">
+             <string> </string>
+            </property>
+            <property name="minimum">
+             <number>-1</number>
+            </property>
+            <property name="value">
+             <number>-1</number>
             </property>
            </widget>
           </item>
@@ -314,6 +352,12 @@
          <layout class="QHBoxLayout" name="horizontalLayout_7">
           <item>
            <widget class="QSpinBox" name="kcfg_marginTop">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="suffix">
+             <string> px</string>
+            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -330,6 +374,12 @@
           </item>
           <item>
            <widget class="QSpinBox" name="kcfg_marginLeft">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="suffix">
+             <string> px</string>
+            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -346,6 +396,12 @@
           </item>
           <item>
            <widget class="QSpinBox" name="kcfg_marginBottom">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="suffix">
+             <string> px</string>
+            </property>
             <property name="minimum">
              <number>0</number>
             </property>
@@ -362,6 +418,12 @@
           </item>
           <item>
            <widget class="QSpinBox" name="kcfg_marginRight">
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="suffix">
+             <string>px</string>
+            </property>
             <property name="minimum">
              <number>0</number>
             </property>

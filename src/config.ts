@@ -39,12 +39,26 @@ const ignoredClients: Array<string> = [
 const ignoredDesktops: Array<string> = readConfigString("ignoredDesktops", "").split(", ");
 const ignoredScreens: Array<string> = readConfigString("ignoredScreens", "").split(", ");
 
+function isIgnoredDesktop(desktop: number) {
+  return ignoredDesktops.indexOf(desktop.toString()) > -1;
+}
+
+function isIgnoredScreen(screen: number) {
+  return ignoredScreens.indexOf(screen.toString()) > -1;
+}
+
 const minWidth: number = readConfig("minWidth", 256);
 const minHeight: number = readConfig("minHeight", 256);
 
 const gaps: number = readConfig("gaps", 8);
 
+const maxClients: number = readConfig("maxClients", -1);
+
 const autoTile: boolean = readConfigString("autoTile", true) === "true";
+
+const dynamicDesktops: boolean = readConfigString("dynamicDesktops", true) === "true";
+
+const followClients: boolean = readConfigString("followClients", true) === "true";
 
 const layout: string = readConfigString("layout", 0);
 
@@ -60,10 +74,15 @@ export const config = {
   ignoredClients,
   ignoredDesktops,
   ignoredScreens,
+  isIgnoredDesktop,
+  isIgnoredScreen,
   minWidth,
   minHeight,
   gaps,
+  maxClients,
   margins,
   autoTile,
+  dynamicDesktops,
+  followClients,
   layout
 };

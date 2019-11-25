@@ -31,8 +31,8 @@ function includes(client: Client): boolean {
     config.ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
     config.ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
     config.ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
-    config.ignoredDesktops.indexOf(client.desktop.toString()) > -1 ||
-    config.ignoredScreens.indexOf(client.screen.toString()) > -1
+    config.isIgnoredDesktop(client.desktop) ||
+    config.isIgnoredScreen(client.screen)
     ? true
     : false;
 }

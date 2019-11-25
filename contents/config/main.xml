@@ -25,6 +25,10 @@
         <label>Pixels between the windows and screen edges</label>
         <default>8</default>
 		  </entry>
+      <entry name="maxClients" type="int">
+        <label>Maximum amount of clients to tile on a screen</label>
+        <default>-1</default>
+		  </entry>
       <entry name="marginTop" type="int">
         <label>Additional pixels from the top of the screen</label>
         <default>0</default>
