@@ -1,11 +1,11 @@
 import { gaps } from "./gaps";
 
-export type Geometry = {
+export interface Geometry {
   x: number;
   y: number;
   width: number;
   height: number;
-};
+}
 
 export type Direction = "top" | "left" | "bottom" | "right";
 

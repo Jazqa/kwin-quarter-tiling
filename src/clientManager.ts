@@ -9,7 +9,12 @@ const clients: Array<Client> = [];
 
 function filter(screen: number, desktop: number): Array<Client> {
   const includedClients = clients.filter((client: Client) => {
-    return client.screen === screen && client.desktop === desktop;
+    // TODO: Better activity support?
+    return (
+      client.screen === screen &&
+      client.desktop === desktop &&
+      (client.activities.length === 0 || client.activities.indexOf(workspace.currentActivity) > -1)
+    );
   });
 
   return includedClients;

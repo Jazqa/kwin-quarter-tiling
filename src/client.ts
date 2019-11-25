@@ -11,6 +11,7 @@ export interface Client {
   desktop: number;
   readonly screen: number;
   geometry: Geometry;
+  readonly activities: Array<string>;
 
   readonly caption: string;
   readonly resourceClass: string;

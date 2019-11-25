@@ -39,12 +39,14 @@ interface ClientActivatedSignal {
 
 interface Workspace {
   activeClient: Client;
-  readonly activeScreen: number;
 
+  readonly activeScreen: number;
   readonly numScreens: number;
 
   desktops: number;
   currentDesktop: number;
+
+  readonly currentActivity: string;
 
   clientList: () => Array<Client>;
   clientArea: (type: number, screenId: number, desktopId: number) => Geometry;
