@@ -7,13 +7,6 @@ import { config } from "./config";
 // toplevels[screen][desktop]: Toplevel
 const toplevels: Array<Array<Toplevel | null>> = [];
 
-function add(): void {
-  workspace.desktops += 1;
-  for (var i = 0; i > workspace.numScreens; i++) {
-    toplevels[i][workspace.desktops] = toplevel(i, workspace.desktops);
-  }
-}
-
 function addAll(): void {
   for (var i = 0; i < workspace.numScreens; i++) {
     toplevels[i] = [];
@@ -23,9 +16,17 @@ function addAll(): void {
   }
 }
 
-function remove(): void {
-  toplevels.forEach((screen: Array<Toplevel>) => {
-    screen.splice(workspace.currentDesktop, 1);
+function addDesktop(desktop: number): void {
+  for (var i = 0; i < workspace.numScreens; i++) {
+    if (toplevels && toplevels[i]) {
+      toplevels[i][desktop] = toplevel(i, desktop);
+    }
+  }
+}
+
+function removeDesktop(desktop: number): void {
+  forEachScreen(desktop, (screen: number, desktop: number): void => {
+    delete toplevels[screen][desktop];
   });
 }
 
@@ -87,36 +88,45 @@ function isEmpty(clients: Array<Client>, screen: number, desktop: number): boole
   }
 }
 
-function forEach(callback: (screen: number, desktop: number) => unknown) {
+function forEach(callback: (screen: number, desktop: number) => boolean | void): void {
   for (var i = 0; i < workspace.numScreens; i++) {
     for (var j = 1; j <= workspace.desktops; j++) {
       if (toplevels && toplevels[i] && toplevels[i][j]) {
-        callback(i, j);
+        const shouldReturn = callback(i, j);
+        if (shouldReturn) {
+          return;
+        }
       }
     }
   }
 }
 
-function forEachScreen(desktop: number, callback: (screen: number, desktop: number) => unknown) {
+function forEachScreen(desktop: number, callback: (screen: number, desktop: number) => boolean | void): void {
   for (var i = 0; i < workspace.numScreens; i++) {
     if (toplevels && toplevels[i] && toplevels[i][desktop]) {
-      callback(i, desktop);
+      const shouldReturn = callback(i, desktop);
+      if (shouldReturn) {
+        return;
+      }
     }
   }
 }
 
-function forEachDesktop(screen: number, callback: (screen: number, desktop: number) => unknown) {
+function forEachDesktop(screen: number, callback: (screen: number, desktop: number) => boolean | void): void {
   for (var i = 1; i <= workspace.desktops; i++) {
     if (toplevels && toplevels[screen] && toplevels[screen][i]) {
-      callback(screen, i);
+      const shouldReturn = callback(screen, i);
+      if (shouldReturn) {
+        return;
+      }
     }
   }
 }
 
 export const toplevelManager = {
-  add,
   addAll,
-  remove,
+  addDesktop,
+  removeDesktop,
   tileClients,
   resizeClient,
   maxClients,

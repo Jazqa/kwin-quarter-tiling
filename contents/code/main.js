@@ -164,11 +164,18 @@ function fullArea(geometry) {
     height += size * 2;
     return { x: x, y: y, width: width, height: height };
 }
-var geometric = {
+function moveTo(geometryA, geometryB) {
+    var geometryC = clone(geometryB);
+    geometryC.height = geometryA.height;
+    geometryC.width = geometryA.width;
+    return geometryC;
+}
+var geometryUtils = {
     clone: clone,
     distance: distance,
     gapArea: gapArea,
-    fullArea: fullArea
+    fullArea: fullArea,
+    moveTo: moveTo
 };
 
 function getTiles(geometry, separators, count) {
@@ -227,7 +234,7 @@ function QuarterVertical(geometry) {
         var tiles = getTiles(geometry, separators, includedClients.length);
         includedClients.forEach(function (client, index) {
             var tile = tiles[index];
-            client.geometry = geometric.gapArea(tile);
+            client.geometry = geometryUtils.gapArea(tile);
         });
     }
     function resizeClient(client, previousGeometry) {
@@ -321,12 +328,6 @@ function toplevel(screen, desktop) {
 
 // toplevels[screen][desktop]: Toplevel
 var toplevels = [];
-function add() {
-    workspace.desktops += 1;
-    for (var i = 0; i > workspace.numScreens; i++) {
-        toplevels[i][workspace.desktops] = toplevel(i, workspace.desktops);
-    }
-}
 function addAll() {
     for (var i = 0; i < workspace.numScreens; i++) {
         toplevels[i] = [];
@@ -335,9 +336,16 @@ function addAll() {
         }
     }
 }
-function remove() {
-    toplevels.forEach(function (screen) {
-        screen.splice(workspace.currentDesktop, 1);
+function addDesktop(desktop) {
+    for (var i = 0; i < workspace.numScreens; i++) {
+        if (toplevels && toplevels[i]) {
+            toplevels[i][desktop] = toplevel(i, desktop);
+        }
+    }
+}
+function removeDesktop(desktop) {
+    forEachScreen(desktop, function (screen, desktop) {
+        delete toplevels[screen][desktop];
     });
 }
 function tileClients(clients) {
@@ -395,7 +403,10 @@ function forEach(callback) {
     for (var i = 0; i < workspace.numScreens; i++) {
         for (var j = 1; j <= workspace.desktops; j++) {
             if (toplevels && toplevels[i] && toplevels[i][j]) {
-                callback(i, j);
+                var shouldReturn = callback(i, j);
+                if (shouldReturn) {
+                    return;
+                }
             }
         }
     }
@@ -403,21 +414,27 @@ function forEach(callback) {
 function forEachScreen(desktop, callback) {
     for (var i = 0; i < workspace.numScreens; i++) {
         if (toplevels && toplevels[i] && toplevels[i][desktop]) {
-            callback(i, desktop);
+            var shouldReturn = callback(i, desktop);
+            if (shouldReturn) {
+                return;
+            }
         }
     }
 }
 function forEachDesktop(screen, callback) {
     for (var i = 1; i <= workspace.desktops; i++) {
         if (toplevels && toplevels[screen] && toplevels[screen][i]) {
-            callback(screen, i);
+            var shouldReturn = callback(screen, i);
+            if (shouldReturn) {
+                return;
+            }
         }
     }
 }
 var toplevelManager = {
-    add: add,
     addAll: addAll,
-    remove: remove,
+    addDesktop: addDesktop,
+    removeDesktop: removeDesktop,
     tileClients: tileClients,
     resizeClient: resizeClient,
     maxClients: maxClients$1,
@@ -448,32 +465,38 @@ function find(client) {
     });
     return index;
 }
-function add$1(client) {
+function splicePush(client) {
+    var index = find(client);
+    if (index > -1) {
+        clients.splice(index, 1);
+        clients.push(client);
+    }
+}
+function add(client) {
     var screen = client.screen, desktop = client.desktop;
     if (!blacklist.includes(client)) {
         clients.push(client);
         client.clientStartUserMovedResized.connect(startMove);
         client.clientFinishUserMovedResized.connect(finishMove);
+        client.screenChanged.connect(function () { return splicePush(client); });
+        client.desktopChanged.connect(function () { return splicePush(client); });
         tileAll(screen, desktop);
     }
 }
 function addWithForce(client) {
     if (!blacklist.includes(client)) {
-        add$1(client);
+        add(client);
         if (find(client) === -1) {
             var freeScreen = -1;
             toplevelManager.forEachScreen(client.desktop, function (screen, desktop) {
                 if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
                     freeScreen = screen;
-                    return;
+                    return true;
                 }
             });
             if (freeScreen > -1) {
-                var geometry = workspace.clientArea(1, freeScreen, client.desktop);
-                geometry.height = client.geometry.height;
-                geometry.width = client.geometry.width;
-                client.geometry = geometry;
-                add$1(client);
+                client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
+                add(client);
             }
             else {
                 var freeDesktop = -1;
@@ -481,16 +504,13 @@ function addWithForce(client) {
                     if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
                         freeScreen = screen;
                         freeDesktop = desktop;
-                        return;
+                        return true;
                     }
                 });
                 if (freeScreen > -1 && freeDesktop > -1) {
-                    var geometry = workspace.clientArea(1, freeScreen, freeDesktop);
-                    geometry.height = client.geometry.height;
-                    geometry.width = client.geometry.width;
-                    client.geometry = geometry;
                     client.desktop = freeDesktop;
-                    add$1(client);
+                    client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
+                    add(client);
                 }
             }
         }
@@ -498,36 +518,38 @@ function addWithForce(client) {
 }
 function addAll$1() {
     if (config.autoTile) {
-        workspace.clientList().forEach(add$1);
+        workspace.clientList().forEach(add);
     }
 }
-function remove$1(client, index) {
+function remove(client, index) {
     index = index || find(client);
     if (index > -1) {
         clients.splice(index, 1);
         client.clientStartUserMovedResized.disconnect(startMove);
         client.clientFinishUserMovedResized.disconnect(finishMove);
+        // TODO: client.desktopChanged.disconnect()
+        // TODO: client.screenChanged.disconnect()
         tileAll(client.screen, client.desktop);
     }
 }
 function toggle(client, index) {
     index = index || find(client);
     if (index > -1) {
-        remove$1(client, index);
+        remove(client, index);
     }
     else {
-        add$1(client);
+        add(client);
     }
 }
 var snapshot = { geometry: { x: 0, y: 0, width: 0, height: 0 }, screen: -1 };
 function findClosest(clientA, indexA) {
     var closestClientIndex = indexA || find(clientA);
-    var closestDistance = geometric.distance(clientA.geometry, snapshot.geometry);
+    var closestDistance = geometryUtils.distance(clientA.geometry, snapshot.geometry);
     clients.forEach(function (clientB, indexB) {
         if (clientA.windowId !== clientB.windowId &&
             clientA.screen === clientB.screen &&
             clientA.desktop === clientB.desktop) {
-            var distance = geometric.distance(clientA.geometry, clientB.geometry);
+            var distance = geometryUtils.distance(clientA.geometry, clientB.geometry);
             if (distance < closestDistance) {
                 closestClientIndex = indexB;
                 closestDistance = distance;
@@ -570,17 +592,17 @@ function tileAll(screen, desktop) {
     // Removes extra clients that exist on the toplevel
     while (includedClients.length > toplevelManager.maxClients(screen, desktop)) {
         var removableClient = includedClients.splice(includedClients.length - 1, 1)[0];
-        remove$1(removableClient);
+        remove(removableClient);
     }
     toplevelManager.tileClients(includedClients);
 }
 var clientManager = {
-    add: add$1,
+    add: add,
     addWithForce: addWithForce,
     addAll: addAll$1,
     find: find,
     filter: filter,
-    remove: remove$1,
+    remove: remove,
     toggle: toggle,
     startMove: startMove,
     finishMove: finishMove,
@@ -692,8 +714,8 @@ function registerShortcuts() {
             }
         });
         clients.sort(function (clientA, clientB) {
-            return (geometric.distance(activeClient.geometry, clientA.geometry) -
-                geometric.distance(activeClient.geometry, clientB.geometry));
+            return (geometryUtils.distance(activeClient.geometry, clientA.geometry) -
+                geometryUtils.distance(activeClient.geometry, clientB.geometry));
         });
         return clients[0];
     }
@@ -788,6 +810,17 @@ function registerSignals() {
         if (client) {
             clientManager.tileAll(client.screen, client.desktop);
         }
+    });
+    workspace.numberDesktopsChanged.connect(function (previousDesktops) {
+        if (workspace.desktops > previousDesktops) {
+            toplevelManager.addDesktop(workspace.desktops);
+        }
+        else {
+            toplevelManager.removeDesktop(previousDesktops);
+        }
+        toplevelManager.forEachScreen(workspace.currentDesktop, function (screen, desktop) {
+            clientManager.tileAll(screen, desktop);
+        });
     });
     /*
   

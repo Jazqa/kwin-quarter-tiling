@@ -1,7 +1,7 @@
 import { blacklist } from "./blacklist";
 import { Client } from "./client";
 import { config } from "./config";
-import { Geometry, geometric } from "./geometry";
+import { Geometry, geometryUtils } from "./geometry";
 import { workspace } from "./globals";
 import { toplevelManager } from "./toplevelManager";
 
@@ -33,6 +33,15 @@ function find(client: Client): number {
   return index;
 }
 
+function splicePush(client: Client): void {
+  var index = find(client);
+
+  if (index > -1) {
+    clients.splice(index, 1);
+    clients.push(client);
+  }
+}
+
 function add(client: Client) {
   const { screen, desktop } = client;
 
@@ -41,6 +50,8 @@ function add(client: Client) {
 
     client.clientStartUserMovedResized.connect(startMove);
     client.clientFinishUserMovedResized.connect(finishMove);
+    client.screenChanged.connect(() => splicePush(client));
+    client.desktopChanged.connect(() => splicePush(client));
 
     tileAll(screen, desktop);
   }
@@ -56,16 +67,12 @@ function addWithForce(client: Client) {
       toplevelManager.forEachScreen(client.desktop, (screen: number, desktop: number) => {
         if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
           freeScreen = screen;
-          return;
+          return true;
         }
       });
 
       if (freeScreen > -1) {
-        const geometry: Geometry = workspace.clientArea(1, freeScreen, client.desktop);
-        geometry.height = client.geometry.height;
-        geometry.width = client.geometry.width;
-        client.geometry = geometry;
-
+        client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
         add(client);
       } else {
         var freeDesktop = -1;
@@ -74,17 +81,13 @@ function addWithForce(client: Client) {
           if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
             freeScreen = screen;
             freeDesktop = desktop;
-            return;
+            return true;
           }
         });
 
         if (freeScreen > -1 && freeDesktop > -1) {
-          const geometry: Geometry = workspace.clientArea(1, freeScreen, freeDesktop);
-          geometry.height = client.geometry.height;
-          geometry.width = client.geometry.width;
-          client.geometry = geometry;
           client.desktop = freeDesktop;
-
+          client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
           add(client);
         }
       }
@@ -106,6 +109,8 @@ function remove(client: Client, index?: number) {
 
     client.clientStartUserMovedResized.disconnect(startMove);
     client.clientFinishUserMovedResized.disconnect(finishMove);
+    // TODO: client.desktopChanged.disconnect()
+    // TODO: client.screenChanged.disconnect()
 
     tileAll(client.screen, client.desktop);
   }
@@ -125,7 +130,7 @@ var snapshot: { geometry: Geometry; screen: number } = { geometry: { x: 0, y: 0,
 
 function findClosest(clientA: Client, indexA?: number): number {
   var closestClientIndex = indexA || find(clientA);
-  var closestDistance = geometric.distance(clientA.geometry, snapshot.geometry);
+  var closestDistance = geometryUtils.distance(clientA.geometry, snapshot.geometry);
 
   clients.forEach((clientB: Client, indexB: number) => {
     if (
@@ -133,7 +138,7 @@ function findClosest(clientA: Client, indexA?: number): number {
       clientA.screen === clientB.screen &&
       clientA.desktop === clientB.desktop
     ) {
-      const distance = geometric.distance(clientA.geometry, clientB.geometry);
+      const distance = geometryUtils.distance(clientA.geometry, clientB.geometry);
       if (distance < closestDistance) {
         closestClientIndex = indexB;
         closestDistance = distance;

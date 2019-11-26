@@ -2,6 +2,7 @@ import { clientManager } from "./clientManager";
 import { Client } from "./client";
 import { config } from "./config";
 import { workspace } from "./globals";
+import { toplevelManager } from "./toplevelManager";
 
 export function registerSignals(): void {
   if (config.autoTile) {
@@ -54,6 +55,18 @@ export function registerSignals(): void {
     if (client) {
       clientManager.tileAll(client.screen, client.desktop);
     }
+  });
+
+  workspace.numberDesktopsChanged.connect((previousDesktops: number) => {
+    if (workspace.desktops > previousDesktops) {
+      toplevelManager.addDesktop(workspace.desktops);
+    } else {
+      toplevelManager.removeDesktop(previousDesktops);
+    }
+
+    toplevelManager.forEachScreen(workspace.currentDesktop, (screen: number, desktop: number) => {
+      clientManager.tileAll(screen, desktop);
+    });
   });
 
   /*

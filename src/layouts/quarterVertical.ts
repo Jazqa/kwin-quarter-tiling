@@ -1,5 +1,5 @@
 import { Client } from "../client";
-import { Geometry, geometric } from "../geometry";
+import { Geometry, geometryUtils } from "../geometry";
 import { Layout } from "../layout";
 
 interface Separators {
@@ -78,7 +78,7 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
 
     includedClients.forEach((client: Client, index: number) => {
       const tile = tiles[index];
-      client.geometry = geometric.gapArea(tile);
+      client.geometry = geometryUtils.gapArea(tile);
     });
   }
 

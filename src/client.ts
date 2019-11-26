@@ -1,5 +1,10 @@
 import { Geometry } from "./geometry";
 
+export interface VoidSignal {
+  connect: (cb: () => void) => void;
+  disconnect: (cb: () => void) => void;
+}
+
 export interface ClientSignal {
   connect: (cb: (client: Client) => void) => void;
   disconnect: (cb: (client: Client) => void) => void;
@@ -36,4 +41,7 @@ export interface Client {
 
   clientStartUserMovedResized: ClientSignal;
   clientFinishUserMovedResized: ClientSignal;
+
+  screenChanged: VoidSignal;
+  desktopChanged: VoidSignal;
 }

@@ -2,7 +2,7 @@ import { gaps } from "./gaps";
 import { clientManager } from "./clientManager";
 import { workspace } from "./globals";
 import { Client } from "./client";
-import { Direction, geometric } from "./geometry";
+import { Direction, geometryUtils } from "./geometry";
 
 const resizeStep = 20;
 
@@ -119,8 +119,8 @@ function registerShortcuts(): void {
 
     clients.sort((clientA: Client, clientB: Client) => {
       return (
-        geometric.distance(activeClient.geometry, clientA.geometry) -
-        geometric.distance(activeClient.geometry, clientB.geometry)
+        geometryUtils.distance(activeClient.geometry, clientA.geometry) -
+        geometryUtils.distance(activeClient.geometry, clientB.geometry)
       );
     });
 

@@ -37,6 +37,11 @@ interface ClientActivatedSignal {
   disconnect: (cb: (client: Client) => void) => void;
 }
 
+interface NumberDesktopsChangedSignal {
+  connect: (cb: (previousDesktops: number) => void) => void;
+  disconnect: (cb: (previousDesktops: number) => void) => void;
+}
+
 interface Workspace {
   activeClient: Client;
 
@@ -61,6 +66,7 @@ interface Workspace {
   currentDesktopChanged: CurrentDesktopChangedSignal;
   desktopPresenceChanged: DesktopPresenceChangeSignal;
   screenResized: ScreenResizedSignal;
+  numberDesktopsChanged: NumberDesktopsChangedSignal;
 }
 
 // @ts-ignore, KWin global

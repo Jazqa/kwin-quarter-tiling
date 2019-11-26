@@ -42,9 +42,17 @@ function fullArea(geometry: Geometry): Geometry {
   return { x, y, width, height };
 }
 
-export const geometric = {
+function moveTo(geometryA: Geometry, geometryB: Geometry) {
+  const geometryC = clone(geometryB);
+  geometryC.height = geometryA.height;
+  geometryC.width = geometryA.width;
+  return geometryC;
+}
+
+export const geometryUtils = {
   clone,
   distance,
   gapArea,
-  fullArea
+  fullArea,
+  moveTo
 };
