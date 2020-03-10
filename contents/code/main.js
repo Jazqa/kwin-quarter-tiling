@@ -504,6 +504,9 @@ function addWithForce(client) {
                     if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
                         freeScreen = screen;
                         freeDesktop = desktop;
+                        if (config.followClients) {
+                            workspace.currentDesktop = desktop;
+                        }
                         return true;
                     }
                 });
@@ -511,6 +514,10 @@ function addWithForce(client) {
                     client.desktop = freeDesktop;
                     client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
                     add(client);
+                }
+                else {
+                    workspace.desktops += 1;
+                    addWithForce(client);
                 }
             }
         }
