@@ -48,7 +48,7 @@ function isIgnoredScreen(screen) {
 }
 var minWidth = readConfig("minWidth", 256);
 var minHeight = readConfig("minHeight", 256);
-var gaps = readConfig("gaps", 8);
+var gaps = readConfig("gap", 8);
 var maxClients = readConfig("maxClients", -1);
 var autoTile = readConfigString("autoTile", true) === "true";
 var dynamicDesktops = readConfigString("dynamicDesktops", true) === "true";

@@ -50,7 +50,7 @@ function isIgnoredScreen(screen: number) {
 const minWidth: number = readConfig("minWidth", 256);
 const minHeight: number = readConfig("minHeight", 256);
 
-const gaps: number = readConfig("gaps", 8);
+const gaps: number = readConfig("gap", 8);
 
 const maxClients: number = readConfig("maxClients", -1);
 
