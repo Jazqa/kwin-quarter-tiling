@@ -472,14 +472,23 @@ function splicePush(client) {
         clients.push(client);
     }
 }
+// Store the disconnectors in cases new functions have to be created (e.g. using accessing client without a param)
+var clientDisconnectors = {};
 function add(client) {
     var screen = client.screen, desktop = client.desktop;
     if (!blacklist.includes(client)) {
         clients.push(client);
+        var splicePushClient_1 = function () { return splicePush(client); };
         client.clientStartUserMovedResized.connect(startMove);
         client.clientFinishUserMovedResized.connect(finishMove);
-        client.screenChanged.connect(function () { return splicePush(client); });
-        client.desktopChanged.connect(function () { return splicePush(client); });
+        client.screenChanged.connect(splicePushClient_1);
+        client.desktopChanged.connect(splicePushClient_1);
+        clientDisconnectors[client.windowId] = function (client) {
+            client.clientStartUserMovedResized.disconnect(startMove);
+            client.clientFinishUserMovedResized.disconnect(finishMove);
+            client.screenChanged.disconnect(splicePushClient_1);
+            client.desktopChanged.disconnect(splicePushClient_1);
+        };
         tileAll(screen, desktop);
     }
 }
@@ -532,10 +541,8 @@ function remove(client, index) {
     index = index || find(client);
     if (index > -1) {
         clients.splice(index, 1);
-        client.clientStartUserMovedResized.disconnect(startMove);
-        client.clientFinishUserMovedResized.disconnect(finishMove);
-        // TODO: client.desktopChanged.disconnect()
-        // TODO: client.screenChanged.disconnect()
+        clientDisconnectors[client.windowId](client);
+        delete clientDisconnectors[client.windowId];
         tileAll(client.screen, client.desktop);
     }
 }

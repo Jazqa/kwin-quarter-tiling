@@ -42,16 +42,28 @@ function splicePush(client: Client): void {
   }
 }
 
+// Store the disconnectors in cases new functions have to be created (e.g. using accessing client without a param)
+const clientDisconnectors = {};
+
 function add(client: Client) {
   const { screen, desktop } = client;
 
   if (!blacklist.includes(client)) {
     clients.push(client);
 
+    const splicePushClient = () => splicePush(client);
+
     client.clientStartUserMovedResized.connect(startMove);
     client.clientFinishUserMovedResized.connect(finishMove);
-    client.screenChanged.connect(() => splicePush(client));
-    client.desktopChanged.connect(() => splicePush(client));
+    client.screenChanged.connect(splicePushClient);
+    client.desktopChanged.connect(splicePushClient);
+
+    clientDisconnectors[client.windowId] = (client: Client) => {
+      client.clientStartUserMovedResized.disconnect(startMove);
+      client.clientFinishUserMovedResized.disconnect(finishMove);
+      client.screenChanged.disconnect(splicePushClient);
+      client.desktopChanged.disconnect(splicePushClient);
+    };
 
     tileAll(screen, desktop);
   }
@@ -112,12 +124,8 @@ function remove(client: Client, index?: number) {
 
   if (index > -1) {
     clients.splice(index, 1);
-
-    client.clientStartUserMovedResized.disconnect(startMove);
-    client.clientFinishUserMovedResized.disconnect(finishMove);
-    // TODO: client.desktopChanged.disconnect()
-    // TODO: client.screenChanged.disconnect()
-
+    clientDisconnectors[client.windowId](client);
+    delete clientDisconnectors[client.windowId];
     tileAll(client.screen, client.desktop);
   }
 }
