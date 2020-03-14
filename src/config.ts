@@ -32,6 +32,8 @@ const ignoredClients: Array<string> = [
   "Quit GIMP",
   "Create a New Image",
   "QEMU",
+  "Latte Dock",
+  "ksmserver-logout-greeter",
   ...readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image").split(", "),
   ...[readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""]
 ];

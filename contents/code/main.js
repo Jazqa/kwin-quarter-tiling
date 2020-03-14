@@ -36,7 +36,9 @@ var ignoredClients = __spreadArrays([
     "Move to Trash",
     "Quit GIMP",
     "Create a New Image",
-    "QEMU"
+    "QEMU",
+    "Latte Dock",
+    "ksmserver-logout-greeter"
 ], readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image").split(", "), [readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""]);
 var ignoredDesktops = readConfigString("ignoredDesktops", "").split(", ");
 var ignoredScreens = readConfigString("ignoredScreens", "").split(", ");
