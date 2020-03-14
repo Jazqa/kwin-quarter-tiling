@@ -225,6 +225,11 @@ function QuarterVertical(geometry) {
     var hs = geometry.y + geometry.height * 0.5;
     var vs = geometry.x + geometry.width * 0.5;
     var separators = { h: [hs, hs], v: vs };
+    function restore() {
+        hs = geometry.y + geometry.height * 0.5;
+        vs = geometry.x + geometry.width * 0.5;
+        separators = { h: [hs, hs], v: vs };
+    }
     function adjustGeometry(newGeometry) {
         separators.v += (geometry.width - newGeometry.width) * 0.5;
         separators.h[0] += (geometry.height - newGeometry.height) * 0.5;
@@ -275,6 +280,7 @@ function QuarterVertical(geometry) {
         separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
     }
     return {
+        restore: restore,
         maxClients: maxClients,
         tileClients: tileClients,
         resizeClient: resizeClient,
@@ -433,6 +439,11 @@ function forEachDesktop(screen, callback) {
         }
     }
 }
+function restoreLayout(screen, desktop) {
+    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
+        toplevels[screen][desktop].layout.restore();
+    }
+}
 var toplevelManager = {
     addAll: addAll,
     addDesktop: addDesktop,
@@ -444,7 +455,8 @@ var toplevelManager = {
     isEmpty: isEmpty,
     forEach: forEach,
     forEachScreen: forEachScreen,
-    forEachDesktop: forEachDesktop
+    forEachDesktop: forEachDesktop,
+    restoreLayout: restoreLayout
 };
 
 var clients = [];
@@ -647,6 +659,16 @@ registerShortcut ||
         workspace.currentDesktop = workspace.currentDesktop;
     };
 function registerShortcuts() {
+    registerShortcut("Quarter: Reset Current Layout", "Quarter: Reset Current Layout", "Meta+R", function () {
+        toplevelManager.restoreLayout(workspace.activeScreen, workspace.currentDesktop);
+        clientManager.tileAll(workspace.activeScreen, workspace.currentDesktop);
+    });
+    registerShortcut("Quarter: Reset All Layouts", "Quarter: Reset All Layout", "Meta+Shift+R", function () {
+        toplevelManager.forEach(function (screen, desktop) {
+            toplevelManager.restoreLayout(screen, desktop);
+            clientManager.tileAll(screen, desktop);
+        });
+    });
     registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function () {
         return clientManager.toggle(workspace.activeClient);
     });

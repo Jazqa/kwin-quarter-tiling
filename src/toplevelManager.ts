@@ -123,6 +123,12 @@ function forEachDesktop(screen: number, callback: (screen: number, desktop: numb
   }
 }
 
+function restoreLayout(screen: number, desktop: number) {
+  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
+    toplevels[screen][desktop].layout.restore();
+  }
+}
+
 export const toplevelManager = {
   addAll,
   addDesktop,
@@ -134,5 +140,6 @@ export const toplevelManager = {
   isEmpty,
   forEach,
   forEachScreen,
-  forEachDesktop
+  forEachDesktop,
+  restoreLayout
 };

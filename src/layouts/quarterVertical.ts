@@ -61,9 +61,15 @@ function getTiles(geometry: Geometry, separators: Separators, count: number): Ar
 export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
   const maxClients = 4;
 
-  const hs = geometry.y + geometry.height * 0.5;
-  const vs = geometry.x + geometry.width * 0.5;
-  const separators = { h: [hs, hs], v: vs };
+  let hs = geometry.y + geometry.height * 0.5;
+  let vs = geometry.x + geometry.width * 0.5;
+  let separators = { h: [hs, hs], v: vs };
+
+  function restore(): void {
+    hs = geometry.y + geometry.height * 0.5;
+    vs = geometry.x + geometry.width * 0.5;
+    separators = { h: [hs, hs], v: vs };
+  }
 
   function adjustGeometry(newGeometry: Geometry): void {
     separators.v += (geometry.width - newGeometry.width) * 0.5;
@@ -121,6 +127,7 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
   }
 
   return {
+    restore,
     maxClients,
     tileClients,
     resizeClient,

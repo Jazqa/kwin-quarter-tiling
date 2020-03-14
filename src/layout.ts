@@ -32,4 +32,9 @@ export interface Layout {
    *  @param geometry - Available space for clients (screen area - panels - gaps - margins)
    */
   adjustGeometry: (geometry: Geometry) => void;
+
+  /*
+   * Restores the layout to its original state
+   */
+  restore: () => void;
 }
