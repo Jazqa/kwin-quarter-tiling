@@ -486,9 +486,9 @@ function splicePush(client) {
 }
 // Store the disconnectors in cases new functions have to be created (e.g. using accessing client without a param)
 var clientDisconnectors = {};
-function add(client) {
+function add(client, checked) {
     var screen = client.screen, desktop = client.desktop;
-    if (!blacklist.includes(client)) {
+    if (checked || !blacklist.includes(client)) {
         clients.push(client);
         var splicePushClient_1 = function () { return splicePush(client); };
         client.clientStartUserMovedResized.connect(startMove);
@@ -506,7 +506,8 @@ function add(client) {
 }
 function addWithForce(client) {
     if (!blacklist.includes(client)) {
-        add(client);
+        add(client, true);
+        // If the client couldn't be added on its screen or desktop, finds an available screen and desktop for it
         if (find(client) === -1) {
             var freeScreen = -1;
             toplevelManager.forEachScreen(client.desktop, function (screen, desktop) {
@@ -517,7 +518,7 @@ function addWithForce(client) {
             });
             if (freeScreen > -1) {
                 client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
-                add(client);
+                add(client, true);
             }
             else {
                 var freeDesktop = -1;
@@ -534,7 +535,7 @@ function addWithForce(client) {
                 if (freeScreen > -1 && freeDesktop > -1) {
                     client.desktop = freeDesktop;
                     client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
-                    add(client);
+                    add(client, true);
                 }
             }
         }
@@ -542,7 +543,7 @@ function addWithForce(client) {
 }
 function addAll$1() {
     if (config.autoTile) {
-        workspace.clientList().forEach(add);
+        workspace.clientList().forEach(function (client) { return add(client); });
     }
 }
 function remove(client, index) {
@@ -552,6 +553,7 @@ function remove(client, index) {
         clientDisconnectors[client.windowId](client);
         delete clientDisconnectors[client.windowId];
         tileAll(client.screen, client.desktop);
+        // Checks if the current desktop is completely empty, finds the closest desktop with clients and switches to it
         if (config.followClients && client.desktop === workspace.currentDesktop) {
             var currentDesktop_1 = workspace.currentDesktop;
             var clientList = workspace.clientList();

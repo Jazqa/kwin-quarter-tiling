@@ -45,10 +45,10 @@ function splicePush(client: Client): void {
 // Store the disconnectors in cases new functions have to be created (e.g. using accessing client without a param)
 const clientDisconnectors = {};
 
-function add(client: Client) {
+function add(client: Client, checked?: boolean): void {
   const { screen, desktop } = client;
 
-  if (!blacklist.includes(client)) {
+  if (checked || !blacklist.includes(client)) {
     clients.push(client);
 
     const splicePushClient = () => splicePush(client);
@@ -69,10 +69,11 @@ function add(client: Client) {
   }
 }
 
-function addWithForce(client: Client) {
+function addWithForce(client: Client): void {
   if (!blacklist.includes(client)) {
-    add(client);
+    add(client, true);
 
+    // If the client couldn't be added on its screen or desktop, finds an available screen and desktop for it
     if (find(client) === -1) {
       var freeScreen = -1;
 
@@ -85,7 +86,7 @@ function addWithForce(client: Client) {
 
       if (freeScreen > -1) {
         client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
-        add(client);
+        add(client, true);
       } else {
         var freeDesktop = -1;
 
@@ -103,7 +104,7 @@ function addWithForce(client: Client) {
         if (freeScreen > -1 && freeDesktop > -1) {
           client.desktop = freeDesktop;
           client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
-          add(client);
+          add(client, true);
         }
       }
     }
@@ -112,7 +113,7 @@ function addWithForce(client: Client) {
 
 function addAll() {
   if (config.autoTile) {
-    workspace.clientList().forEach(add);
+    workspace.clientList().forEach((client: Client) => add(client));
   }
 }
 
@@ -125,6 +126,7 @@ function remove(client: Client, index?: number) {
     delete clientDisconnectors[client.windowId];
     tileAll(client.screen, client.desktop);
 
+    // Checks if the current desktop is completely empty, finds the closest desktop with clients and switches to it
     if (config.followClients && client.desktop === workspace.currentDesktop) {
       const currentDesktop = workspace.currentDesktop;
       const clientList = workspace.clientList();
