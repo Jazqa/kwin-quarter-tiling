@@ -211,13 +211,13 @@
              <string> px</string>
             </property>
             <property name="minimum">
-             <number>2</number>
+             <number>1</number>
             </property>
             <property name="maximum">
              <number>64</number>
             </property>
             <property name="singleStep">
-             <number>2</number>
+             <number>1</number>
             </property>
            </widget>
           </item>
@@ -230,7 +230,7 @@
              <bool>false</bool>
             </property>
             <property name="suffix">
-             <string> </string>
+             <string/>
             </property>
             <property name="minimum">
              <number>-1</number>
