@@ -790,7 +790,7 @@ function registerSignals() {
         });
     }
     workspace.clientUnminimized.connect(function (client) {
-        if (client) {
+        if (client && config.autoTile) {
             clientManager.addWithForce(client);
         }
     });
@@ -809,12 +809,19 @@ function registerSignals() {
             clientManager.remove(client);
         }
         else if (client && !h && !v) {
-            clientManager.addWithForce(client);
+            if (config.autoTile) {
+                clientManager.addWithForce(client);
+            }
         }
     });
     workspace.clientFullScreenSet.connect(function (client, fs) {
         if (client && fs) {
             clientManager.remove(client);
+        }
+        else {
+            if (config.autoTile) {
+                clientManager.addWithForce(client);
+            }
         }
     });
     workspace.desktopPresenceChanged.connect(function (client, desktop) {
