@@ -104,9 +104,6 @@ function addWithForce(client: Client) {
           client.desktop = freeDesktop;
           client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
           add(client);
-        } else {
-          workspace.desktops += 1;
-          addWithForce(client);
         }
       }
     }
@@ -127,6 +124,33 @@ function remove(client: Client, index?: number) {
     clientDisconnectors[client.windowId](client);
     delete clientDisconnectors[client.windowId];
     tileAll(client.screen, client.desktop);
+
+    if (config.followClients && client.desktop === workspace.currentDesktop) {
+      const currentDesktop = workspace.currentDesktop;
+      const clientList = workspace.clientList();
+
+      const hasClientsLeft = clientList.some((clientB: Client) => {
+        if (clientB.windowId !== client.windowId) {
+          return clientB.desktop === currentDesktop;
+        }
+      });
+
+      if (!hasClientsLeft) {
+        const busyDesktops = [];
+
+        clientList.forEach((clientB: Client) => {
+          if (clientB.desktop !== currentDesktop) {
+            busyDesktops.push(clientB.desktop);
+          }
+        });
+
+        const nextDesktop = busyDesktops.reduce((previous: number, current: number) => {
+          return Math.abs(currentDesktop - current) < Math.abs(currentDesktop - previous) ? current : previous;
+        });
+
+        workspace.currentDesktop = nextDesktop;
+      }
+    }
   }
 }
 

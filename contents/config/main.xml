@@ -13,10 +13,6 @@
         <label>Ignore all Java windows</label>
         <default>false</default>
       </entry>
-      <entry name="dynamicDesktops" type="bool">
-        <label>Dynamic desktops</label>
-        <default>true</default>
-      </entry>
       <entry name="followClients" type="bool">
         <label>Follow clients across desktops</label>
         <default>true</default>

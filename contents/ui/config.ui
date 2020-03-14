@@ -52,6 +52,9 @@
    </property>
    <item>
     <widget class="QTabWidget" name="tabWidget">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -75,6 +78,9 @@
      </property>
      <property name="currentIndex">
       <number>0</number>
+     </property>
+     <property name="usesScrollButtons">
+      <bool>false</bool>
      </property>
      <widget class="QWidget" name="tab">
       <property name="sizePolicy">
@@ -132,19 +138,12 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_5">
           <item>
-           <widget class="QCheckBox" name="kcfg_dynamicDesktops">
-            <property name="text">
-             <string>Dynamic Desktops</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QCheckBox" name="kcfg_followClients">
+            <property name="whatsThis">
+             <string/>
+            </property>
             <property name="text">
-             <string>Follow clients</string>
+             <string>Automatically change desktops</string>
             </property>
            </widget>
           </item>
@@ -740,17 +739,6 @@
         </item>
        </layout>
       </widget>
-     </widget>
-     <widget class="QWidget" name="tab_3">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <attribute name="title">
-       <string>Page</string>
-      </attribute>
      </widget>
     </widget>
    </item>

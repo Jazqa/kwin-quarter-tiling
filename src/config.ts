@@ -58,8 +58,6 @@ const maxClients: number = readConfig("maxClients", -1);
 
 const autoTile: boolean = readConfigString("autoTile", true) === "true";
 
-const dynamicDesktops: boolean = readConfigString("dynamicDesktops", true) === "true";
-
 const followClients: boolean = readConfigString("followClients", true) === "true";
 
 const layout: string = readConfigString("layout", 0);
@@ -84,7 +82,6 @@ export const config = {
   maxClients,
   margins,
   autoTile,
-  dynamicDesktops,
   followClients,
   layout
 };

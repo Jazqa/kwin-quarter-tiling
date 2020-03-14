@@ -44,6 +44,7 @@ interface NumberDesktopsChangedSignal {
 
 interface Workspace {
   activeClient: Client;
+  activateClient: (client: Client) => void;
 
   readonly activeScreen: number;
   readonly numScreens: number;

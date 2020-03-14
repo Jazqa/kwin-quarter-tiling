@@ -53,7 +53,6 @@ var minHeight = readConfig("minHeight", 256);
 var gaps = readConfig("gap", 8);
 var maxClients = readConfig("maxClients", -1);
 var autoTile = readConfigString("autoTile", true) === "true";
-var dynamicDesktops = readConfigString("dynamicDesktops", true) === "true";
 var followClients = readConfigString("followClients", true) === "true";
 var layout = readConfigString("layout", 0);
 var margins = {
@@ -75,7 +74,6 @@ var config = {
     maxClients: maxClients,
     margins: margins,
     autoTile: autoTile,
-    dynamicDesktops: dynamicDesktops,
     followClients: followClients,
     layout: layout
 };
@@ -346,7 +344,7 @@ function addAll() {
 }
 function addDesktop(desktop) {
     for (var i = 0; i < workspace.numScreens; i++) {
-        if (toplevels && toplevels[i]) {
+        if (toplevels && toplevels[i] && !toplevels[i][desktop]) {
             toplevels[i][desktop] = toplevel(i, desktop);
         }
     }
@@ -538,10 +536,6 @@ function addWithForce(client) {
                     client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
                     add(client);
                 }
-                else {
-                    workspace.desktops += 1;
-                    addWithForce(client);
-                }
             }
         }
     }
@@ -558,6 +552,27 @@ function remove(client, index) {
         clientDisconnectors[client.windowId](client);
         delete clientDisconnectors[client.windowId];
         tileAll(client.screen, client.desktop);
+        if (config.followClients && client.desktop === workspace.currentDesktop) {
+            var currentDesktop_1 = workspace.currentDesktop;
+            var clientList = workspace.clientList();
+            var hasClientsLeft = clientList.some(function (clientB) {
+                if (clientB.windowId !== client.windowId) {
+                    return clientB.desktop === currentDesktop_1;
+                }
+            });
+            if (!hasClientsLeft) {
+                var busyDesktops_1 = [];
+                clientList.forEach(function (clientB) {
+                    if (clientB.desktop !== currentDesktop_1) {
+                        busyDesktops_1.push(clientB.desktop);
+                    }
+                });
+                var nextDesktop = busyDesktops_1.reduce(function (previous, current) {
+                    return Math.abs(currentDesktop_1 - current) < Math.abs(currentDesktop_1 - previous) ? current : previous;
+                });
+                workspace.currentDesktop = nextDesktop;
+            }
+        }
     }
 }
 function toggle(client, index) {

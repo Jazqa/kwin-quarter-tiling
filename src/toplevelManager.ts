@@ -18,7 +18,7 @@ function addAll(): void {
 
 function addDesktop(desktop: number): void {
   for (var i = 0; i < workspace.numScreens; i++) {
-    if (toplevels && toplevels[i]) {
+    if (toplevels && toplevels[i] && !toplevels[i][desktop]) {
       toplevels[i][desktop] = toplevel(i, desktop);
     }
   }
