@@ -791,7 +791,7 @@ function registerSignals() {
     }
     workspace.clientUnminimized.connect(function (client) {
         if (client) {
-            clientManager.add(client);
+            clientManager.addWithForce(client);
         }
     });
     workspace.clientRemoved.connect(function (client) {
@@ -809,7 +809,7 @@ function registerSignals() {
             clientManager.remove(client);
         }
         else if (client && !h && !v) {
-            clientManager.add(client);
+            clientManager.addWithForce(client);
         }
     });
     workspace.clientFullScreenSet.connect(function (client, fs) {

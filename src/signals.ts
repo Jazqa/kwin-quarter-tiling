@@ -15,7 +15,7 @@ export function registerSignals(): void {
 
   workspace.clientUnminimized.connect((client: Client) => {
     if (client) {
-      clientManager.add(client);
+      clientManager.addWithForce(client);
     }
   });
 
@@ -35,7 +35,7 @@ export function registerSignals(): void {
     if (client && h && v) {
       clientManager.remove(client);
     } else if (client && !h && !v) {
-      clientManager.add(client);
+      clientManager.addWithForce(client);
     }
   });
 
