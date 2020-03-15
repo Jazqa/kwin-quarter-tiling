@@ -546,7 +546,7 @@ function addAll$1() {
         workspace.clientList().forEach(function (client) { return add(client); });
     }
 }
-function remove(client, index) {
+function remove(client, index, shouldNotFollow) {
     index = index || find(client);
     if (index > -1) {
         clients.splice(index, 1);
@@ -554,7 +554,7 @@ function remove(client, index) {
         delete clientDisconnectors[client.windowId];
         tileAll(client.screen, client.desktop);
         // Checks if the current desktop is completely empty, finds the closest desktop with clients and switches to it
-        if (config.followClients && client.desktop === workspace.currentDesktop) {
+        if (!shouldNotFollow && config.followClients && client.desktop === workspace.currentDesktop) {
             var currentDesktop_1 = workspace.currentDesktop;
             var clientList = workspace.clientList();
             var hasClientsLeft = clientList.some(function (clientB) {
@@ -845,7 +845,7 @@ function registerSignals() {
     });
     workspace.clientMaximizeSet.connect(function (client, h, v) {
         if (client && h && v) {
-            clientManager.remove(client);
+            clientManager.remove(client, undefined, true);
         }
         else if (client && !h && !v) {
             if (config.autoTile) {
@@ -855,7 +855,7 @@ function registerSignals() {
     });
     workspace.clientFullScreenSet.connect(function (client, fs) {
         if (client && fs) {
-            clientManager.remove(client);
+            clientManager.remove(client, undefined, true);
         }
         else {
             if (config.autoTile) {

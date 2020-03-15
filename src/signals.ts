@@ -33,7 +33,7 @@ export function registerSignals(): void {
 
   workspace.clientMaximizeSet.connect((client: Client, h: boolean, v: boolean) => {
     if (client && h && v) {
-      clientManager.remove(client);
+      clientManager.remove(client, undefined, true);
     } else if (client && !h && !v) {
       if (config.autoTile) {
         clientManager.addWithForce(client);
@@ -43,7 +43,7 @@ export function registerSignals(): void {
 
   workspace.clientFullScreenSet.connect((client: Client, fs: boolean) => {
     if (client && fs) {
-      clientManager.remove(client);
+      clientManager.remove(client, undefined, true);
     } else {
       if (config.autoTile) {
         clientManager.addWithForce(client);

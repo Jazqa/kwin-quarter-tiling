@@ -117,7 +117,7 @@ function addAll() {
   }
 }
 
-function remove(client: Client, index?: number) {
+function remove(client: Client, index?: number, shouldNotFollow?: boolean) {
   index = index || find(client);
 
   if (index > -1) {
@@ -127,7 +127,7 @@ function remove(client: Client, index?: number) {
     tileAll(client.screen, client.desktop);
 
     // Checks if the current desktop is completely empty, finds the closest desktop with clients and switches to it
-    if (config.followClients && client.desktop === workspace.currentDesktop) {
+    if (!shouldNotFollow && config.followClients && client.desktop === workspace.currentDesktop) {
       const currentDesktop = workspace.currentDesktop;
       const clientList = workspace.clientList();
 
