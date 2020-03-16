@@ -1054,6 +1054,7 @@ function registerSignals() {
     workspace.clientMaximizeSet.connect(function (client, h, v) {
         if (client && h && v) {
             clientManager.remove(client, undefined, true);
+            workspace.activeClient = client;
         }
         else if (client && !h && !v) {
             if (config.autoTile) {

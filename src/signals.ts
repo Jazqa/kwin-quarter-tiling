@@ -34,6 +34,7 @@ export function registerSignals(): void {
   workspace.clientMaximizeSet.connect((client: Client, h: boolean, v: boolean) => {
     if (client && h && v) {
       clientManager.remove(client, undefined, true);
+      workspace.activeClient = client;
     } else if (client && !h && !v) {
       if (config.autoTile) {
         clientManager.addWithForce(client);
