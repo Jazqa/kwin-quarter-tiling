@@ -73,11 +73,7 @@ function maxClients(screen: number, desktop: number): number {
 }
 
 function isFull(clients: Array<Client>, screen: number, desktop: number): boolean {
-  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-    return clients.length >= toplevels[screen][desktop].layout.maxClients;
-  } else {
-    return true;
-  }
+  return clients.length >= maxClients(screen, desktop);
 }
 
 function isEmpty(clients: Array<Client>, screen: number, desktop: number): boolean {

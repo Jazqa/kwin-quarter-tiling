@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>300</width>
+    <width>330</width>
     <height>400</height>
    </rect>
   </property>
@@ -18,13 +18,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>300</width>
+    <width>330</width>
     <height>400</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>300</width>
+    <width>330</width>
     <height>400</height>
    </size>
   </property>
@@ -95,9 +95,9 @@
       <widget class="QWidget" name="verticalLayoutWidget_2">
        <property name="geometry">
         <rect>
-         <x>-7</x>
+         <x>0</x>
          <y>0</y>
-         <width>301</width>
+         <width>311</width>
          <height>361</height>
         </rect>
        </property>
@@ -115,21 +115,36 @@
          <number>6</number>
         </property>
         <item>
+         <spacer name="verticalSpacer_9">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_6">
           <property name="topMargin">
            <number>0</number>
           </property>
           <item>
            <widget class="QCheckBox" name="kcfg_autoTile">
-            <property name="text">
-             <string>Autotile</string>
+            <property name="toolTip">
+             <string/>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="kcfg_ignoreJava">
+            <property name="toolTipDuration">
+             <number>-1</number>
+            </property>
+            <property name="whatsThis">
+             <string/>
+            </property>
             <property name="text">
-             <string>Ignore Java</string>
+             <string>Automatically tile windows</string>
             </property>
            </widget>
           </item>
@@ -144,6 +159,20 @@
             </property>
             <property name="text">
              <string>Automatically change desktops</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="kcfg_ignoreJava">
+            <property name="text">
+             <string>Ignore java clients</string>
             </property>
            </widget>
           </item>
@@ -180,7 +209,7 @@
              <string>Set to -1 if you want the layout to manage maximum clients</string>
             </property>
             <property name="text">
-             <string>Max clients</string>
+             <string>Max tiles</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -225,10 +254,16 @@
             <property name="alignment">
              <set>Qt::AlignCenter</set>
             </property>
+            <property name="specialValueText">
+             <string>Unlimited</string>
+            </property>
             <property name="showGroupSeparator" stdset="0">
              <bool>false</bool>
             </property>
             <property name="suffix">
+             <string/>
+            </property>
+            <property name="prefix">
              <string/>
             </property>
             <property name="minimum">
@@ -270,16 +305,6 @@
          </spacer>
         </item>
         <item>
-         <widget class="QLabel" name="ignoredLabel_2">
-          <property name="text">
-           <string>Margins</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignBottom|Qt::AlignHCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_9">
           <item>
            <widget class="QLabel" name="ignoredDesktopsLabel_2">
@@ -296,7 +321,7 @@
              <string/>
             </property>
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Top&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Margin top&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -306,7 +331,7 @@
           <item>
            <widget class="QLabel" name="ignoredScreensLabel_2">
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Left&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Margin left&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -316,7 +341,7 @@
           <item>
            <widget class="QLabel" name="ignoredActivitiesLabel_2">
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Bottom&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Margin bottom&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -338,7 +363,7 @@
              <string/>
             </property>
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Right&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Margin right&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -364,7 +389,7 @@
              <number>64</number>
             </property>
             <property name="singleStep">
-             <number>2</number>
+             <number>1</number>
             </property>
             <property name="value">
              <number>0</number>
@@ -386,7 +411,7 @@
              <number>64</number>
             </property>
             <property name="singleStep">
-             <number>2</number>
+             <number>1</number>
             </property>
             <property name="value">
              <number>0</number>
@@ -408,7 +433,7 @@
              <number>64</number>
             </property>
             <property name="singleStep">
-             <number>2</number>
+             <number>1</number>
             </property>
             <property name="value">
              <number>0</number>
@@ -430,7 +455,7 @@
              <number>64</number>
             </property>
             <property name="singleStep">
-             <number>2</number>
+             <number>1</number>
             </property>
             <property name="value">
              <number>0</number>
@@ -453,16 +478,6 @@
          </spacer>
         </item>
         <item>
-         <widget class="QLabel" name="ignoredLabel">
-          <property name="text">
-           <string>Ignored Areas</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignBottom|Qt::AlignHCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <widget class="QLabel" name="ignoredDesktopsLabel">
@@ -479,7 +494,7 @@
              <string/>
             </property>
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Desktops&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ignored desktops&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -489,7 +504,7 @@
           <item>
            <widget class="QLabel" name="ignoredScreensLabel">
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Screens&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ignored screens&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -499,7 +514,7 @@
           <item>
            <widget class="QLabel" name="ignoredActivitiesLabel">
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Activities&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ignored activities&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -570,7 +585,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>281</width>
+         <width>311</width>
          <height>361</height>
         </rect>
        </property>
@@ -587,6 +602,19 @@
         <property name="bottomMargin">
          <number>6</number>
         </property>
+        <item>
+         <spacer name="verticalSpacer_10">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
         <item>
          <widget class="QLabel" name="ignoredProgramsLabel">
           <property name="text">
@@ -650,7 +678,7 @@
         <item>
          <widget class="QLabel" name="smallProgramsLabel">
           <property name="text">
-           <string>Small programs</string>
+           <string>Small programs (will be tiled, but not resized)</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignBottom|Qt::AlignHCenter</set>
@@ -690,6 +718,13 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_8">
           <item>
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>Width</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLineEdit" name="kcfg_minWidth">
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -702,7 +737,7 @@
           <item>
            <widget class="QLabel" name="label_4">
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;x&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;X&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignCenter</set>
@@ -719,6 +754,13 @@
             </property>
             <property name="placeholderText">
              <string>256</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Height</string>
             </property>
            </widget>
           </item>

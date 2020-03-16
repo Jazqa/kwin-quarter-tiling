@@ -396,12 +396,7 @@ function maxClients$1(screen, desktop) {
     }
 }
 function isFull(clients, screen, desktop) {
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        return clients.length >= toplevels[screen][desktop].layout.maxClients;
-    }
-    else {
-        return true;
-    }
+    return clients.length >= maxClients$1(screen, desktop);
 }
 function isEmpty(clients, screen, desktop) {
     if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
