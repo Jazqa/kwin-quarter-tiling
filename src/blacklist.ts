@@ -28,7 +28,7 @@ function includes(client: Client): boolean {
     client.screen < 0 ||
     client.geometry.width < config.minWidth ||
     client.geometry.height < config.minHeight ||
-    config.ignoredCaptions.indexOf(client.caption.toString()) > -1 ||
+    config.ignoredCaptions.some(caption => client.caption.toString().indexOf(caption) > -1) ||
     config.ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
     config.ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
     config.isIgnoredDesktop(client.desktop) ||

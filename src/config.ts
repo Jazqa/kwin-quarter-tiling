@@ -9,7 +9,7 @@ function readConfigString(key: string, defaultValue: any): string {
   return readConfig(key, defaultValue).toString();
 }
 
-const ignoredCaptions: Array<string> = [
+const ignoredClients: Array<string> = [
   "albert",
   "kazam",
   "krunner",
@@ -23,19 +23,19 @@ const ignoredCaptions: Array<string> = [
   "plugin-container",
   "simplescreenrecorder",
   "yakuake",
-  ...readConfigString("ignoredClients", "wine, steam, kate").split(", ")
+  "ksmserver-logout-greeter",
+  "QEMU",
+  "Latte Dock",
+  ...readConfigString("ignoredClients", "wine, steam").split(", "),
+  ...[readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""]
 ];
 
-const ignoredClients: Array<string> = [
+const ignoredCaptions: Array<string> = [
   "File Upload",
   "Move to Trash",
   "Quit GIMP",
   "Create a New Image",
-  "QEMU",
-  "Latte Dock",
-  "ksmserver-logout-greeter",
-  ...readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image").split(", "),
-  ...[readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""]
+  ...readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image").split(", ")
 ];
 
 const ignoredDesktops: Array<string> = readConfigString("ignoredDesktops", "").split(", ");

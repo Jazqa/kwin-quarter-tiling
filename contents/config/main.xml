@@ -68,7 +68,7 @@
       </entry>
       <entry name="ignoredClients" type="string">
   	    <label>Programs that should be ignored by the script (e.g. "kate", "steam")</label>
-  	    <default>wine, steam, kate</default>
+  	    <default>wine, steam</default>
       </entry>
       <entry name="ignoredCaptions" type="string">
   	    <label>Captions that should be ignored by the script (e.g. "Quit GIMP")</label>
