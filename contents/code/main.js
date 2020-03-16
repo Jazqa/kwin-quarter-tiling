@@ -121,15 +121,15 @@ var blacklist = {
 var size = config.gaps;
 var adjust = function (amount) {
     // Note: Gap size can't be zero, because it would screw up the maximized window logic
-    var min = 2;
+    var min = 1;
     var max = 64;
     size = Math.min(Math.max(size + amount, min), max);
 };
 function increase() {
-    adjust(2);
+    adjust(1);
 }
 function decrease() {
-    adjust(-2);
+    adjust(-1);
 }
 var gaps$1 = {
     increase: increase,
