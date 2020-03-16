@@ -160,7 +160,7 @@ function toggle(client: Client, index?: number): void {
   index = index || find(client);
 
   if (index > -1) {
-    remove(client, index);
+    remove(client, index, true);
   } else {
     add(client);
   }

@@ -580,7 +580,7 @@ function remove(client, index, shouldNotFollow) {
 function toggle(client, index) {
     index = index || find(client);
     if (index > -1) {
-        remove(client, index);
+        remove(client, index, true);
     }
     else {
         add(client);
