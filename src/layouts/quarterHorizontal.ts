@@ -3,11 +3,11 @@ import { Geometry, geometryUtils } from "../geometry";
 import { Layout } from "../layout";
 
 interface Separators {
-  v: Array<number>;
-  h: number;
+  h: Array<number>;
+  v: number;
 }
 
-interface QuarterVerticalLayout extends Layout {
+interface QuarterHorizontalLayout extends Layout {
   geometry: Geometry;
   separators: Separators;
 }
@@ -20,62 +20,61 @@ function getTiles(geometry: Geometry, separators: Separators, count: number): Ar
     {
       x,
       y,
-      width: v[0] - x,
-      height: h - y
+      width: v - x,
+      height: h[0] - y
+    },
+    {
+      x: v,
+      y,
+      width: x + width - v,
+      height: h[1] - y
+    },
+    {
+      x: v,
+      y: h[1],
+      width: x + width - v,
+      height: y + height - h[1]
     },
     {
       x,
-      y: h,
-      width: v[1] - x,
-      height: y + height - h
-    },
-    {
-      x: v[1],
-      y: h,
-      width: x + width - v[1],
-      height: y + height - h
-    },
-    {
-      x: v[0],
-      y,
-      width: x + width - v[0],
-      height: h - y
+      y: h[0],
+      width: v - x,
+      height: y + height - h[0]
     }
   ];
 
   if (count < 4) {
-    tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
+    tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
   }
 
   if (count < 3) {
-    tiles[1].width = tiles[2].x + tiles[2].width - tiles[1].x;
+    tiles[1].height = tiles[2].y + tiles[2].height - tiles[1].y;
   }
 
   if (count < 2) {
-    tiles[0].height = tiles[1].y + tiles[1].height - tiles[0].y;
+    tiles[0].width = tiles[1].x + tiles[1].width - tiles[0].x;
   }
 
   return tiles;
 }
 
-export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
+export function QuarterHorizontal(geometry: Geometry): QuarterHorizontalLayout {
   const maxClients = 4;
 
   let hs = geometry.y + geometry.height * 0.5;
   let vs = geometry.x + geometry.width * 0.5;
-  let separators = { h: hs, v: [vs, vs] };
+  let separators = { h: [hs, hs], v: vs };
 
   function restore(): void {
     hs = geometry.y + geometry.height * 0.5;
     vs = geometry.x + geometry.width * 0.5;
-    separators = { h: hs, v: [vs, vs] };
+    separators = { h: [hs, hs], v: vs };
   }
 
   function adjustGeometry(newGeometry: Geometry): void {
-    separators.v[0] += (geometry.width - newGeometry.width) * 0.5;
-    separators.v[0] += (geometry.width - newGeometry.width) * 0.5;
-
-    separators.h += (geometry.height - newGeometry.height) * 0.5;
+    separators.v += (geometry.width - newGeometry.width) * 0.5;
+    separators.h[0] += (geometry.height - newGeometry.height) * 0.5;
+    separators.h[1] += (geometry.height - newGeometry.height) * 0.5;
     geometry = newGeometry;
   }
 
@@ -93,25 +92,25 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
     const newGeometry = client.geometry;
     previousGeometry = previousGeometry;
 
-    if (previousGeometry.y >= separators.h) {
+    if (previousGeometry.x >= separators.v) {
       // Right
-      separators.h += newGeometry.y - previousGeometry.y;
-      if (previousGeometry.x >= separators.v[1]) {
+      separators.v += newGeometry.x - previousGeometry.x;
+      if (previousGeometry.y >= separators.h[1]) {
         // Bottom right
-        separators.v[1] += newGeometry.x - previousGeometry.x;
+        separators.h[1] += newGeometry.y - previousGeometry.y;
       } else {
         // Top right
-        separators.v[1] += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
+        separators.h[1] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
       }
     } else {
-      separators.h += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
+      separators.v += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
       // Left
-      if (previousGeometry.x >= separators.v[0]) {
+      if (previousGeometry.y >= separators.h[0]) {
         // Bottom left
-        separators.v[0] += newGeometry.x - previousGeometry.x;
+        separators.h[0] += newGeometry.y - previousGeometry.y;
       } else {
         // Top left
-        separators.v[0] += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
+        separators.h[0] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
       }
     }
 
@@ -121,10 +120,10 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
     const maxH = 0.9 * (geometry.y + geometry.height);
     const minH = geometry.y + geometry.height * 0.1;
 
-    separators.v[0] = Math.min(Math.max(minV, separators.v[0]), maxV);
-    separators.v[1] = Math.min(Math.max(minV, separators.v[1]), maxV);
+    separators.v = Math.min(Math.max(minV, separators.v), maxV);
 
-    separators.h = Math.min(Math.max(minH, separators.h), maxH);
+    separators.h[0] = Math.min(Math.max(minH, separators.h[0]), maxH);
+    separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
   }
 
   return {
