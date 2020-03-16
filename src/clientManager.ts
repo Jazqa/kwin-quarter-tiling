@@ -160,7 +160,8 @@ function toggle(client: Client, index?: number): void {
   index = index || find(client);
 
   if (index > -1) {
-    remove(client, index, true);
+    remove(client, index);
+    client.geometry = geometryUtils.center(client.geometry, workspace.clientArea(0, client.screen, client.desktop));
   } else {
     add(client);
   }

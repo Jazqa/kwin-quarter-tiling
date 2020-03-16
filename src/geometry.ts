@@ -49,10 +49,17 @@ function moveTo(geometryA: Geometry, geometryB: Geometry) {
   return geometryC;
 }
 
+function center(geometryA: Geometry, geometryB: Geometry) {
+  geometryB.x += geometryB.width * 0.5 - geometryA.width * 0.5;
+  geometryB.y += geometryB.height * 0.5 - geometryA.height * 0.5;
+  return moveTo(geometryA, geometryB);
+}
+
 export const geometryUtils = {
   clone,
   distance,
   gapArea,
   fullArea,
-  moveTo
+  moveTo,
+  center
 };

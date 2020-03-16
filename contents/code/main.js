@@ -170,12 +170,18 @@ function moveTo(geometryA, geometryB) {
     geometryC.width = geometryA.width;
     return geometryC;
 }
+function center(geometryA, geometryB) {
+    geometryB.x += geometryB.width * 0.5 - geometryA.width * 0.5;
+    geometryB.y += geometryB.height * 0.5 - geometryA.height * 0.5;
+    return moveTo(geometryA, geometryB);
+}
 var geometryUtils = {
     clone: clone,
     distance: distance,
     gapArea: gapArea,
     fullArea: fullArea,
-    moveTo: moveTo
+    moveTo: moveTo,
+    center: center
 };
 
 function getTiles(geometry, separators, count) {
@@ -580,7 +586,8 @@ function remove(client, index, shouldNotFollow) {
 function toggle(client, index) {
     index = index || find(client);
     if (index > -1) {
-        remove(client, index, true);
+        remove(client, index);
+        client.geometry = geometryUtils.center(client.geometry, workspace.clientArea(0, client.screen, client.desktop));
     }
     else {
         add(client);
