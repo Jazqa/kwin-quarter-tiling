@@ -1,5 +1,6 @@
 import { QuarterHorizontal } from "./quarterHorizontal";
-import { QuarterBoth } from "./quarterBoth";
+import { QuarterSingleHorizontal } from "./quarterSingleHorizontal";
+import { QuarterSingleVertical } from "./quarterSingleVertical";
 import { QuarterVertical } from "./quarterVertical";
 
 /*
@@ -14,4 +15,9 @@ import { QuarterVertical } from "./quarterVertical";
  *      </property>
  */
 
-export const layouts = { "0": QuarterHorizontal, "1": QuarterVertical, "2": QuarterBoth };
+export const layouts = {
+  "0": QuarterHorizontal,
+  "1": QuarterVertical,
+  "2": QuarterSingleHorizontal,
+  "3": QuarterSingleVertical
+};

@@ -3,11 +3,11 @@ import { Geometry, geometryUtils } from "../geometry";
 import { Layout } from "../layout";
 
 interface Separators {
-  h: number;
   v: number;
+  h: number;
 }
 
-interface QuarterBothLayout extends Layout {
+interface QuarterSingleVerticalLayout extends Layout {
   geometry: Geometry;
   separators: Separators;
 }
@@ -24,41 +24,41 @@ function getTiles(geometry: Geometry, separators: Separators, count: number): Ar
       height: h - y
     },
     {
-      x: v,
-      y,
-      width: x + width - v,
-      height: h - y
-    },
-    {
-      x: v,
-      y: h,
-      width: x + width - v,
-      height: y + height - h
-    },
-    {
       x,
       y: h,
       width: v - x,
       height: y + height - h
+    },
+    {
+      x: v,
+      y: h,
+      width: x + width - v,
+      height: y + height - h
+    },
+    {
+      x: v,
+      y,
+      width: x + width - v,
+      height: h - y
     }
   ];
 
   if (count < 4) {
-    tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
+    tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
   }
 
   if (count < 3) {
-    tiles[1].height = tiles[2].y + tiles[2].height - tiles[1].y;
+    tiles[1].width = tiles[2].x + tiles[2].width - tiles[1].x;
   }
 
   if (count < 2) {
-    tiles[0].width = tiles[1].x + tiles[1].width - tiles[0].x;
+    tiles[0].height = tiles[1].y + tiles[1].height - tiles[0].y;
   }
 
   return tiles;
 }
 
-export function QuarterBoth(geometry: Geometry): QuarterBothLayout {
+export function QuarterSingleVertical(geometry: Geometry): QuarterSingleVerticalLayout {
   const maxClients = 4;
 
   let hs = geometry.y + geometry.height * 0.5;

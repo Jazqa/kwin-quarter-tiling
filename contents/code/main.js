@@ -341,7 +341,7 @@ function getTiles$1(geometry, separators, count) {
     }
     return tiles;
 }
-function QuarterBoth(geometry) {
+function QuarterSingleHorizontal(geometry) {
     var maxClients = 4;
     var hs = geometry.y + geometry.height * 0.5;
     var vs = geometry.x + geometry.width * 0.5;
@@ -404,6 +404,102 @@ function getTiles$2(geometry, separators, count) {
         {
             x: x,
             y: y,
+            width: v - x,
+            height: h - y
+        },
+        {
+            x: x,
+            y: h,
+            width: v - x,
+            height: y + height - h
+        },
+        {
+            x: v,
+            y: h,
+            width: x + width - v,
+            height: y + height - h
+        },
+        {
+            x: v,
+            y: y,
+            width: x + width - v,
+            height: h - y
+        }
+    ];
+    if (count < 4) {
+        tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
+    }
+    if (count < 3) {
+        tiles[1].width = tiles[2].x + tiles[2].width - tiles[1].x;
+    }
+    if (count < 2) {
+        tiles[0].height = tiles[1].y + tiles[1].height - tiles[0].y;
+    }
+    return tiles;
+}
+function QuarterSingleVertical(geometry) {
+    var maxClients = 4;
+    var hs = geometry.y + geometry.height * 0.5;
+    var vs = geometry.x + geometry.width * 0.5;
+    var separators = { h: hs, v: vs };
+    function restore() {
+        hs = geometry.y + geometry.height * 0.5;
+        vs = geometry.x + geometry.width * 0.5;
+        separators = { h: hs, v: vs };
+    }
+    function adjustGeometry(newGeometry) {
+        separators.v += (geometry.width - newGeometry.width) * 0.5;
+        separators.h += (geometry.height - newGeometry.height) * 0.5;
+        geometry = newGeometry;
+    }
+    function tileClients(clients) {
+        var includedClients = clients.slice(0, maxClients);
+        var tiles = getTiles$2(geometry, separators, includedClients.length);
+        includedClients.forEach(function (client, index) {
+            var tile = tiles[index];
+            client.geometry = geometryUtils.gapArea(tile);
+        });
+    }
+    function resizeClient(client, previousGeometry) {
+        var newGeometry = client.geometry;
+        previousGeometry = previousGeometry;
+        if (previousGeometry.x >= separators.v) {
+            separators.v += newGeometry.x - previousGeometry.x;
+        }
+        else {
+            separators.v += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
+        }
+        if (previousGeometry.y >= separators.h) {
+            separators.h += newGeometry.y - previousGeometry.y;
+        }
+        else {
+            separators.h += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
+        }
+        var maxV = 0.9 * (geometry.x + geometry.width);
+        var minV = geometry.x + geometry.width * 0.1;
+        var maxH = 0.9 * (geometry.y + geometry.height);
+        var minH = geometry.y + geometry.height * 0.1;
+        separators.v = Math.min(Math.max(minV, separators.v), maxV);
+        separators.h = Math.min(Math.max(minH, separators.h), maxH);
+    }
+    return {
+        restore: restore,
+        maxClients: maxClients,
+        tileClients: tileClients,
+        resizeClient: resizeClient,
+        geometry: geometry,
+        separators: separators,
+        adjustGeometry: adjustGeometry
+    };
+}
+
+function getTiles$3(geometry, separators, count) {
+    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
+    var v = separators.v, h = separators.h;
+    var tiles = [
+        {
+            x: x,
+            y: y,
             width: v[0] - x,
             height: h - y
         },
@@ -455,7 +551,7 @@ function QuarterVertical(geometry) {
     }
     function tileClients(clients) {
         var includedClients = clients.slice(0, maxClients);
-        var tiles = getTiles$2(geometry, separators, includedClients.length);
+        var tiles = getTiles$3(geometry, separators, includedClients.length);
         includedClients.forEach(function (client, index) {
             var tile = tiles[index];
             client.geometry = geometryUtils.gapArea(tile);
@@ -518,7 +614,12 @@ function QuarterVertical(geometry) {
  *          <string>NewLayout</string>
  *      </property>
  */
-var layouts = { "0": QuarterHorizontal, "1": QuarterVertical, "2": QuarterBoth };
+var layouts = {
+    "0": QuarterHorizontal,
+    "1": QuarterVertical,
+    "2": QuarterSingleHorizontal,
+    "3": QuarterSingleVertical
+};
 
 var SelectedLayout = layouts[config.layout];
 function availableArea(geometry) {
