@@ -35,7 +35,9 @@ const ignoredCaptions: Array<string> = [
   "Move to Trash",
   "Quit GIMP",
   "Create a New Image",
-  ...readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image").split(", ")
+  ...readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image")
+    .split(", ")
+    .filter(caption => caption)
 ];
 
 const ignoredDesktops: Array<string> = readConfigString("ignoredDesktops", "").split(", ");

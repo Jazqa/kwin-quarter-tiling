@@ -39,7 +39,9 @@ var ignoredCaptions = __spreadArrays([
     "Move to Trash",
     "Quit GIMP",
     "Create a New Image"
-], readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image").split(", "));
+], readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image")
+    .split(", ")
+    .filter(function (caption) { return caption; }));
 var ignoredDesktops = readConfigString("ignoredDesktops", "").split(", ");
 var ignoredScreens = readConfigString("ignoredScreens", "").split(", ");
 function isIgnoredDesktop(desktop) {
@@ -106,7 +108,12 @@ function includes(client) {
         client.screen < 0 ||
         client.geometry.width < config.minWidth ||
         client.geometry.height < config.minHeight ||
-        config.ignoredCaptions.some(function (caption) { return client.caption.toString().indexOf(caption) > -1; }) ||
+        config.ignoredCaptions.some(function (caption) {
+            return client.caption
+                .toString()
+                .toLowerCase()
+                .indexOf(caption.toLowerCase()) > -1;
+        }) ||
         config.ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
         config.ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
         config.isIgnoredDesktop(client.desktop) ||
