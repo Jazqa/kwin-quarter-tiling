@@ -222,7 +222,12 @@
                  </item>
                 <item>
                   <property name="text">
-                   <string>Quarter (Both)</string>
+                   <string>Quarter (HS)</string>
+                  </property>
+                 </item>
+                <item>
+                  <property name="text">
+                   <string>Quarter (VS)</string>
                   </property>
                  </item>
                 </widget>
