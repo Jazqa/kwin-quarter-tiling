@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Quarter Tiling
 Name[zh_CN]=四分平铺
-Comment=Improves the workflow by automatically tiling windows and creating virtual desktops
+Comment=A script providing an easily approachable middle ground between a tiling and a floating window manager
 Comment[zh_CN]=自动平铺窗口及创建新虚拟桌面，以改善工作流
 Icon=preferences-system-windows-script-test
 
@@ -11,7 +11,7 @@ X-Plasma-MainScript=code/main.js
 X-KDE-PluginInfo-Author=Jasu Koponen
 X-KDE-PluginInfo-Email=jasu.koponen@hotmail.com
 X-KDE-PluginInfo-Name=quarter-tiling
-X-KDE-PluginInfo-Version=0.0.3
+X-KDE-PluginInfo-Version=2.0.0
 
 X-KDE-PluginInfo-Depends=
 X-KDE-PluginInfo-License=GPL
