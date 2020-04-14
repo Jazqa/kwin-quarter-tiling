@@ -5,77 +5,74 @@
       http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
     <kcfgfile name=""/>
     <group name="">
+      <entry name="autoTile" type="bool">
+        <label>Automatically tile windows</label>
+        <default>true</default>
+      </entry>
+      <entry name="ignoreJava" type="bool">
+        <label>Ignore all Java windows</label>
+        <default>false</default>
+      </entry>
+      <entry name="followClients" type="bool">
+        <label>Follow clients across desktops</label>
+        <default>true</default>
+      </entry>
     	<entry name="gap" type="int">
-		  <label>Pixels between the windows and screen edges</label>
-		  <default>8</default>
-		</entry>
-    	<entry name="floatX" type="int">
-		  <label>Floating Windows preset horizontal size value in percentage representing factor of screen size, zero disables the feature</label>
-		  <default>0</default>
-		</entry>
-    	<entry name="floatY" type="int">
-		  <label>Floating Windows preset vertical size value in percentage representing factor of screen size, zero disables the feature</label>
-		  <default>0</default>
-		</entry>
-    <entry name="numDesks" type="int">
-      <label>Initial number of desktops</label>
-      <default>2</default>
-    </entry>
-    <entry name="follow" type="bool">
-      <label>Go to the next busy desktop when the last window of a desktop is closed</label>
-      <default>true</default>
-    </entry>
-    <entry name="ignoredScreens" type="string">
-      <label>Ignored Screens</label>
-      <default></default>
-    </entry>
-    <entry name="ignoredDesktops" type="string">
-      <label>Ignored Desktops</label>
-      <default></default>
-    </entry>
-    <entry name="ignoredActivities" type="string">
-      <label>Ignored Activities</label>
-      <default></default>
-    </entry>
-    <entry name="centerTo" type="int">
-      <label>Tile small clients to the center of the tile instead of the center of the screen</label>
-      <default>1</default>
-    </entry>
-    <entry name="liveTiling" type="bool">
-      <label>Tile the windows live when dragging and resizing with mouse</label>
-      <default>false</default>
-    </entry>
-    <entry name="mt" type="int">
-      <label>Top margin</label>
-      <default>0</default>
-    </entry>
-    <entry name="mb" type="int">
-      <label>Bottom margin</label>
-      <default>1</default>
-    </entry>
-    <entry name="ml" type="int">
-      <label>Left margin</label>
-      <default>0</default>
-    </entry>
-    <entry name="mr" type="int">
-      <label>Right margin</label>
-      <default>0</default>
-    </entry>
-    <entry name="ignoredClients" type="string">
-  	  <label>Programs that should be ignored by the script (f.ex. "kate", "steam")</label>
-  	  <default>wine, steam, kate</default>
-    </entry>
-    <entry name="ignoreJava" type="bool">
-      <label>Ignores all Java programs if set to true</label>
-      <default>false</default>
-    </entry>
-    <entry name="ignoredCaptions" type="string">
-  	  <label>(Parts of) Window captions that should be ignored by the script (f.ex "move to trash")</label>
-  	  <default></default>
-    </entry>
-    <entry name="fixedClients" type="string">
-      <label>Clients that are aligned (position) but not resized with the layout</label>
-      <default>telegram, telegram-desktop, telegramdesktop</default>
-    </entry>
+        <label>Pixels between the windows and screen edges</label>
+        <default>8</default>
+		  </entry>
+      <entry name="maxClients" type="int">
+        <label>Maximum amount of clients to tile on a screen</label>
+        <default>-1</default>
+		  </entry>
+      <entry name="marginTop" type="int">
+        <label>Additional pixels from the top of the screen</label>
+        <default>0</default>
+		  </entry>
+      <entry name="marginLeft" type="int">
+        <label>Additional pixels from the left of the screen</label>
+        <default>0</default>
+		  </entry>
+      <entry name="marginBottom" type="int">
+        <label>Additional pixels from the bottom of the screen</label>
+        <default>0</default>
+		  </entry>
+      <entry name="marginRight" type="int">
+        <label>Additional pixels from the right of the screen</label>
+        <default>0</default>
+		  </entry>
+      <entry name="layout" type="int">
+        <label>Tiling layout</label>
+        <default>0</default>
+		  </entry>
+      <entry name="">
+      <entry name="minWidth" type="int">
+        <label>Minimum Program Width</label>
+        <default>256</default>
+      </entry>
+      <entry name="minHeight" type="int">
+        <label>Minimum Program Height</label>
+        <default>256</default>
+      </entry>
+      <entry name="ignoredScreens" type="string">
+  	    <label>Screens that should be ignored by the script</label>
+  	    <default></default>
+      </entry>
+      <entry name="ignoredDesktops" type="string">
+  	    <label>Desktops that should be ignored by the script</label>
+  	    <default></default>
+      </entry>
+      <entry name="ignoredActivities" type="string">
+  	    <label>Activities that should be ignored by the script</label>
+  	    <default></default>
+      </entry>
+      <entry name="ignoredClients" type="string">
+  	    <label>Programs that should be ignored by the script (e.g. "kate", "steam")</label>
+  	    <default>wine, steam</default>
+      </entry>
+      <entry name="ignoredCaptions" type="string">
+  	    <label>Captions that should be ignored by the script (e.g. "Quit GIMP")</label>
+  	    <default>Quit GIMP, Create a New Image</default>
+      </entry>
    	</group>
 </kcfg>

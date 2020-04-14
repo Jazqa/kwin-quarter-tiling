@@ -1,10 +1,10 @@
 # Quarter Tiling Script for KWin
 
-## Features
-- Tiles windows
-- Maintains the tiled layout when windows are interacted with
-- Automatically creates and moves between virtual desktops
-- Supports mouse and [keyboard](https://github.com/Jazqa/kwin-quarter-tiling/wiki/Keybindings)
+## Description
+
+Easy tiling script for KWin. Thanks to the simple tiling layouts and mouse-driven controls, the script should feel familiar to users with no prior experience with tiling window managers.
+
+The script is not supposed to be a replacement for a tiling window manager, but a simple tool to easily combine the strengths of tiling and floating window managers.
 
 ## Preview
 
@@ -14,7 +14,7 @@
 
 ![d3](https://i.imgur.com/7rN8hg2.gif)
 
-## Installing
+## Installation
 
 Arch Linux: [AUR](https://aur.archlinux.org/packages/kwin-scripts-quarter-tiling-git/)
 
@@ -27,27 +27,34 @@ Manually:
     mkdir -p ~/.local/share/kservices5
     ln -sf ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
 
-**[Configuration:](https://github.com/Jazqa/kwin-quarter-tiling/wiki/Configuration-Interface)** Script is configured through the configuration interface.
+## Configuration
 
-**[Keybindings:](https://github.com/Jazqa/kwin-quarter-tiling/wiki/Keybindings)** Go to Settings » Shortcuts » Global Shortcuts » KWin and search for "Quarter" to find all the script specific shortcuts. Bind the ones you wish to use. "Float On/Off" is recommended for an easy way to tile and untile the active window.
+The script is configured through the configuration interface under "Kwin Scripts". If you encounter programs that do not work with tiling, you can ignore them via the configuration interface.
 
-## Updating
+## Shortcuts
 
-**Git:**
+Go to `System Settings » Shortcuts » Global Shortcuts » KWin` and search for "Quarter" to find all the script specific shortcuts. Bind the ones you wish to use. "Float On/Off" is recommended for an easy way to tile and untile the active window.
+
+## Updates
+
+**Git**
 
 `git clone https://github.com/Jazqa/kwin-quarter-tiling.git && plasmapkg2 --type kwinscript -u kwin-quarter-tiling`
 
 Alternatively, set this repository as the git origin of `~/.local/share/kwin/scripts/quarter-tiling`. If you don't know how to do this, move the hidden .git folder inside the cloned folder to the location above. After this, the script can be updated by using `git fetch origin && git pull`.
 
-**AUR:** Arch users can keep the script updated through AUR.
+**AUR**
 
-## Uninstalling
+Arch users can keep the script updated through AUR.
+
+## Uninstallation
 
 `plasmapkg2 --type kwinscript -r .local/share/kwin/scripts/quarter-tiling`
 
+## Contributions and adjustments
 
-## Note
-- If you remove a virtual desktop, all of the tiled clients on the desktop will be closed.
-- Some programs don't play nice with tiling. If you encounter one, add it to `Ignored Programs` or `Ignored Captions` to avoid issues.
+The script is written in TypeScript and transpiled to JavaScript. If you modify the `.ts` files, you have to run `npm install && npm run transpile` to apply the changes you've made.
 
-#### Suggestions and bug reports are welcome!
+New tiling layouts can be created without touching the existing code. New layouts should be placed under `src/layouts`. New layouts will work as long as the layouts implement the interface described in `src/layout.ts`. If you create a new layout, feel free to open a pull request and it'll be added to master.
+
+#### Suggestions, pull requests and bug reports are welcome!
