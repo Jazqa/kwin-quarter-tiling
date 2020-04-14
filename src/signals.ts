@@ -79,6 +79,10 @@ export function registerSignals(): void {
   workspace.numberScreensChanged.connect((count: number) => {
     toplevelManager.addAll();
   });
+
+  workspace.screenResized.connect((screen: number) => {
+    clientManager.tileAll(screen, workspace.currentDesktop);
+  });
 }
 
 export const signals = {

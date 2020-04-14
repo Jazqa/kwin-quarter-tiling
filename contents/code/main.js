@@ -1245,6 +1245,9 @@ function registerSignals() {
     workspace.numberScreensChanged.connect(function (count) {
         toplevelManager.addAll();
     });
+    workspace.screenResized.connect(function (screen) {
+        clientManager.tileAll(screen, workspace.currentDesktop);
+    });
 }
 var signals = {
     registerSignals: registerSignals,
