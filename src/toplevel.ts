@@ -33,8 +33,24 @@ export function toplevel(screen: number, desktop: number): Toplevel | null {
     return null;
   }
 
+  // Geometry
   var geometry = availableArea(workspace.clientArea(0, screen, desktop));
 
+  function hasGeometryChanged(newGeometry: Geometry) {
+    return (
+      geometry.x !== newGeometry.x ||
+      geometry.y !== newGeometry.y ||
+      geometry.width !== newGeometry.width ||
+      geometry.height !== newGeometry.height
+    );
+  }
+
+  function onGeometryChanged(newGeometry: Geometry) {
+    geometry = newGeometry;
+    layout.adjustGeometry(newGeometry);
+  }
+
+  // Layout
   var layout = SelectedLayout(geometry);
 
   if (config.maxClients > -1) {
@@ -44,14 +60,8 @@ export function toplevel(screen: number, desktop: number): Toplevel | null {
   function tileClients(clients: Array<Client>): void {
     const currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
 
-    if (
-      geometry.x !== currentGeometry.x ||
-      geometry.y !== currentGeometry.y ||
-      geometry.width !== currentGeometry.width ||
-      geometry.height !== currentGeometry.height
-    ) {
-      layout.adjustGeometry(currentGeometry);
-      geometry = currentGeometry;
+    if (hasGeometryChanged(currentGeometry)) {
+      onGeometryChanged(currentGeometry);
     }
 
     layout.tileClients(clients);

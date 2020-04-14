@@ -624,19 +624,27 @@ function toplevel(screen, desktop) {
     if (config.isIgnoredScreen(screen) || config.isIgnoredDesktop(desktop)) {
         return null;
     }
+    // Geometry
     var geometry = availableArea(workspace.clientArea(0, screen, desktop));
+    function hasGeometryChanged(newGeometry) {
+        return (geometry.x !== newGeometry.x ||
+            geometry.y !== newGeometry.y ||
+            geometry.width !== newGeometry.width ||
+            geometry.height !== newGeometry.height);
+    }
+    function onGeometryChanged(newGeometry) {
+        geometry = newGeometry;
+        layout.adjustGeometry(newGeometry);
+    }
+    // Layout
     var layout = SelectedLayout(geometry);
     if (config.maxClients > -1) {
         layout.maxClients = Math.min(layout.maxClients, config.maxClients);
     }
     function tileClients(clients) {
         var currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
-        if (geometry.x !== currentGeometry.x ||
-            geometry.y !== currentGeometry.y ||
-            geometry.width !== currentGeometry.width ||
-            geometry.height !== currentGeometry.height) {
-            layout.adjustGeometry(currentGeometry);
-            geometry = currentGeometry;
+        if (hasGeometryChanged(currentGeometry)) {
+            onGeometryChanged(currentGeometry);
         }
         layout.tileClients(clients);
     }
