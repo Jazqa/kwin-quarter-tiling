@@ -66,7 +66,7 @@ function resizeClient(client: Client, previousGeometry: Geometry) {
 
 function maxClients(screen: number, desktop: number): number {
   if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-    return config.maxClients > -1 ? config.maxClients : toplevels[screen][desktop].layout.maxClients;
+    return toplevels[screen][desktop].layout.maxClients;
   } else {
     return 0;
   }

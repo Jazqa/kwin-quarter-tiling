@@ -37,6 +37,10 @@ export function toplevel(screen: number, desktop: number): Toplevel | null {
 
   var layout = SelectedLayout(geometry);
 
+  if (config.maxClients > -1) {
+    layout.maxClients = Math.min(layout.maxClients, config.maxClients);
+  }
+
   function tileClients(clients: Array<Client>): void {
     const currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
 
@@ -52,6 +56,6 @@ export function toplevel(screen: number, desktop: number): Toplevel | null {
     screen,
     desktop,
     layout,
-    tileClients
+    tileClients,
   };
 }
