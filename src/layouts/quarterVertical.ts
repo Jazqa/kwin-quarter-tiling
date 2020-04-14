@@ -21,26 +21,26 @@ function getTiles(geometry: Geometry, separators: Separators, count: number): Ar
       x,
       y,
       width: v[0] - x,
-      height: h - y
+      height: h - y,
     },
     {
       x,
       y: h,
       width: v[1] - x,
-      height: y + height - h
+      height: y + height - h,
     },
     {
       x: v[1],
       y: h,
       width: x + width - v[1],
-      height: y + height - h
+      height: y + height - h,
     },
     {
       x: v[0],
       y,
       width: x + width - v[0],
-      height: h - y
-    }
+      height: h - y,
+    },
   ];
 
   if (count < 4) {
@@ -72,10 +72,9 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
   }
 
   function adjustGeometry(newGeometry: Geometry): void {
-    separators.v[0] += (geometry.width - newGeometry.width) * 0.5;
-    separators.v[0] += (geometry.width - newGeometry.width) * 0.5;
-
-    separators.h += (geometry.height - newGeometry.height) * 0.5;
+    separators.v[0] += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
+    separators.v[0] += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
+    separators.h += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
     geometry = newGeometry;
   }
 
@@ -134,6 +133,6 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
     resizeClient,
     geometry,
     separators,
-    adjustGeometry
+    adjustGeometry,
   };
 }

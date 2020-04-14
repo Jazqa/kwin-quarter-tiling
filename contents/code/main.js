@@ -199,26 +199,26 @@ function getTiles(geometry, separators, count) {
             x: x,
             y: y,
             width: v - x,
-            height: h[0] - y
+            height: h[0] - y,
         },
         {
             x: v,
             y: y,
             width: x + width - v,
-            height: h[1] - y
+            height: h[1] - y,
         },
         {
             x: v,
             y: h[1],
             width: x + width - v,
-            height: y + height - h[1]
+            height: y + height - h[1],
         },
         {
             x: x,
             y: h[0],
             width: v - x,
-            height: y + height - h[0]
-        }
+            height: y + height - h[0],
+        },
     ];
     if (count < 4) {
         tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
@@ -242,9 +242,9 @@ function QuarterHorizontal(geometry) {
         separators = { h: [hs, hs], v: vs };
     }
     function adjustGeometry(newGeometry) {
-        separators.v += (geometry.width - newGeometry.width) * 0.5;
-        separators.h[0] += (geometry.height - newGeometry.height) * 0.5;
-        separators.h[1] += (geometry.height - newGeometry.height) * 0.5;
+        separators.v += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
+        separators.h[0] += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
+        separators.h[1] += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
         geometry = newGeometry;
     }
     function tileClients(clients) {
@@ -297,7 +297,7 @@ function QuarterHorizontal(geometry) {
         resizeClient: resizeClient,
         geometry: geometry,
         separators: separators,
-        adjustGeometry: adjustGeometry
+        adjustGeometry: adjustGeometry,
     };
 }
 
@@ -309,26 +309,26 @@ function getTiles$1(geometry, separators, count) {
             x: x,
             y: y,
             width: v - x,
-            height: h - y
+            height: h - y,
         },
         {
             x: v,
             y: y,
             width: x + width - v,
-            height: h - y
+            height: h - y,
         },
         {
             x: v,
             y: h,
             width: x + width - v,
-            height: y + height - h
+            height: y + height - h,
         },
         {
             x: x,
             y: h,
             width: v - x,
-            height: y + height - h
-        }
+            height: y + height - h,
+        },
     ];
     if (count < 4) {
         tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
@@ -352,8 +352,8 @@ function QuarterSingleHorizontal(geometry) {
         separators = { h: hs, v: vs };
     }
     function adjustGeometry(newGeometry) {
-        separators.v += (geometry.width - newGeometry.width) * 0.5;
-        separators.h += (geometry.height - newGeometry.height) * 0.5;
+        separators.v += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
+        separators.h += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
         geometry = newGeometry;
     }
     function tileClients(clients) {
@@ -393,7 +393,7 @@ function QuarterSingleHorizontal(geometry) {
         resizeClient: resizeClient,
         geometry: geometry,
         separators: separators,
-        adjustGeometry: adjustGeometry
+        adjustGeometry: adjustGeometry,
     };
 }
 
@@ -405,26 +405,26 @@ function getTiles$2(geometry, separators, count) {
             x: x,
             y: y,
             width: v - x,
-            height: h - y
+            height: h - y,
         },
         {
             x: x,
             y: h,
             width: v - x,
-            height: y + height - h
+            height: y + height - h,
         },
         {
             x: v,
             y: h,
             width: x + width - v,
-            height: y + height - h
+            height: y + height - h,
         },
         {
             x: v,
             y: y,
             width: x + width - v,
-            height: h - y
-        }
+            height: h - y,
+        },
     ];
     if (count < 4) {
         tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
@@ -448,8 +448,8 @@ function QuarterSingleVertical(geometry) {
         separators = { h: hs, v: vs };
     }
     function adjustGeometry(newGeometry) {
-        separators.v += (geometry.width - newGeometry.width) * 0.5;
-        separators.h += (geometry.height - newGeometry.height) * 0.5;
+        separators.v += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
+        separators.h += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
         geometry = newGeometry;
     }
     function tileClients(clients) {
@@ -489,7 +489,7 @@ function QuarterSingleVertical(geometry) {
         resizeClient: resizeClient,
         geometry: geometry,
         separators: separators,
-        adjustGeometry: adjustGeometry
+        adjustGeometry: adjustGeometry,
     };
 }
 
@@ -501,26 +501,26 @@ function getTiles$3(geometry, separators, count) {
             x: x,
             y: y,
             width: v[0] - x,
-            height: h - y
+            height: h - y,
         },
         {
             x: x,
             y: h,
             width: v[1] - x,
-            height: y + height - h
+            height: y + height - h,
         },
         {
             x: v[1],
             y: h,
             width: x + width - v[1],
-            height: y + height - h
+            height: y + height - h,
         },
         {
             x: v[0],
             y: y,
             width: x + width - v[0],
-            height: h - y
-        }
+            height: h - y,
+        },
     ];
     if (count < 4) {
         tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
@@ -544,9 +544,9 @@ function QuarterVertical(geometry) {
         separators = { h: hs, v: [vs, vs] };
     }
     function adjustGeometry(newGeometry) {
-        separators.v[0] += (geometry.width - newGeometry.width) * 0.5;
-        separators.v[0] += (geometry.width - newGeometry.width) * 0.5;
-        separators.h += (geometry.height - newGeometry.height) * 0.5;
+        separators.v[0] += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
+        separators.v[0] += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
+        separators.h += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
         geometry = newGeometry;
     }
     function tileClients(clients) {
@@ -599,7 +599,7 @@ function QuarterVertical(geometry) {
         resizeClient: resizeClient,
         geometry: geometry,
         separators: separators,
-        adjustGeometry: adjustGeometry
+        adjustGeometry: adjustGeometry,
     };
 }
 
@@ -641,7 +641,10 @@ function toplevel(screen, desktop) {
     }
     function tileClients(clients) {
         var currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
-        if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
+        if (geometry.x !== currentGeometry.x ||
+            geometry.y !== currentGeometry.y ||
+            geometry.width !== currentGeometry.width ||
+            geometry.height !== currentGeometry.height) {
             layout.adjustGeometry(currentGeometry);
             geometry = currentGeometry;
         }
@@ -658,6 +661,7 @@ function toplevel(screen, desktop) {
 // toplevels[screen][desktop]: Toplevel
 var toplevels = [];
 function addAll() {
+    toplevels = [];
     for (var i = 0; i < workspace.numScreens; i++) {
         toplevels[i] = [];
         for (var j = 1; j <= workspace.desktops; j++) {
@@ -786,7 +790,6 @@ var disabled = {};
 var disconnectors = {};
 function filter(screen, desktop) {
     var includedClients = clients.filter(function (client) {
-        // TODO: Better activity support?
         return (client.screen === screen &&
             client.desktop === desktop &&
             (client.activities.length === 0 || client.activities.indexOf(workspace.currentActivity) > -1));
@@ -1239,19 +1242,9 @@ function registerSignals() {
             clientManager.tileAll(screen, desktop);
         });
     });
-    /*
-  
-    workspace.screenResized.connect((screen: number) => {
-      clientManager.tileAll(screen, workspace.currentDesktop);
+    workspace.numberScreensChanged.connect(function (count) {
+        toplevelManager.addAll();
     });
-  
-    workspace.currentDesktopChanged.connect((desktop: number, client: Client) => {
-      for (var i = 0; i < workspace.numScreens; i++) {
-        clientManager.tileAll(i, desktop);
-      }
-    });
-  
-    */
 }
 var signals = {
     registerSignals: registerSignals,

@@ -42,6 +42,11 @@ interface NumberDesktopsChangedSignal {
   disconnect: (cb: (previousDesktops: number) => void) => void;
 }
 
+interface NumberScreensChangedSignal {
+  connect: (cb: (count: number) => void) => void;
+  disconnect: (cb: (count: number) => void) => void;
+}
+
 interface Workspace {
   activeClient: Client;
 
@@ -67,6 +72,7 @@ interface Workspace {
   desktopPresenceChanged: DesktopPresenceChangeSignal;
   screenResized: ScreenResizedSignal;
   numberDesktopsChanged: NumberDesktopsChangedSignal;
+  numberScreensChanged: NumberScreensChangedSignal;
 }
 
 // @ts-ignore, KWin global
@@ -74,3 +80,6 @@ export const options: Options = options || {};
 
 // @ts-ignore, KWin global
 export const workspace: Workspace = workspace || {};
+
+// @ts-ignore, KWin global
+export const print: (s: any) => void = print || {};

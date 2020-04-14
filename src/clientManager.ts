@@ -13,7 +13,6 @@ const disconnectors = {};
 
 function filter(screen: number, desktop: number): Array<Client> {
   const includedClients = clients.filter((client: Client) => {
-    // TODO: Better activity support?
     return (
       client.screen === screen &&
       client.desktop === desktop &&

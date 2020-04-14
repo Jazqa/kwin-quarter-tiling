@@ -1,7 +1,7 @@
 import { clientManager } from "./clientManager";
 import { Client } from "./client";
 import { config } from "./config";
-import { workspace } from "./globals";
+import { workspace, print } from "./globals";
 import { toplevelManager } from "./toplevelManager";
 
 export function registerSignals(): void {
@@ -76,19 +76,9 @@ export function registerSignals(): void {
     });
   });
 
-  /*
-
-  workspace.screenResized.connect((screen: number) => {
-    clientManager.tileAll(screen, workspace.currentDesktop);
+  workspace.numberScreensChanged.connect((count: number) => {
+    toplevelManager.addAll();
   });
-
-  workspace.currentDesktopChanged.connect((desktop: number, client: Client) => {
-    for (var i = 0; i < workspace.numScreens; i++) {
-      clientManager.tileAll(i, desktop);
-    }
-  });
-
-  */
 }
 
 export const signals = {

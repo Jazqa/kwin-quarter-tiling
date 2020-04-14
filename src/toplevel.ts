@@ -44,7 +44,12 @@ export function toplevel(screen: number, desktop: number): Toplevel | null {
   function tileClients(clients: Array<Client>): void {
     const currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
 
-    if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
+    if (
+      geometry.x !== currentGeometry.x ||
+      geometry.y !== currentGeometry.y ||
+      geometry.width !== currentGeometry.width ||
+      geometry.height !== currentGeometry.height
+    ) {
       layout.adjustGeometry(currentGeometry);
       geometry = currentGeometry;
     }

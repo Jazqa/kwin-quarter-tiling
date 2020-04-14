@@ -21,26 +21,26 @@ function getTiles(geometry: Geometry, separators: Separators, count: number): Ar
       x,
       y,
       width: v - x,
-      height: h - y
+      height: h - y,
     },
     {
       x: v,
       y,
       width: x + width - v,
-      height: h - y
+      height: h - y,
     },
     {
       x: v,
       y: h,
       width: x + width - v,
-      height: y + height - h
+      height: y + height - h,
     },
     {
       x,
       y: h,
       width: v - x,
-      height: y + height - h
-    }
+      height: y + height - h,
+    },
   ];
 
   if (count < 4) {
@@ -72,8 +72,8 @@ export function QuarterSingleHorizontal(geometry: Geometry): QuarterSingleHorizo
   }
 
   function adjustGeometry(newGeometry: Geometry): void {
-    separators.v += (geometry.width - newGeometry.width) * 0.5;
-    separators.h += (geometry.height - newGeometry.height) * 0.5;
+    separators.v += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
+    separators.h += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
     geometry = newGeometry;
   }
 
@@ -120,6 +120,6 @@ export function QuarterSingleHorizontal(geometry: Geometry): QuarterSingleHorizo
     resizeClient,
     geometry,
     separators,
-    adjustGeometry
+    adjustGeometry,
   };
 }

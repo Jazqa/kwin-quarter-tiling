@@ -2,12 +2,12 @@ import { Client } from "./client";
 import { Geometry } from "./geometry";
 import { workspace } from "./globals";
 import { Toplevel, toplevel } from "./toplevel";
-import { config } from "./config";
 
 // toplevels[screen][desktop]: Toplevel
-const toplevels: Array<Array<Toplevel | null>> = [];
+let toplevels: Array<Array<Toplevel | null>> = [];
 
 function addAll(): void {
+  toplevels = [];
   for (var i = 0; i < workspace.numScreens; i++) {
     toplevels[i] = [];
     for (var j = 1; j <= workspace.desktops; j++) {
