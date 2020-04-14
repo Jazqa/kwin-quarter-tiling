@@ -100,6 +100,7 @@ function includes(client) {
         client.popupMenu ||
         client.specialWindow ||
         client.splash ||
+        client.shade ||
         client.toolbar ||
         client.tooltip ||
         client.utility ||
@@ -108,12 +109,7 @@ function includes(client) {
         client.screen < 0 ||
         client.geometry.width < config.minWidth ||
         client.geometry.height < config.minHeight ||
-        config.ignoredCaptions.some(function (caption) {
-            return client.caption
-                .toString()
-                .toLowerCase()
-                .indexOf(caption.toLowerCase()) > -1;
-        }) ||
+        config.ignoredCaptions.some(function (caption) { return client.caption.toString().toLowerCase().indexOf(caption.toLowerCase()) > -1; }) ||
         config.ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
         config.ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
         config.isIgnoredDesktop(client.desktop) ||
@@ -122,7 +118,7 @@ function includes(client) {
         : false;
 }
 var blacklist = {
-    includes: includes
+    includes: includes,
 };
 
 var size = config.gaps;
@@ -823,16 +819,19 @@ function add(client, checked) {
         else {
             clients.push(client);
         }
+        var disableClient_1 = function () { return disable(client, undefined, true); };
         var splicePushClient_1 = function () { return splicePush(client); };
         client.clientStartUserMovedResized.connect(startMove);
         client.clientFinishUserMovedResized.connect(finishMove);
         client.screenChanged.connect(splicePushClient_1);
         client.desktopChanged.connect(splicePushClient_1);
+        client.shadeChanged.connect(disableClient_1);
         disconnectors[client.windowId] = function (client) {
             client.clientStartUserMovedResized.disconnect(startMove);
             client.clientFinishUserMovedResized.disconnect(finishMove);
             client.screenChanged.disconnect(splicePushClient_1);
             client.desktopChanged.disconnect(splicePushClient_1);
+            client.shadeChanged.disconnect(disableClient_1);
         };
         tileAll(screen, desktop);
     }
@@ -980,8 +979,9 @@ function tileAll(screen, desktop) {
 }
 function enable(client) {
     if (disabled[client.windowId]) {
-        var _a = disabled[client.windowId], index = _a.index, screen_1 = _a.screen, desktop = _a.desktop;
+        var _a = disabled[client.windowId], index = _a.index, screen_1 = _a.screen, desktop = _a.desktop, disconnect = _a.disconnect;
         delete disabled[client.windowId];
+        disconnect();
         toplevelManager.adjustMaxClients(screen_1, desktop, 1);
         return index;
     }
@@ -992,9 +992,18 @@ function enable(client) {
 function disable(client, index, shouldNotFollow) {
     index = index || find(client);
     if (index > -1) {
-        disabled[client.windowId] = { index: index, screen: client.screen, desktop: client.desktop };
-        toplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
         remove(client, index, shouldNotFollow);
+        var addClient_1 = function () { return add(client); };
+        client.shadeChanged.connect(addClient_1);
+        disabled[client.windowId] = {
+            index: index,
+            screen: client.screen,
+            desktop: client.desktop,
+            disconnect: function () {
+                client.shadeChanged.disconnect(addClient_1);
+            },
+        };
+        toplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
     }
 }
 var clientManager = {

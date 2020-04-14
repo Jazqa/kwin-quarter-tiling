@@ -38,10 +38,12 @@ export interface Client {
   readonly tooltip: boolean;
   readonly utility: boolean;
   readonly transient: boolean;
+  readonly shade: boolean;
 
   clientStartUserMovedResized: ClientSignal;
   clientFinishUserMovedResized: ClientSignal;
 
   screenChanged: VoidSignal;
   desktopChanged: VoidSignal;
+  shadeChanged: VoidSignal;
 }

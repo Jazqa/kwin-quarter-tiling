@@ -2,11 +2,10 @@ import { blacklist } from "./blacklist";
 import { Client } from "./client";
 import { config } from "./config";
 import { Geometry, geometryUtils } from "./geometry";
-import { workspace } from "./globals";
+import { workspace, print } from "./globals";
 import { toplevelManager } from "./toplevelManager";
 
 const clients: Array<Client> = [];
-
 const disabled: Object = {};
 
 const disconnectors = {};
@@ -57,18 +56,21 @@ function add(client: Client, checked?: boolean): void {
       clients.push(client);
     }
 
+    const disableClient = () => disable(client, undefined, true);
     const splicePushClient = () => splicePush(client);
 
     client.clientStartUserMovedResized.connect(startMove);
     client.clientFinishUserMovedResized.connect(finishMove);
     client.screenChanged.connect(splicePushClient);
     client.desktopChanged.connect(splicePushClient);
+    client.shadeChanged.connect(disableClient);
 
     disconnectors[client.windowId] = (client: Client) => {
       client.clientStartUserMovedResized.disconnect(startMove);
       client.clientFinishUserMovedResized.disconnect(finishMove);
       client.screenChanged.disconnect(splicePushClient);
       client.desktopChanged.disconnect(splicePushClient);
+      client.shadeChanged.disconnect(disableClient);
     };
 
     tileAll(screen, desktop);
@@ -243,10 +245,11 @@ function tileAll(screen: number, desktop: number) {
   toplevelManager.tileClients(includedClients);
 }
 
-function enable(client) {
+function enable(client: Client) {
   if (disabled[client.windowId]) {
-    const { index, screen, desktop } = disabled[client.windowId];
+    const { index, screen, desktop, disconnect } = disabled[client.windowId];
     delete disabled[client.windowId];
+    disconnect();
     toplevelManager.adjustMaxClients(screen, desktop, 1);
     return index;
   } else {
@@ -256,16 +259,23 @@ function enable(client) {
 
 function disable(client: Client, index?: number, shouldNotFollow?: boolean) {
   index = index || find(client);
-  if (index > -1) {
-    disabled[client.windowId] = { index, screen: client.screen, desktop: client.desktop };
-    toplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
-    remove(client, index, shouldNotFollow);
-  }
-}
 
-function clearDisabled(client: Client) {
-  if (disabled[client.windowId]) {
-    delete disabled[client.windowId];
+  if (index > -1) {
+    remove(client, index, shouldNotFollow);
+
+    const addClient = () => add(client);
+    client.shadeChanged.connect(addClient);
+
+    disabled[client.windowId] = {
+      index,
+      screen: client.screen,
+      desktop: client.desktop,
+      disconnect: () => {
+        client.shadeChanged.disconnect(addClient);
+      },
+    };
+
+    toplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
   }
 }
 

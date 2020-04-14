@@ -20,6 +20,7 @@ function includes(client: Client): boolean {
     client.popupMenu ||
     client.specialWindow ||
     client.splash ||
+    client.shade ||
     client.toolbar ||
     client.tooltip ||
     client.utility ||
@@ -29,11 +30,7 @@ function includes(client: Client): boolean {
     client.geometry.width < config.minWidth ||
     client.geometry.height < config.minHeight ||
     config.ignoredCaptions.some(
-      caption =>
-        client.caption
-          .toString()
-          .toLowerCase()
-          .indexOf(caption.toLowerCase()) > -1
+      (caption) => client.caption.toString().toLowerCase().indexOf(caption.toLowerCase()) > -1
     ) ||
     config.ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
     config.ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
@@ -44,5 +41,5 @@ function includes(client: Client): boolean {
 }
 
 export const blacklist = {
-  includes
+  includes,
 };
