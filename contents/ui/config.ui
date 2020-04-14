@@ -205,29 +205,29 @@
                   </size>
                  </property>
                  <property name="currentText">
-                  <string>Quarter (H)</string>
+                  <string>Quarter (Horizontal)</string>
                  </property>
                  <property name="frame">
                   <bool>true</bool>
                  </property>
                  <item>
                   <property name="text">
-                   <string>Quarter (H)</string>
+                   <string>Quarter (Horizontal)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>Quarter (V)</string>
+                   <string>Quarter (Vertical)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>Quarter (HS)</string>
+                   <string>Quarter (H. Single)</string>
                   </property>
                  </item>
                  <item>
                   <property name="text">
-                   <string>Quarter (VS)</string>
+                   <string>Quarter (V. Single)</string>
                   </property>
                  </item>
                 </widget>
