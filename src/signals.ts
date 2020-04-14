@@ -27,13 +27,13 @@ export function registerSignals(): void {
 
   workspace.clientMinimized.connect((client: Client) => {
     if (client) {
-      clientManager.remove(client);
+      clientManager.disable(client);
     }
   });
 
   workspace.clientMaximizeSet.connect((client: Client, h: boolean, v: boolean) => {
     if (client && h && v) {
-      clientManager.remove(client, undefined, true);
+      clientManager.disable(client, undefined, true);
       workspace.activeClient = client;
     } else if (client && !h && !v) {
       if (config.autoTile) {
@@ -44,7 +44,7 @@ export function registerSignals(): void {
 
   workspace.clientFullScreenSet.connect((client: Client, fs: boolean) => {
     if (client && fs) {
-      clientManager.remove(client, undefined, true);
+      clientManager.disable(client, undefined, true);
     } else {
       if (config.autoTile) {
         clientManager.addWithForce(client);
@@ -92,5 +92,5 @@ export function registerSignals(): void {
 }
 
 export const signals = {
-  registerSignals
+  registerSignals,
 };

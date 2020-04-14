@@ -757,6 +757,11 @@ function restoreLayout(screen, desktop) {
         toplevels[screen][desktop].layout.restore();
     }
 }
+function adjustMaxClients(screen, desktop, amount) {
+    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
+        toplevels[screen][desktop].layout.maxClients += amount;
+    }
+}
 var toplevelManager = {
     addAll: addAll,
     addDesktop: addDesktop,
@@ -769,10 +774,13 @@ var toplevelManager = {
     forEach: forEach,
     forEachScreen: forEachScreen,
     forEachDesktop: forEachDesktop,
-    restoreLayout: restoreLayout
+    restoreLayout: restoreLayout,
+    adjustMaxClients: adjustMaxClients,
 };
 
 var clients = [];
+var disabled = {};
+var disconnectors = {};
 function filter(screen, desktop) {
     var includedClients = clients.filter(function (client) {
         // TODO: Better activity support?
@@ -799,18 +807,22 @@ function splicePush(client) {
         clients.push(client);
     }
 }
-// Store the disconnectors in cases new functions have to be created (e.g. using accessing client without a param)
-var clientDisconnectors = {};
 function add(client, checked) {
     var screen = client.screen, desktop = client.desktop;
     if (checked || !blacklist.includes(client)) {
-        clients.push(client);
+        var index = enable(client);
+        if (index > -1) {
+            clients.splice(index, 0, client);
+        }
+        else {
+            clients.push(client);
+        }
         var splicePushClient_1 = function () { return splicePush(client); };
         client.clientStartUserMovedResized.connect(startMove);
         client.clientFinishUserMovedResized.connect(finishMove);
         client.screenChanged.connect(splicePushClient_1);
         client.desktopChanged.connect(splicePushClient_1);
-        clientDisconnectors[client.windowId] = function (client) {
+        disconnectors[client.windowId] = function (client) {
             client.clientStartUserMovedResized.disconnect(startMove);
             client.clientFinishUserMovedResized.disconnect(finishMove);
             client.screenChanged.disconnect(splicePushClient_1);
@@ -865,8 +877,8 @@ function remove(client, index, shouldNotFollow) {
     index = index || find(client);
     if (index > -1) {
         clients.splice(index, 1);
-        clientDisconnectors[client.windowId](client);
-        delete clientDisconnectors[client.windowId];
+        disconnectors[client.windowId](client);
+        delete disconnectors[client.windowId];
         tileAll(client.screen, client.desktop);
         // Checks if the current desktop is completely empty, finds the closest desktop with clients and switches to it
         if (!shouldNotFollow && config.followClients && client.desktop === workspace.currentDesktop) {
@@ -890,6 +902,9 @@ function remove(client, index, shouldNotFollow) {
                 workspace.currentDesktop = nextDesktop;
             }
         }
+    }
+    else if (disabled[client.windowId]) {
+        delete disabled[client.windowId];
     }
 }
 function toggle(client, index) {
@@ -957,19 +972,39 @@ function tileAll(screen, desktop) {
     }
     toplevelManager.tileClients(includedClients);
 }
+function enable(client) {
+    if (disabled[client.windowId]) {
+        var _a = disabled[client.windowId], index = _a.index, screen_1 = _a.screen, desktop = _a.desktop;
+        delete disabled[client.windowId];
+        toplevelManager.adjustMaxClients(screen_1, desktop, 1);
+        return index;
+    }
+    else {
+        return -1;
+    }
+}
+function disable(client, index, shouldNotFollow) {
+    index = index || find(client);
+    if (index > -1) {
+        disabled[client.windowId] = { index: index, screen: client.screen, desktop: client.desktop };
+        toplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
+        remove(client, index, shouldNotFollow);
+    }
+}
 var clientManager = {
     add: add,
     addWithForce: addWithForce,
     addAll: addAll$1,
     find: find,
     filter: filter,
+    disable: disable,
     remove: remove,
     toggle: toggle,
     startMove: startMove,
     finishMove: finishMove,
     swap: swap,
     resize: resize,
-    tileAll: tileAll
+    tileAll: tileAll,
 };
 
 var __assign = (undefined && undefined.__assign) || function () {
@@ -1156,12 +1191,12 @@ function registerSignals() {
     });
     workspace.clientMinimized.connect(function (client) {
         if (client) {
-            clientManager.remove(client);
+            clientManager.disable(client);
         }
     });
     workspace.clientMaximizeSet.connect(function (client, h, v) {
         if (client && h && v) {
-            clientManager.remove(client, undefined, true);
+            clientManager.disable(client, undefined, true);
             workspace.activeClient = client;
         }
         else if (client && !h && !v) {
@@ -1172,7 +1207,7 @@ function registerSignals() {
     });
     workspace.clientFullScreenSet.connect(function (client, fs) {
         if (client && fs) {
-            clientManager.remove(client, undefined, true);
+            clientManager.disable(client, undefined, true);
         }
         else {
             if (config.autoTile) {
@@ -1216,7 +1251,7 @@ function registerSignals() {
     */
 }
 var signals = {
-    registerSignals: registerSignals
+    registerSignals: registerSignals,
 };
 
 toplevelManager.addAll();

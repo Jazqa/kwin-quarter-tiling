@@ -125,6 +125,12 @@ function restoreLayout(screen: number, desktop: number) {
   }
 }
 
+function adjustMaxClients(screen: number, desktop: number, amount: number) {
+  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
+    toplevels[screen][desktop].layout.maxClients += amount;
+  }
+}
+
 export const toplevelManager = {
   addAll,
   addDesktop,
@@ -137,5 +143,6 @@ export const toplevelManager = {
   forEach,
   forEachScreen,
   forEachDesktop,
-  restoreLayout
+  restoreLayout,
+  adjustMaxClients,
 };

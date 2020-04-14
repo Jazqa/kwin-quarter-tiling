@@ -7,6 +7,10 @@ import { toplevelManager } from "./toplevelManager";
 
 const clients: Array<Client> = [];
 
+const disabled: Object = {};
+
+const disconnectors = {};
+
 function filter(screen: number, desktop: number): Array<Client> {
   const includedClients = clients.filter((client: Client) => {
     // TODO: Better activity support?
@@ -42,14 +46,17 @@ function splicePush(client: Client): void {
   }
 }
 
-// Store the disconnectors in cases new functions have to be created (e.g. using accessing client without a param)
-const clientDisconnectors = {};
-
 function add(client: Client, checked?: boolean): void {
   const { screen, desktop } = client;
 
   if (checked || !blacklist.includes(client)) {
-    clients.push(client);
+    const index = enable(client);
+
+    if (index > -1) {
+      clients.splice(index, 0, client);
+    } else {
+      clients.push(client);
+    }
 
     const splicePushClient = () => splicePush(client);
 
@@ -58,7 +65,7 @@ function add(client: Client, checked?: boolean): void {
     client.screenChanged.connect(splicePushClient);
     client.desktopChanged.connect(splicePushClient);
 
-    clientDisconnectors[client.windowId] = (client: Client) => {
+    disconnectors[client.windowId] = (client: Client) => {
       client.clientStartUserMovedResized.disconnect(startMove);
       client.clientFinishUserMovedResized.disconnect(finishMove);
       client.screenChanged.disconnect(splicePushClient);
@@ -122,8 +129,8 @@ function remove(client: Client, index?: number, shouldNotFollow?: boolean) {
 
   if (index > -1) {
     clients.splice(index, 1);
-    clientDisconnectors[client.windowId](client);
-    delete clientDisconnectors[client.windowId];
+    disconnectors[client.windowId](client);
+    delete disconnectors[client.windowId];
     tileAll(client.screen, client.desktop);
 
     // Checks if the current desktop is completely empty, finds the closest desktop with clients and switches to it
@@ -153,6 +160,8 @@ function remove(client: Client, index?: number, shouldNotFollow?: boolean) {
         workspace.currentDesktop = nextDesktop;
       }
     }
+  } else if (disabled[client.windowId]) {
+    delete disabled[client.windowId];
   }
 }
 
@@ -235,17 +244,44 @@ function tileAll(screen: number, desktop: number) {
   toplevelManager.tileClients(includedClients);
 }
 
+function enable(client) {
+  if (disabled[client.windowId]) {
+    const { index, screen, desktop } = disabled[client.windowId];
+    delete disabled[client.windowId];
+    toplevelManager.adjustMaxClients(screen, desktop, 1);
+    return index;
+  } else {
+    return -1;
+  }
+}
+
+function disable(client: Client, index?: number, shouldNotFollow?: boolean) {
+  index = index || find(client);
+  if (index > -1) {
+    disabled[client.windowId] = { index, screen: client.screen, desktop: client.desktop };
+    toplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
+    remove(client, index, shouldNotFollow);
+  }
+}
+
+function clearDisabled(client: Client) {
+  if (disabled[client.windowId]) {
+    delete disabled[client.windowId];
+  }
+}
+
 export const clientManager = {
   add,
   addWithForce,
   addAll,
   find,
   filter,
+  disable,
   remove,
   toggle,
   startMove,
   finishMove,
   swap,
   resize,
-  tileAll
+  tileAll,
 };
