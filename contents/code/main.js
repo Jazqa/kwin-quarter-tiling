@@ -636,6 +636,9 @@ function toplevel(screen, desktop) {
     }
     var geometry = availableArea(workspace.clientArea(0, screen, desktop));
     var layout = SelectedLayout(geometry);
+    if (config.maxClients > -1) {
+        layout.maxClients = Math.min(layout.maxClients, config.maxClients);
+    }
     function tileClients(clients) {
         var currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
         if (geometry.width !== currentGeometry.width || geometry.height !== currentGeometry.height) {
@@ -648,7 +651,7 @@ function toplevel(screen, desktop) {
         screen: screen,
         desktop: desktop,
         layout: layout,
-        tileClients: tileClients
+        tileClients: tileClients,
     };
 }
 
@@ -703,7 +706,7 @@ function resizeClient(client, previousGeometry) {
 }
 function maxClients$1(screen, desktop) {
     if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        return config.maxClients > -1 ? config.maxClients : toplevels[screen][desktop].layout.maxClients;
+        return toplevels[screen][desktop].layout.maxClients;
     }
     else {
         return 0;
