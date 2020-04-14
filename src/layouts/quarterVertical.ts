@@ -72,10 +72,8 @@ export function QuarterVertical(geometry: Geometry): QuarterVerticalLayout {
   }
 
   function adjustGeometry(newGeometry: Geometry): void {
-    separators.v[0] += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
-    separators.v[0] += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
-    separators.h += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
     geometry = newGeometry;
+    restore();
   }
 
   function tileClients(clients: Array<Client>): void {

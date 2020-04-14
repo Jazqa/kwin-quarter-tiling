@@ -238,10 +238,8 @@ function QuarterHorizontal(geometry) {
         separators = { h: [hs, hs], v: vs };
     }
     function adjustGeometry(newGeometry) {
-        separators.v += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
-        separators.h[0] += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
-        separators.h[1] += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
         geometry = newGeometry;
+        restore();
     }
     function tileClients(clients) {
         var includedClients = clients.slice(0, maxClients);
@@ -348,9 +346,8 @@ function QuarterSingleHorizontal(geometry) {
         separators = { h: hs, v: vs };
     }
     function adjustGeometry(newGeometry) {
-        separators.v += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
-        separators.h += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
         geometry = newGeometry;
+        restore();
     }
     function tileClients(clients) {
         var includedClients = clients.slice(0, maxClients);
@@ -444,9 +441,8 @@ function QuarterSingleVertical(geometry) {
         separators = { h: hs, v: vs };
     }
     function adjustGeometry(newGeometry) {
-        separators.v += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
-        separators.h += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
         geometry = newGeometry;
+        restore();
     }
     function tileClients(clients) {
         var includedClients = clients.slice(0, maxClients);
@@ -540,10 +536,8 @@ function QuarterVertical(geometry) {
         separators = { h: hs, v: [vs, vs] };
     }
     function adjustGeometry(newGeometry) {
-        separators.v[0] += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
-        separators.v[0] += newGeometry.x - geometry.x + (geometry.width - newGeometry.width) * 0.5;
-        separators.h += newGeometry.y - geometry.y + (geometry.height - newGeometry.height) * 0.5;
         geometry = newGeometry;
+        restore();
     }
     function tileClients(clients) {
         var includedClients = clients.slice(0, maxClients);
