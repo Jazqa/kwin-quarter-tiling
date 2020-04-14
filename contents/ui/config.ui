@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>507</width>
-    <height>360</height>
+    <width>483</width>
+    <height>320</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -50,7 +50,7 @@
    <property name="bottomMargin">
     <number>2</number>
    </property>
-   <item alignment="Qt::AlignHCenter">
+   <item>
     <widget class="QTabWidget" name="tabs">
      <property name="enabled">
       <bool>true</bool>
@@ -215,17 +215,17 @@
                    <string>Quarter (H)</string>
                   </property>
                  </item>
-                       <item>
+                 <item>
                   <property name="text">
                    <string>Quarter (V)</string>
                   </property>
                  </item>
-                <item>
+                 <item>
                   <property name="text">
                    <string>Quarter (HS)</string>
                   </property>
                  </item>
-                <item>
+                 <item>
                   <property name="text">
                    <string>Quarter (VS)</string>
                   </property>
@@ -1045,52 +1045,6 @@
                </property>
                <property name="placeholderText">
                 <string>Move to trash, Quit GIMP</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBox_smallPrograms">
-            <property name="title">
-             <string>Small programs (work in progress)</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_5">
-             <property name="spacing">
-              <number>8</number>
-             </property>
-             <property name="leftMargin">
-              <number>8</number>
-             </property>
-             <property name="topMargin">
-              <number>8</number>
-             </property>
-             <property name="rightMargin">
-              <number>8</number>
-             </property>
-             <property name="bottomMargin">
-              <number>8</number>
-             </property>
-             <item>
-              <widget class="QPlainTextEdit" name="kcfg_smallPrograms">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>800</width>
-                 <height>128</height>
-                </size>
-               </property>
-               <property name="sizeAdjustPolicy">
-                <enum>QAbstractScrollArea::AdjustToContents</enum>
-               </property>
-               <property name="placeholderText">
-                <string>kcalc, telegram</string>
                </property>
               </widget>
              </item>
