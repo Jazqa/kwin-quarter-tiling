@@ -85,8 +85,8 @@ var config = {
 var workspace = workspace || {};
 
 function includes(client) {
-    var isMaximized = client.geometry.width === workspace.clientArea(0, client.screen, 0).width &&
-        client.geometry.height === workspace.clientArea(0, client.screen, 0).height;
+    var isMaximized = client.geometry.width === workspace.clientArea(2, client.screen, 0).width &&
+        client.geometry.height === workspace.clientArea(2, client.screen, 0).height;
     return isMaximized ||
         client.comboBox ||
         client.desktopWindow ||
@@ -625,7 +625,7 @@ function toplevel(screen, desktop) {
         return null;
     }
     // Geometry
-    var geometry = availableArea(workspace.clientArea(0, screen, desktop));
+    var geometry = availableArea(workspace.clientArea(2, screen, desktop));
     function hasGeometryChanged(newGeometry) {
         return (geometry.x !== newGeometry.x ||
             geometry.y !== newGeometry.y ||
@@ -642,7 +642,7 @@ function toplevel(screen, desktop) {
         layout.maxClients = Math.min(layout.maxClients, config.maxClients);
     }
     function tileClients(clients) {
-        var currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
+        var currentGeometry = availableArea(workspace.clientArea(2, screen, desktop));
         if (hasGeometryChanged(currentGeometry)) {
             onGeometryChanged(currentGeometry);
         }
@@ -918,7 +918,7 @@ function toggle(client, index) {
     index = index || find(client);
     if (index > -1) {
         remove(client, index);
-        client.geometry = geometryUtils.center(client.geometry, workspace.clientArea(0, client.screen, client.desktop));
+        client.geometry = geometryUtils.center(client.geometry, workspace.clientArea(2, client.screen, client.desktop));
     }
     else {
         add(client);

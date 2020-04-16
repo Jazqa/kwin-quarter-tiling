@@ -4,8 +4,8 @@ import { workspace } from "./globals";
 
 function includes(client: Client): boolean {
   const isMaximized: boolean =
-    client.geometry.width === workspace.clientArea(0, client.screen, 0).width &&
-    client.geometry.height === workspace.clientArea(0, client.screen, 0).height;
+    client.geometry.width === workspace.clientArea(2, client.screen, 0).width &&
+    client.geometry.height === workspace.clientArea(2, client.screen, 0).height;
 
   return isMaximized ||
     client.comboBox ||

@@ -34,7 +34,7 @@ export function toplevel(screen: number, desktop: number): Toplevel | null {
   }
 
   // Geometry
-  var geometry = availableArea(workspace.clientArea(0, screen, desktop));
+  var geometry = availableArea(workspace.clientArea(2, screen, desktop));
 
   function hasGeometryChanged(newGeometry: Geometry) {
     return (
@@ -58,7 +58,7 @@ export function toplevel(screen: number, desktop: number): Toplevel | null {
   }
 
   function tileClients(clients: Array<Client>): void {
-    const currentGeometry = availableArea(workspace.clientArea(0, screen, desktop));
+    const currentGeometry = availableArea(workspace.clientArea(2, screen, desktop));
 
     if (hasGeometryChanged(currentGeometry)) {
       onGeometryChanged(currentGeometry);

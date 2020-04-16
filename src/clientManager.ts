@@ -171,7 +171,7 @@ function toggle(client: Client, index?: number): void {
 
   if (index > -1) {
     remove(client, index);
-    client.geometry = geometryUtils.center(client.geometry, workspace.clientArea(0, client.screen, client.desktop));
+    client.geometry = geometryUtils.center(client.geometry, workspace.clientArea(2, client.screen, client.desktop));
   } else {
     add(client);
   }
