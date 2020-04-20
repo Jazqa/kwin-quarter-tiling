@@ -113,6 +113,9 @@ function addWithForce(client: Client): void {
           client.desktop = freeDesktop;
           client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
           add(client, true);
+          if (config.followClients) {
+            workspace.activeClient = client;
+          }
         }
       }
     }
