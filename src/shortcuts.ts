@@ -10,7 +10,7 @@ const resizeStep = 20;
 const registerShortcut: (name: string, description: string, key: string, cb: () => void) => void =
   // @ts-ignore, KWin global
   registerShortcut ||
-  function(): void {
+  function (): void {
     // This is never called, exists only as a dumb workaround to include this file in rollup
     workspace.currentDesktop = workspace.currentDesktop;
   };
@@ -78,36 +78,36 @@ function registerShortcuts(): void {
     }
   }
 
-  registerShortcut("Quarter: + Window Size Top", "Quarter: + Window Size Top", "Meta+K", function() {
+  registerShortcut("Quarter: + Window Size Top", "Quarter: + Window Size Top", "Meta+K", function () {
     resizeClient("top", resizeStep);
   });
 
-  registerShortcut("Quarter: - Window Size Top", "Quarter: - Window Size Top", "Meta+Shift+K", function() {
+  registerShortcut("Quarter: - Window Size Top", "Quarter: - Window Size Top", "Meta+Shift+K", function () {
     resizeClient("top", -resizeStep);
   });
 
-  registerShortcut("Quarter: + Window Size Left", "Quarter: + Window Size Left", "Meta+H", function() {
+  registerShortcut("Quarter: + Window Size Left", "Quarter: + Window Size Left", "Meta+H", function () {
     resizeClient("left", resizeStep);
   });
 
-  registerShortcut("Quarter: - Window Size Left", "Quarter: - Window Size Left", "Meta+Shift+H", function() {
+  registerShortcut("Quarter: - Window Size Left", "Quarter: - Window Size Left", "Meta+Shift+H", function () {
     resizeClient("left", -resizeStep);
   });
 
-  registerShortcut("Quarter: + Window Size Right", "Quarter: + Window Size Right", "Meta+L", function() {
+  registerShortcut("Quarter: + Window Size Right", "Quarter: + Window Size Right", "Meta+L", function () {
     resizeClient("right", resizeStep);
   });
 
-  registerShortcut("Quarter: - Window Size Right", "Quarter: - Window Size Right", "Meta+Shift+L", function() {
+  registerShortcut("Quarter: - Window Size Right", "Quarter: - Window Size Right", "Meta+Shift+L", function () {
     resizeClient("right", -resizeStep);
   });
 
-  registerShortcut("Quarter: + Window Size Bottom", "Quarter: + Window Size Bottom", "Meta+J", function() {
-    resizeClient("top", resizeStep);
+  registerShortcut("Quarter: + Window Size Bottom", "Quarter: + Window Size Bottom", "Meta+J", function () {
+    resizeClient("bottom", resizeStep);
   });
 
-  registerShortcut("Quarter: - Window Size Bottom", "Quarter: - Window Size Bottom", "Meta+Shift+J", function() {
-    resizeClient("top", -resizeStep);
+  registerShortcut("Quarter: - Window Size Bottom", "Quarter: - Window Size Bottom", "Meta+Shift+J", function () {
+    resizeClient("bottom", -resizeStep);
   });
 
   // Move
@@ -150,19 +150,19 @@ function registerShortcuts(): void {
     }
   }
 
-  registerShortcut("Quarter: Move Up", "Quarter: Move Up", "Alt+Shift+K", function() {
+  registerShortcut("Quarter: Move Up", "Quarter: Move Up", "Alt+Shift+K", function () {
     moveClient("top");
   });
 
-  registerShortcut("Quarter: Move Left", "Quarter: Move Left", "Alt+Shift+H", function() {
+  registerShortcut("Quarter: Move Left", "Quarter: Move Left", "Alt+Shift+H", function () {
     moveClient("left");
   });
 
-  registerShortcut("Quarter: Move Down", "Quarter: Move Down", "Alt+Shift+J", function() {
+  registerShortcut("Quarter: Move Down", "Quarter: Move Down", "Alt+Shift+J", function () {
     moveClient("bottom");
   });
 
-  registerShortcut("Quarter: Move Right", "Quarter: Move Right", "Alt+Shift+L", function() {
+  registerShortcut("Quarter: Move Right", "Quarter: Move Right", "Alt+Shift+L", function () {
     moveClient("right");
   });
 
@@ -177,23 +177,23 @@ function registerShortcuts(): void {
     });
   }
 
-  registerShortcut("Quarter: Focus Up", "Quarter: Focus Up", "Alt+K", function() {
+  registerShortcut("Quarter: Focus Up", "Quarter: Focus Up", "Alt+K", function () {
     focusClient("top");
   });
 
-  registerShortcut("Quarter: Focus Left", "Quarter: Focus Left", "Alt+H", function() {
+  registerShortcut("Quarter: Focus Left", "Quarter: Focus Left", "Alt+H", function () {
     focusClient("left");
   });
 
-  registerShortcut("Quarter: Focus Down", "Quarter: Focus Down", "Alt+J", function() {
+  registerShortcut("Quarter: Focus Down", "Quarter: Focus Down", "Alt+J", function () {
     focusClient("bottom");
   });
 
-  registerShortcut("Quarter: Focus Right", "Quarter: Focus Right", "Alt+L", function() {
+  registerShortcut("Quarter: Focus Right", "Quarter: Focus Right", "Alt+L", function () {
     focusClient("right");
   });
 }
 
 export const shortcuts = {
-  registerShortcuts
+  registerShortcuts,
 };

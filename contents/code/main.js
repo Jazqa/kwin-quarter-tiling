@@ -1118,10 +1118,10 @@ function registerShortcuts() {
         resizeClient("right", -resizeStep);
     });
     registerShortcut("Quarter: + Window Size Bottom", "Quarter: + Window Size Bottom", "Meta+J", function () {
-        resizeClient("top", resizeStep);
+        resizeClient("bottom", resizeStep);
     });
     registerShortcut("Quarter: - Window Size Bottom", "Quarter: - Window Size Bottom", "Meta+Shift+J", function () {
-        resizeClient("top", -resizeStep);
+        resizeClient("bottom", -resizeStep);
     });
     // Move
     function nextClient(direction) {
@@ -1188,7 +1188,7 @@ function registerShortcuts() {
     });
 }
 var shortcuts = {
-    registerShortcuts: registerShortcuts
+    registerShortcuts: registerShortcuts,
 };
 
 function registerSignals() {
