@@ -29,7 +29,11 @@ Manually:
 
 ## Configuration
 
-The script is configured through the configuration interface under "Kwin Scripts". If you encounter programs that do not work with tiling, you can ignore them via the configuration interface.
+The script is configured through the configuration interface under "Kwin Scripts". If you encounter programs that do not work with tiling, you can ignore them via the configuration interface. **If the configuration interface is not visible, the `metadata.desktop` file of the script needs to be added to `~/.local/share/kservices5` folder. This is something KWin does not do automatically when installing the script, so you might need to do it manually:**
+
+    mkdir -p ~/.local/share/kservices5
+    ln -sf ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
+
 
 ## Shortcuts
 
