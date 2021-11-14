@@ -137,9 +137,7 @@ function decrease() {
 var gaps$1 = {
     increase: increase,
     decrease: decrease,
-    get size() {
-        return size;
-    }
+    size: size
 };
 
 function clone(geometry) {
