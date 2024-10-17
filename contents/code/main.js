@@ -273,19 +273,19 @@ function tile(window, callbacks) {
     var move = window.move;
     var resize = window.resize;
     var frameGeometry;
-    function startResize(oldRect) {
-        frameGeometry = oldRect;
+    function startResize() {
         resize = true;
+        frameGeometry = math.clone(window.frameGeometry);
     }
     function stopResize() {
         callbacks.resizeWindow(window, frameGeometry);
         resize = false;
     }
-    function frameGeometryChanged(oldRect) {
+    function moveResizedChanged() {
         if (window.move && !move) ;
         else if (!window.move && move) ;
         if (window.resize && !resize) {
-            startResize(oldRect);
+            startResize();
         }
         else if (!window.resize && resize) {
             stopResize();
@@ -297,9 +297,9 @@ function tile(window, callbacks) {
     function isOnDesktop(targetDesktop) {
         return window.desktops.findIndex(function (desktop) { return desktop.id === targetDesktop.id; }) > -1;
     }
-    window.frameGeometryChanged.connect(frameGeometryChanged);
+    window.moveResizedChanged.connect(moveResizedChanged);
     function remove() {
-        window.frameGeometryChanged.disconnect(frameGeometryChanged);
+        window.moveResizedChanged.disconnect(moveResizedChanged);
     }
     return {
         window: window,

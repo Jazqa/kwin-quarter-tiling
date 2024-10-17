@@ -20,9 +20,9 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
 
   function stopMove() {}
 
-  function startResize(oldRect: QRect) {
-    frameGeometry = oldRect;
+  function startResize() {
     resize = true;
+    frameGeometry = math.clone(window.frameGeometry);
   }
 
   function stopResize() {
@@ -30,7 +30,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     resize = false;
   }
 
-  function frameGeometryChanged(oldRect: QRect) {
+  function moveResizedChanged() {
     if (window.move && !move) {
       startMove();
     } else if (!window.move && move) {
@@ -38,7 +38,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     }
 
     if (window.resize && !resize) {
-      startResize(oldRect);
+      startResize();
     } else if (!window.resize && resize) {
       stopResize();
     }
@@ -52,10 +52,10 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     return window.desktops.findIndex((desktop) => desktop.id === targetDesktop.id) > -1;
   }
 
-  window.frameGeometryChanged.connect(frameGeometryChanged);
+  window.moveResizedChanged.connect(moveResizedChanged);
 
   function remove() {
-    window.frameGeometryChanged.disconnect(frameGeometryChanged);
+    window.moveResizedChanged.disconnect(moveResizedChanged);
   }
 
   return {

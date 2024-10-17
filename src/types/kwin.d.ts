@@ -73,4 +73,9 @@ export interface KWinWindow {
     connect: (cb: (rect: QRect) => void) => void;
     disconnect: (cb: (rect: QRect) => void) => void;
   };
+
+  moveResizedChanged: {
+    connect: (cb: () => void) => void;
+    disconnect: (cb: () => void) => void;
+  };
 }
