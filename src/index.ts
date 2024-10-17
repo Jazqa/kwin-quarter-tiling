@@ -1,9 +1,3 @@
-import { clientManager } from "./clientManager";
-import { toplevelManager } from "./toplevelManager";
-import { shortcuts } from "./shortcuts";
-import { signals } from "./signals";
+import { wm } from "./wm";
 
-toplevelManager.addAll();
-clientManager.addAll();
-shortcuts.registerShortcuts();
-signals.registerSignals();
+wm();

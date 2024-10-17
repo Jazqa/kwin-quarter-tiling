@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Name": "Quarter Tiling",
+        "Description": "A script providing an easily approachable middle ground between a tiling and a floating window manager",
+        "Icon": "preferences-system-windows",
+        "Authors": [
+            {
+                "Email": "jasu.koponen@hotmail.com",
+                "Name": "Jasu Koponen"
+            }
+        ],
+        "Id": "quarter-tiling",
+        "Version": "1.0",
+        "License": "GPLv2",
+        "Website": "https://github.com/Jazqa/kwin-quarter-tiling"
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js",
+    "KPackageStructure": "KWin/Script"
+}

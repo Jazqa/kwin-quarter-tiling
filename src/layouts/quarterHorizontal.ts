@@ -1,6 +1,7 @@
-import { Client } from "../client";
-import { Geometry, geometryUtils } from "../geometry";
-import { Layout } from "../layout";
+import math from "../math";
+import { KWinWindow } from "../types/kwin";
+import { QRect } from "../types/qt";
+import { Layout } from "./layout";
 
 interface Separators {
   h: Array<number>;
@@ -8,12 +9,12 @@ interface Separators {
 }
 
 interface QuarterHorizontalLayout extends Layout {
-  geometry: Geometry;
+  rect: QRect;
   separators: Separators;
 }
 
-function getTiles(geometry: Geometry, separators: Separators, count: number): Array<Geometry> {
-  const { x, y, width, height } = geometry;
+function getTiles(rect: QRect, separators: Separators, count: number): Array<QRect> {
+  const { x, y, width, height } = rect;
   const { v, h } = separators;
 
   const tiles = [
@@ -58,65 +59,64 @@ function getTiles(geometry: Geometry, separators: Separators, count: number): Ar
   return tiles;
 }
 
-export function QuarterHorizontal(geometry: Geometry): QuarterHorizontalLayout {
-  const maxClients = 4;
+export function QuarterHorizontal(rect: QRect): QuarterHorizontalLayout {
+  const maxWindows = 4;
 
-  let hs = geometry.y + geometry.height * 0.5;
-  let vs = geometry.x + geometry.width * 0.5;
+  let hs = rect.y + rect.height * 0.5;
+  let vs = rect.x + rect.width * 0.5;
   let separators = { h: [hs, hs], v: vs };
 
   function restore(): void {
-    hs = geometry.y + geometry.height * 0.5;
-    vs = geometry.x + geometry.width * 0.5;
+    hs = rect.y + rect.height * 0.5;
+    vs = rect.x + rect.width * 0.5;
     separators = { h: [hs, hs], v: vs };
   }
 
-  function adjustGeometry(newGeometry: Geometry): void {
-    geometry = newGeometry;
+  function adjustRect(newRect: QRect): void {
+    rect = newRect;
     restore();
   }
 
-  function tileClients(clients: Array<Client>): void {
-    const includedClients = clients.slice(0, maxClients);
-    const tiles = getTiles(geometry, separators, includedClients.length);
+  function tileWindows(windows: Array<KWinWindow>): void {
+    const includedWindows = windows.slice(0, maxWindows);
+    const tiles = getTiles(rect, separators, includedWindows.length);
 
-    includedClients.forEach((client: Client, index: number) => {
+    includedWindows.forEach((window: KWinWindow, index: number) => {
       const tile = tiles[index];
-      client.geometry = geometryUtils.gapArea(tile);
+      window.frameGeometry = math.withGap(tile);
     });
   }
 
-  function resizeClient(client: Client, previousGeometry: Geometry): void {
-    const newGeometry = client.geometry;
-    previousGeometry = previousGeometry;
+  function resizeWindow(window: KWinWindow, oldRect: QRect): void {
+    const newRect = math.clone(window.frameGeometry);
 
-    if (previousGeometry.x >= separators.v) {
+    if (oldRect.x >= separators.v) {
       // Right
-      separators.v += newGeometry.x - previousGeometry.x;
-      if (previousGeometry.y >= separators.h[1]) {
+      separators.v += newRect.x - oldRect.x;
+      if (oldRect.y >= separators.h[1]) {
         // Bottom right
-        separators.h[1] += newGeometry.y - previousGeometry.y;
+        separators.h[1] += newRect.y - oldRect.y;
       } else {
         // Top right
-        separators.h[1] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
+        separators.h[1] += newRect.y === oldRect.y ? newRect.height - oldRect.height : 0;
       }
     } else {
-      separators.v += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
+      separators.v += newRect.x === oldRect.x ? newRect.width - oldRect.width : 0;
       // Left
-      if (previousGeometry.y >= separators.h[0]) {
+      if (oldRect.y >= separators.h[0]) {
         // Bottom left
-        separators.h[0] += newGeometry.y - previousGeometry.y;
+        separators.h[0] += newRect.y - oldRect.y;
       } else {
         // Top left
-        separators.h[0] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
+        separators.h[0] += newRect.y === oldRect.y ? newRect.height - oldRect.height : 0;
       }
     }
 
-    const maxV = 0.9 * (geometry.x + geometry.width);
-    const minV = geometry.x + geometry.width * 0.1;
+    const maxV = 0.9 * (rect.x + rect.width);
+    const minV = rect.x + rect.width * 0.1;
 
-    const maxH = 0.9 * (geometry.y + geometry.height);
-    const minH = geometry.y + geometry.height * 0.1;
+    const maxH = 0.9 * (rect.y + rect.height);
+    const minH = rect.y + rect.height * 0.1;
 
     separators.v = Math.min(Math.max(minV, separators.v), maxV);
 
@@ -125,12 +125,12 @@ export function QuarterHorizontal(geometry: Geometry): QuarterHorizontalLayout {
   }
 
   return {
-    restore,
-    maxClients,
-    tileClients,
-    resizeClient,
-    geometry,
+    rect,
     separators,
-    adjustGeometry,
+    maxWindows,
+    restore,
+    tileWindows,
+    resizeWindow,
+    adjustRect,
   };
 }
