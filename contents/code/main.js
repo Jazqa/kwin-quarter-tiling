@@ -273,6 +273,14 @@ function tile(window, callbacks) {
     var move = window.move;
     var resize = window.resize;
     var frameGeometry;
+    function startMove() {
+        move = true;
+        frameGeometry = math.clone(window.frameGeometry);
+    }
+    function stopMove() {
+        callbacks.moveWindow(window, frameGeometry);
+        move = false;
+    }
     function startResize() {
         resize = true;
         frameGeometry = math.clone(window.frameGeometry);
@@ -282,8 +290,12 @@ function tile(window, callbacks) {
         resize = false;
     }
     function moveResizedChanged() {
-        if (window.move && !move) ;
-        else if (!window.move && move) ;
+        if (window.move && !move) {
+            startMove();
+        }
+        else if (!window.move && move) {
+            stopMove();
+        }
         if (window.resize && !resize) {
             startResize();
         }
@@ -329,6 +341,7 @@ function wm() {
     var tiles = [];
     var callbacks = {
         resizeWindow: resizeWindow,
+        moveWindow: moveWindow,
     };
     function addLayer(output, desktop) {
         if (config.isIgnoredLayer(output, desktop))
@@ -346,6 +359,11 @@ function wm() {
             windows = windows.filter(function (window) { return window; });
             layer.layout.tileWindows(windows);
         });
+    }
+    function swapTiles(i, j) {
+        var tile = tiles[i];
+        tiles[i] = tiles[j];
+        tiles[j] = tile;
     }
     function addWindow(window) {
         if (isWindowAllowed(window)) {
@@ -370,6 +388,25 @@ function wm() {
                 layer.layout.resizeWindow(window, oldRect);
             }
         });
+        tileLayers();
+    }
+    function moveWindow(window, oldRect) {
+        var nearestTile = tiles.find(function (tile) { return tile.window.internalId === window.internalId; });
+        var nearestDistance = math.distanceTo(window.frameGeometry, oldRect);
+        tiles.forEach(function (tile) {
+            if (window.internalId !== tile.window.internalId) {
+                var distance = math.distanceTo(window.frameGeometry, tile.window.frameGeometry);
+                if (distance < nearestDistance) {
+                    nearestTile = tile;
+                    nearestDistance = distance;
+                }
+            }
+        });
+        var i = tiles.findIndex(function (tile) { return tile.window.internalId === window.internalId; });
+        var j = tiles.findIndex(function (tile) { return tile.window.internalId === nearestTile.window.internalId; });
+        if (i !== j) {
+            swapTiles(i, j);
+        }
         tileLayers();
     }
     function isWindowAllowed(window) {
@@ -404,6 +441,7 @@ function wm() {
     });
     workspace.windowAdded.connect(addWindow);
     workspace.windowRemoved.connect(removeWindow);
+    workspace.windowActivated.connect(tileLayers);
 }
 
 wm();

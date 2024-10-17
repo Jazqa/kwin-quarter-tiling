@@ -16,9 +16,15 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
 
   let frameGeometry: QRect;
 
-  function startMove() {}
+  function startMove() {
+    move = true;
+    frameGeometry = math.clone(window.frameGeometry);
+  }
 
-  function stopMove() {}
+  function stopMove() {
+    callbacks.moveWindow(window, frameGeometry);
+    move = false;
+  }
 
   function startResize() {
     resize = true;

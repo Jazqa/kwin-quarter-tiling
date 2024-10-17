@@ -51,6 +51,7 @@ function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
 
 export interface Callbacks {
   resizeWindow: (window: KWinWindow, oldRect: QRect) => void;
+  moveWindow: (window: KWinWindow, oldRect: QRect) => void;
 }
 
 export function wm() {
@@ -59,6 +60,7 @@ export function wm() {
 
   const callbacks = {
     resizeWindow,
+    moveWindow,
   };
 
   function addLayer(output: KWinOutput, desktop: KWinVirtualDesktop) {
@@ -81,6 +83,12 @@ export function wm() {
 
       layer.layout.tileWindows(windows);
     });
+  }
+
+  function swapTiles(i: number, j: number) {
+    const tile: Tile = tiles[i];
+    tiles[i] = tiles[j];
+    tiles[j] = tile;
   }
 
   function addWindow(window: KWinWindow) {
@@ -109,6 +117,30 @@ export function wm() {
         layer.layout.resizeWindow(window, oldRect);
       }
     });
+
+    tileLayers();
+  }
+
+  function moveWindow(window: KWinWindow, oldRect: QRect) {
+    let nearestTile = tiles.find((tile) => tile.window.internalId === window.internalId);
+    let nearestDistance = math.distanceTo(window.frameGeometry, oldRect);
+
+    tiles.forEach((tile) => {
+      if (window.internalId !== tile.window.internalId) {
+        const distance = math.distanceTo(window.frameGeometry, tile.window.frameGeometry);
+        if (distance < nearestDistance) {
+          nearestTile = tile;
+          nearestDistance = distance;
+        }
+      }
+    });
+
+    const i = tiles.findIndex((tile) => tile.window.internalId === window.internalId);
+    const j = tiles.findIndex((tile) => tile.window.internalId === nearestTile.window.internalId);
+
+    if (i !== j) {
+      swapTiles(i, j);
+    }
 
     tileLayers();
   }
@@ -150,4 +182,6 @@ export function wm() {
   workspace.windowAdded.connect(addWindow);
 
   workspace.windowRemoved.connect(removeWindow);
+
+  workspace.windowActivated.connect(tileLayers);
 }
