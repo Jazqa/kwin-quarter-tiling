@@ -21,18 +21,35 @@ const margins: { top: number; left: number; bottom: number; right: number } = {
   right: readConfig("marginRight", 0),
 };
 
-const layout: string = readConfigString("layout", 0);
+const layouts = [
+  readConfigString("layout_0", 0),
+  readConfigString("layout_1", 0),
+  readConfigString("layout_2", 0),
+  readConfigString("layout_3", 0),
+];
+
+const maxWindows: Array<number> = [
+  readConfig("maxWindows_0", -1),
+  readConfig("maxWindows_1", -1),
+  readConfig("maxWindows_2", -1),
+  readConfig("maxWindows_3", -1),
+];
+
+const outputEnabled: Array<boolean> = [
+  readConfig("outputEnabled_0", -1),
+  readConfig("outputEnabled_1", -1),
+  readConfig("outputEnabled_2", -1),
+  readConfig("outputEnabled_3", -1),
+];
 
 const autoTile: boolean = readConfigString("autoTile", true) === "true";
 
-const followWindows: boolean = readConfigString("followClients", true) === "true";
+const followWindows: boolean = readConfigString("followWindows", true) === "true";
 
 const minWidth: number = readConfig("minWidth", 256);
 const minHeight: number = readConfig("minHeight", 256);
 
-const maxWindows: number = readConfig("maxClients", -1);
-
-const ignoredWindows: Array<string> = [
+const ignoredProcesses: Array<string> = [
   "albert",
   "kazam",
   "krunner",
@@ -49,7 +66,7 @@ const ignoredWindows: Array<string> = [
   "ksmserver-logout-greeter",
   "QEMU",
   "Latte Dock",
-  ...readConfigString("ignoredClients", "wine, steam").split(", "),
+  ...readConfigString("ignoredProcesses", "wine, steam").split(", "),
   ...[readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""],
 ];
 
@@ -64,36 +81,33 @@ const ignoredCaptions: Array<string> = [
 ];
 
 const ignoredDesktops: Array<string> = readConfigString("ignoredDesktops", "").split(", ");
-const ignoredOutputs: Array<string> = readConfigString("ignoredScreens", "").split(", ");
 
 function isIgnoredDesktop(desktop: KWinVirtualDesktop) {
   const index = workspace.desktops.findIndex(({ id }) => id === desktop.id);
   return ignoredDesktops.indexOf(index.toString()) > -1;
 }
 
-function isIgnoredOutput(output: KWinOutput) {
+function isOutputEnabled(output: KWinOutput) {
   const index = workspace.screens.findIndex(({ serialNumber }) => serialNumber === output.serialNumber);
-  return ignoredOutputs.indexOf(index.toString()) > -1;
+  return outputEnabled[index];
 }
 
 function isIgnoredLayer(output: KWinOutput, desktop: KWinVirtualDesktop) {
-  return isIgnoredOutput(output) || isIgnoredDesktop(desktop);
+  return !isOutputEnabled(output) || isIgnoredDesktop(desktop);
 }
 
 export default {
   gaps,
   margins,
-  layout,
+  layouts,
   autoTile,
   followWindows,
   minWidth,
   minHeight,
   maxWindows,
-  ignoredWindows,
+  ignoredProcesses,
   ignoredCaptions,
   ignoredDesktops,
-  ignoredOutputs,
   isIgnoredDesktop,
-  isIgnoredOutput,
   isIgnoredLayer,
 };

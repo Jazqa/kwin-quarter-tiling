@@ -26,13 +26,29 @@ var margins = {
     bottom: readConfig("marginBottom", 0),
     right: readConfig("marginRight", 0),
 };
-var layout = readConfigString("layout", 0);
+var layouts = [
+    readConfigString("layout_0", 0),
+    readConfigString("layout_1", 0),
+    readConfigString("layout_2", 0),
+    readConfigString("layout_3", 0),
+];
+var maxWindows = [
+    readConfig("maxWindows_0", -1),
+    readConfig("maxWindows_1", -1),
+    readConfig("maxWindows_2", -1),
+    readConfig("maxWindows_3", -1),
+];
+var outputEnabled = [
+    readConfig("outputEnabled_0", -1),
+    readConfig("outputEnabled_1", -1),
+    readConfig("outputEnabled_2", -1),
+    readConfig("outputEnabled_3", -1),
+];
 var autoTile = readConfigString("autoTile", true) === "true";
-var followWindows = readConfigString("followClients", true) === "true";
+var followWindows = readConfigString("followWindows", true) === "true";
 var minWidth = readConfig("minWidth", 256);
 var minHeight = readConfig("minHeight", 256);
-var maxWindows = readConfig("maxClients", -1);
-var ignoredWindows = __spreadArrays([
+var ignoredProcesses = __spreadArrays([
     "albert",
     "kazam",
     "krunner",
@@ -49,7 +65,7 @@ var ignoredWindows = __spreadArrays([
     "ksmserver-logout-greeter",
     "QEMU",
     "Latte Dock"
-], readConfigString("ignoredClients", "wine, steam").split(", "), [readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""]);
+], readConfigString("ignoredProcesses", "wine, steam").split(", "), [readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""]);
 var ignoredCaptions = __spreadArrays([
     "File Upload",
     "Move to Trash",
@@ -59,7 +75,6 @@ var ignoredCaptions = __spreadArrays([
     .split(", ")
     .filter(function (caption) { return caption; }));
 var ignoredDesktops = readConfigString("ignoredDesktops", "").split(", ");
-var ignoredOutputs = readConfigString("ignoredScreens", "").split(", ");
 function isIgnoredDesktop(desktop) {
     var index = workspace.desktops.findIndex(function (_a) {
         var id = _a.id;
@@ -67,31 +82,29 @@ function isIgnoredDesktop(desktop) {
     });
     return ignoredDesktops.indexOf(index.toString()) > -1;
 }
-function isIgnoredOutput(output) {
+function isOutputEnabled(output) {
     var index = workspace.screens.findIndex(function (_a) {
         var serialNumber = _a.serialNumber;
         return serialNumber === output.serialNumber;
     });
-    return ignoredOutputs.indexOf(index.toString()) > -1;
+    return outputEnabled[index];
 }
 function isIgnoredLayer(output, desktop) {
-    return isIgnoredOutput(output) || isIgnoredDesktop(desktop);
+    return !isOutputEnabled(output) || isIgnoredDesktop(desktop);
 }
 var config = {
     gaps: gaps,
     margins: margins,
-    layout: layout,
+    layouts: layouts,
     autoTile: autoTile,
     followWindows: followWindows,
     minWidth: minWidth,
     minHeight: minHeight,
     maxWindows: maxWindows,
-    ignoredWindows: ignoredWindows,
+    ignoredProcesses: ignoredProcesses,
     ignoredCaptions: ignoredCaptions,
     ignoredDesktops: ignoredDesktops,
-    ignoredOutputs: ignoredOutputs,
     isIgnoredDesktop: isIgnoredDesktop,
-    isIgnoredOutput: isIgnoredOutput,
     isIgnoredLayer: isIgnoredLayer,
 };
 
@@ -187,16 +200,11 @@ function getTiles(rect, separators, count) {
     }
     return tiles;
 }
-function QuarterHorizontal(rect) {
+function TwoByTwoHorizontal(rect) {
     var maxWindows = 4;
     var hs = rect.y + rect.height * 0.5;
     var vs = rect.x + rect.width * 0.5;
     var separators = { h: [hs, hs], v: vs };
-    function restore() {
-        hs = rect.y + rect.height * 0.5;
-        vs = rect.x + rect.width * 0.5;
-        separators = { h: [hs, hs], v: vs };
-    }
     function adjustRect(newRect) {
         rect = newRect;
         restore();
@@ -243,14 +251,122 @@ function QuarterHorizontal(rect) {
         separators.h[0] = Math.min(Math.max(minH, separators.h[0]), maxH);
         separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
     }
+    function restore() {
+        hs = rect.y + rect.height * 0.5;
+        vs = rect.x + rect.width * 0.5;
+        separators = { h: [hs, hs], v: vs };
+    }
     return {
-        rect: rect,
-        separators: separators,
         maxWindows: maxWindows,
-        restore: restore,
         tileWindows: tileWindows,
         resizeWindow: resizeWindow,
         adjustRect: adjustRect,
+        restore: restore,
+    };
+}
+
+function getTiles$1(rect, separators, count) {
+    var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
+    var v = separators.v, h = separators.h;
+    var tiles = [
+        {
+            x: x,
+            y: y,
+            width: v[0] - x,
+            height: h - y,
+        },
+        {
+            x: x,
+            y: h,
+            width: v[1] - x,
+            height: y + height - h,
+        },
+        {
+            x: v[1],
+            y: h,
+            width: x + width - v[1],
+            height: y + height - h,
+        },
+        {
+            x: v[0],
+            y: y,
+            width: x + width - v[0],
+            height: h - y,
+        },
+    ];
+    if (count < 4) {
+        tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
+    }
+    if (count < 3) {
+        tiles[1].width = tiles[2].x + tiles[2].width - tiles[1].x;
+    }
+    if (count < 2) {
+        tiles[0].height = tiles[1].y + tiles[1].height - tiles[0].y;
+    }
+    return tiles;
+}
+function TwoByTwoVertical(rect) {
+    var maxWindows = 4;
+    var hs = rect.y + rect.height * 0.5;
+    var vs = rect.x + rect.width * 0.5;
+    var separators = { h: hs, v: [vs, vs] };
+    function adjustRect(newRect) {
+        rect = newRect;
+        restore();
+    }
+    function tileWindows(windows) {
+        var includedWindows = windows.slice(0, maxWindows);
+        var tiles = getTiles$1(rect, separators, includedWindows.length);
+        includedWindows.forEach(function (window, index) {
+            var tile = tiles[index];
+            window.frameGeometry = math.withGap(tile);
+        });
+    }
+    function resizeWindow(window, oldRect) {
+        var newRect = math.clone(window.frameGeometry);
+        if (oldRect.y >= separators.h) {
+            // Right
+            separators.h += newRect.y - oldRect.y;
+            if (oldRect.x >= separators.v[1]) {
+                // Bottom right
+                separators.v[1] += newRect.x - oldRect.x;
+            }
+            else {
+                // Top right
+                separators.v[1] += newRect.x === oldRect.x ? newRect.width - oldRect.width : 0;
+            }
+        }
+        else {
+            separators.h += newRect.y === oldRect.y ? newRect.height - oldRect.height : 0;
+            // Left
+            if (oldRect.x >= separators.v[0]) {
+                // Bottom left
+                separators.v[0] += newRect.x - oldRect.x;
+            }
+            else {
+                // Top left
+                separators.v[0] += newRect.x === oldRect.x ? newRect.width - oldRect.width : 0;
+            }
+        }
+        var maxV = 0.9 * (rect.x + rect.width);
+        var minV = rect.x + rect.width * 0.1;
+        var maxH = 0.9 * (rect.y + rect.height);
+        var minH = rect.y + rect.height * 0.1;
+        separators.v[0] = Math.min(Math.max(minV, separators.v[0]), maxV);
+        separators.v[1] = Math.min(Math.max(minV, separators.v[1]), maxV);
+        separators.h = Math.min(Math.max(minH, separators.h), maxH);
+    }
+    function restore() {
+        hs = rect.y + rect.height * 0.5;
+        vs = rect.x + rect.width * 0.5;
+        separators = { h: hs, v: [vs, vs] };
+    }
+    return {
+        maxWindows: maxWindows,
+        tileWindows: tileWindows,
+        resizeWindow: resizeWindow,
+        adjustRect: adjustRect,
+        restore: restore,
     };
 }
 
@@ -259,14 +375,15 @@ function QuarterHorizontal(rect) {
  *
  *  1. Create a new class that inside src/layouts folder, make sure it implements the Layout interface as seen in /src/layout.ts
  *  2. Add an entry to the layouts object in src/layouts/layouts.ts, increasing the key by one:
- *      { "0": QuarterVertical, "1": NewLayout }
+ *      { "0": TwoByTwoHorizontal, "1": NewLayout }
  *  3. Add a new entry to the kcfg_layouts entry in contents/code/config.ui:
  *      <property name="text">
  *          <string>NewLayout</string>
  *      </property>
  */
-var layouts = {
-    "0": QuarterHorizontal,
+var layouts$1 = {
+    "0": TwoByTwoHorizontal,
+    "1": TwoByTwoVertical,
 };
 
 function tile(window, callbacks) {
@@ -323,10 +440,11 @@ function tile(window, callbacks) {
 
 function layer(output, desktop) {
     var id = output.serialNumber + desktop.id;
+    var outputIndex = workspace.screens.findIndex(function (workspaceOutput) { return workspaceOutput.serialNumber === output.serialNumber; });
     var rect = math.withMargin(workspace.clientArea(2, output, desktop));
-    var layout = layouts[config.layout](rect);
-    if (config.maxWindows > -1) {
-        layout.maxWindows = Math.min(layout.maxWindows, config.maxWindows);
+    var layout = layouts$1[config.layouts[outputIndex]](rect);
+    if (config.maxWindows[outputIndex] > -1) {
+        layout.maxWindows = Math.min(layout.maxWindows, config.maxWindows[outputIndex]);
     }
     return {
         output: output,
@@ -423,8 +541,8 @@ function wm() {
           !window.minimized &&
           window.rect.width >= config.minWidth &&
           window.rect.height >= config.minHeight &&
-          config.ignoredClients.indexOf(window.resourceClass.toString()) === -1 &&
-          config.ignoredClients.indexOf(window.resourceName.toString()) === -1 &&
+          config.ignoredProcesses.indexOf(window.resourceClass.toString()) === -1 &&
+          config.ignoredProcesses.indexOf(window.resourceName.toString()) === -1 &&
           config.ignoredCaptions.some(
             (caption) => window.caption.toString().toLowerCase().indexOf(caption.toLowerCase()) === -1
           )

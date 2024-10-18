@@ -8,11 +8,6 @@ interface Separators {
   v: number;
 }
 
-interface QuarterHorizontalLayout extends Layout {
-  rect: QRect;
-  separators: Separators;
-}
-
 function getTiles(rect: QRect, separators: Separators, count: number): Array<QRect> {
   const { x, y, width, height } = rect;
   const { v, h } = separators;
@@ -59,25 +54,19 @@ function getTiles(rect: QRect, separators: Separators, count: number): Array<QRe
   return tiles;
 }
 
-export function QuarterHorizontal(rect: QRect): QuarterHorizontalLayout {
+export function TwoByTwoHorizontal(rect: QRect): Layout {
   const maxWindows = 4;
 
   let hs = rect.y + rect.height * 0.5;
   let vs = rect.x + rect.width * 0.5;
   let separators = { h: [hs, hs], v: vs };
 
-  function restore(): void {
-    hs = rect.y + rect.height * 0.5;
-    vs = rect.x + rect.width * 0.5;
-    separators = { h: [hs, hs], v: vs };
-  }
-
-  function adjustRect(newRect: QRect): void {
+  function adjustRect(newRect: QRect) {
     rect = newRect;
     restore();
   }
 
-  function tileWindows(windows: Array<KWinWindow>): void {
+  function tileWindows(windows: Array<KWinWindow>) {
     const includedWindows = windows.slice(0, maxWindows);
     const tiles = getTiles(rect, separators, includedWindows.length);
 
@@ -87,7 +76,7 @@ export function QuarterHorizontal(rect: QRect): QuarterHorizontalLayout {
     });
   }
 
-  function resizeWindow(window: KWinWindow, oldRect: QRect): void {
+  function resizeWindow(window: KWinWindow, oldRect: QRect) {
     const newRect = math.clone(window.frameGeometry);
 
     if (oldRect.x >= separators.v) {
@@ -124,13 +113,17 @@ export function QuarterHorizontal(rect: QRect): QuarterHorizontalLayout {
     separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
   }
 
+  function restore() {
+    hs = rect.y + rect.height * 0.5;
+    vs = rect.x + rect.width * 0.5;
+    separators = { h: [hs, hs], v: vs };
+  }
+
   return {
-    rect,
-    separators,
     maxWindows,
-    restore,
     tileWindows,
     resizeWindow,
     adjustRect,
+    restore,
   };
 }

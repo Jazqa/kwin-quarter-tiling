@@ -6,72 +6,111 @@
     <kcfgfile name=""/>
     <group name="">
       <entry name="autoTile" type="bool">
-        <label>Automatically tile windows</label>
+        <label>Automatically tiles windows (if unchecked, a shortcut needs to be used to manually tile windows)</label>
         <default>true</default>
       </entry>
       <entry name="ignoreJava" type="bool">
-        <label>Ignore all Java windows</label>
+        <label>Java windows will not be tiled</label>
         <default>false</default>
       </entry>
-      <entry name="followClients" type="bool">
-        <label>Follow clients across desktops</label>
+      <entry name="followWindows" type="bool">
+        <label>Automatically moves windows to available desktops</label>
         <default>true</default>
       </entry>
-    	<entry name="gap" type="int">
-        <label>Pixels between the windows and screen edges</label>
+      <entry name="gap" type="int">
+        <label>Leaves a gap between windows</label>
         <default>8</default>
 		  </entry>
-      <entry name="maxClients" type="int">
-        <label>Maximum amount of clients to tile on a screen</label>
-        <default>-1</default>
-		  </entry>
       <entry name="marginTop" type="int">
-        <label>Additional pixels from the top of the screen</label>
+        <label>Reduces available tiling area from the top of the screen</label>
         <default>0</default>
 		  </entry>
       <entry name="marginLeft" type="int">
-        <label>Additional pixels from the left of the screen</label>
+        <label>Reduces available tiling area from the left of the screen</label>
         <default>0</default>
 		  </entry>
       <entry name="marginBottom" type="int">
-        <label>Additional pixels from the bottom of the screen</label>
+        <label>Reduces available tiling area from the bottom of the screen</label>
         <default>0</default>
 		  </entry>
       <entry name="marginRight" type="int">
-        <label>Additional pixels from the right of the screen</label>
+        <label>Reduces available tiling area from the right of the screen</label>
         <default>0</default>
 		  </entry>
-      <entry name="layout" type="int">
-        <label>Tiling layout</label>
+
+      <entry name="layout_0" type="int">
+        <label>Tiling layout (Screen 1)</label>
         <default>0</default>
 		  </entry>
-      <entry name="">
+      <entry name="layout_1" type="int">
+        <label>Tiling layout (Screen 2)</label>
+        <default>0</default>
+		  </entry>
+      <entry name="layout_2" type="int">
+        <label>Tiling layout (Screen 3)</label>
+        <default>0</default>
+		  </entry>
+      <entry name="layout_3" type="int">
+        <label>Tiling layout (Screen 4)</label>
+        <default>0</default>
+		  </entry>
+
+      <entry name="maxWindows_0" type="int">
+        <label>Max windows (Screen 1)</label>
+        <default>-1</default>
+		  </entry>
+      <entry name="maxWindows_1" type="int">
+        <label>Max windows (Screen 2)</label>
+        <default>-1</default>
+		  </entry>
+      <entry name="maxWindows_2" type="int">
+        <label>Max windows (Screen 3)</label>
+        <default>-1</default>
+		  </entry>
+      <entry name="maxWindows_3" type="int">
+        <label>Max windows (Screen 4)</label>
+        <default>-1</default>
+		  </entry>
+
+      <entry name="outputEnabled_0" type="bool">
+        <label>Output enabled (Screen 1)</label>
+        <default>-1</default>
+		  </entry>
+      <entry name="outputEnabled_1" type="bool">
+        <label>Output enabled (Screen 2)</label>
+        <default>-1</default>
+		  </entry>
+      <entry name="outputEnabled_2" type="bool">
+        <label>Output enabled (Screen 3)</label>
+        <default>-1</default>
+		  </entry>
+      <entry name="outputEnabled_3" type="bool">
+        <label>Output enabled (Screen 4)</label>
+        <default>-1</default>
+		  </entry>
+      
       <entry name="minWidth" type="int">
-        <label>Minimum Program Width</label>
+        <label>Windows with width below this value will not be tiled</label>
         <default>256</default>
       </entry>
       <entry name="minHeight" type="int">
-        <label>Minimum Program Height</label>
+        <label>Windows with height below this value will not be tiled</label>
         <default>256</default>
       </entry>
-      <entry name="ignoredScreens" type="string">
-  	    <label>Screens that should be ignored by the script</label>
-  	    <default></default>
-      </entry>
       <entry name="ignoredDesktops" type="string">
-  	    <label>Desktops that should be ignored by the script</label>
+  	    <label>Windows on these desktops will not be tiled</label>
   	    <default></default>
       </entry>
       <entry name="ignoredActivities" type="string">
-  	    <label>Activities that should be ignored by the script</label>
+  	    <label>Windows on these activities will not be tiled</label>
   	    <default></default>
       </entry>
-      <entry name="ignoredClients" type="string">
-  	    <label>Programs that should be ignored by the script (e.g. "kate", "steam")</label>
+      <entry name="ignoredProcesses" type="string">
+  	    <label>Windows belonging to these programs will not be tiled (e.g. "kate", "steam")</label>
   	    <default>wine, steam</default>
       </entry>
       <entry name="ignoredCaptions" type="string">
-  	    <label>Captions that should be ignored by the script (e.g. "Quit GIMP")</label>
+  	    <label>Windows with these captions will not be tiled (e.g. "Quit GIMP")</label>
   	    <default>Quit GIMP, Create a New Image</default>
       </entry>
    	</group>

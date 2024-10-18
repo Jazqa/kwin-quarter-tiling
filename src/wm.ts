@@ -22,11 +22,15 @@ interface Layer {
 function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
   const id = output.serialNumber + desktop.id;
 
-  let rect = math.withMargin(workspace.clientArea(2, output, desktop));
-  let layout = layouts[config.layout](rect);
+  const outputIndex = workspace.screens.findIndex(
+    (workspaceOutput) => workspaceOutput.serialNumber === output.serialNumber
+  );
 
-  if (config.maxWindows > -1) {
-    layout.maxWindows = Math.min(layout.maxWindows, config.maxWindows);
+  let rect = math.withMargin(workspace.clientArea(2, output, desktop));
+  let layout = layouts[config.layouts[outputIndex]](rect);
+
+  if (config.maxWindows[outputIndex] > -1) {
+    layout.maxWindows = Math.min(layout.maxWindows, config.maxWindows[outputIndex]);
   }
 
   function hasRectChanged(newRect: QRect) {
@@ -160,8 +164,8 @@ export function wm() {
       !window.minimized &&
       window.rect.width >= config.minWidth &&
       window.rect.height >= config.minHeight &&
-      config.ignoredClients.indexOf(window.resourceClass.toString()) === -1 &&
-      config.ignoredClients.indexOf(window.resourceName.toString()) === -1 &&
+      config.ignoredProcesses.indexOf(window.resourceClass.toString()) === -1 &&
+      config.ignoredProcesses.indexOf(window.resourceName.toString()) === -1 &&
       config.ignoredCaptions.some(
         (caption) => window.caption.toString().toLowerCase().indexOf(caption.toLowerCase()) === -1
       )
