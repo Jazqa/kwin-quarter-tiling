@@ -25,9 +25,12 @@ export function wm() {
   function addLayer(output: KWinOutput, desktop: KWinVirtualDesktop) {
     if (config.exclude(output, desktop)) return;
 
+    const id = output.serialNumber + desktop.id;
+    if (layers[id]) return;
+
     const newLayer = layer(output, desktop);
 
-    layers[newLayer.id] = newLayer;
+    layers[id] = newLayer;
   }
 
   function tileLayers() {
@@ -134,6 +137,8 @@ export function wm() {
   workspace.stackingOrder.forEach((window) => {
     addWindow(window);
   });
+
+  workspace.currentDesktopChanged.connect(tileLayers);
 
   workspace.windowAdded.connect(addWindow);
 

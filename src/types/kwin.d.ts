@@ -10,6 +10,10 @@ export interface KWinWorkspaceWrapper {
 
   clientArea: (option: 2, output: KWinOutput, desktop: KWinVirtualDesktop) => QRect;
 
+  currentDesktopChanged: {
+    connect: (cb: (oldDesktop: KWinVirtualDesktop) => void) => void;
+    disconnect: (cb: (oldDesktop: KWinVirtualDesktop) => void) => void;
+  };
   windowAdded: {
     connect: (cb: (window: KWinWindow) => void) => void;
     disconnect: (cb: (window: KWinWindow) => void) => void;
@@ -82,6 +86,11 @@ export interface KWinWindow {
   };
 
   outputChanged: {
+    connect: (cb: () => void) => void;
+    disconnect: (cb: () => void) => void;
+  };
+
+  desktopsChanged: {
     connect: (cb: () => void) => void;
     disconnect: (cb: () => void) => void;
   };

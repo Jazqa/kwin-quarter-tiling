@@ -42,7 +42,7 @@ export function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
           i++;
           return tile.window;
         } else {
-          tile.enabled = false;
+          tile.softDisable();
         }
       })
       .filter((window) => window)

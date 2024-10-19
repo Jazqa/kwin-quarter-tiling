@@ -430,7 +430,7 @@ function layer(output, desktop) {
                 return tile.window;
             }
             else {
-                tile.enabled = false;
+                tile.softDisable();
             }
         })
             .filter(function (window) { return window; })
@@ -448,8 +448,30 @@ function layer(output, desktop) {
 }
 
 function tile(window, callbacks) {
+    // Enabled  can      be changed manually by the user or automatically by the script
+    // Disabled can only be changed                         automatically by the script
+    // In practice, disabled = true tiles can be re-enabled automatically by the script, but disabled = false tiles can only be re-enabled manually by the user
     var enabled = true;
+    var disabled = false;
+    function hardEnable() {
+        enabled = true;
+        disabled = false;
+    }
+    function softEnable() {
+        if (disabled) {
+            enabled = true;
+            disabled = false;
+        }
+    }
+    function hardDisable() {
+        enabled = false;
+    }
+    function softDisable() {
+        enabled = false;
+        disabled = true;
+    }
     var output = window.output;
+    var desktops = window.desktops;
     var move = window.move;
     var resize = window.resize;
     var originalGeometry = math.clone(window.frameGeometry);
@@ -476,6 +498,8 @@ function tile(window, callbacks) {
         resize = false;
     }
     function moveResizedChanged() {
+        if (!enabled)
+            return;
         if (window.move && !move) {
             startMove();
         }
@@ -496,20 +520,39 @@ function tile(window, callbacks) {
             callbacks.pushWindow(window);
         }
     }
-    function isOnOutput(targetOutput) {
-        return window.output === targetOutput;
+    function isOnOutput(output) {
+        return window.output.serialNumber === output.serialNumber;
     }
-    function isOnDesktop(targetDesktop) {
-        return window.desktops.findIndex(function (desktop) { return desktop.id === targetDesktop.id; }) > -1;
+    // cf3f
+    function desktopsChanged() {
+        if (desktops.length > 1) {
+            softDisable();
+        }
+        else if (desktops.length === 1) {
+            softEnable();
+        }
+        desktops = window.desktops;
+        callbacks.pushWindow(window);
+    }
+    // cf3f
+    function isOnDesktop(desktop) {
+        return window.desktops.length === 1 && window.desktops[0].id === desktop.id;
     }
     window.moveResizedChanged.connect(moveResizedChanged);
     window.outputChanged.connect(outputChanged);
+    window.desktopsChanged.connect(desktopsChanged);
     function remove() {
         window.moveResizedChanged.disconnect(moveResizedChanged);
+        window.outputChanged.disconnect(outputChanged);
+        window.desktopsChanged.disconnect(desktopsChanged);
     }
     return {
         enabled: enabled,
         window: window,
+        hardEnable: hardEnable,
+        softEnable: softEnable,
+        hardDisable: hardDisable,
+        softDisable: softDisable,
         isOnOutput: isOnOutput,
         isOnDesktop: isOnDesktop,
         remove: remove,
@@ -527,8 +570,11 @@ function wm() {
     function addLayer(output, desktop) {
         if (config.exclude(output, desktop))
             return;
+        var id = output.serialNumber + desktop.id;
+        if (layers[id])
+            return;
         var newLayer = layer(output, desktop);
-        layers[newLayer.id] = newLayer;
+        layers[id] = newLayer;
     }
     function tileLayers() {
         Object.values(layers).forEach(function (layer) {
@@ -615,6 +661,7 @@ function wm() {
     workspace.stackingOrder.forEach(function (window) {
         addWindow(window);
     });
+    workspace.currentDesktopChanged.connect(tileLayers);
     workspace.windowAdded.connect(addWindow);
     workspace.windowRemoved.connect(removeWindow);
     workspace.windowActivated.connect(tileLayers);
