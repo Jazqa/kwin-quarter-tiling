@@ -24,7 +24,7 @@ The script can be configured through its configuration interface under `System S
 
 ## Shortcuts
 
-The script adds new KWin shortcuts under `System Settings > Shortcuts > Global Shortcuts > KWin`. All `Quarter: <ACTION>` shortcuts are used exclusively by the script.
+The script adds new KWin shortcuts under `System Settings > Shortcuts > Global Shortcuts > KWin`. All `8137: <ACTION>` shortcuts are used exclusively by the script.
 
 ## Updates
 
