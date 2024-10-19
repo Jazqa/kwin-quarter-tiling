@@ -1,5 +1,5 @@
 import config from "./config";
-import { workspace } from "./kwin";
+import { registerShortcut, workspace } from "./kwin";
 import { layer, Layers } from "./layer";
 import math from "./math";
 import { tile, Tile } from "./tile";
@@ -22,6 +22,7 @@ export function wm() {
     moveWindow,
   };
 
+  // Layers
   function addLayer(output: KWinOutput, desktop: KWinVirtualDesktop) {
     if (config.exclude(output, desktop)) return;
 
@@ -39,12 +40,14 @@ export function wm() {
     });
   }
 
+  // Tiles
   function swapTiles(i: number, j: number) {
     const tile: Tile = tiles[i];
     tiles[i] = tiles[j];
     tiles[j] = tile;
   }
 
+  // Windows
   function addWindow(window: KWinWindow) {
     if (isWindowAllowed(window)) {
       const newTile = tile(window, callbacks);
@@ -128,6 +131,7 @@ export function wm() {
     );
   }
 
+  // Constructor
   workspace.screens.forEach((output) => {
     workspace.desktops.forEach((desktop) => {
       addLayer(output, desktop);
@@ -138,6 +142,7 @@ export function wm() {
     addWindow(window);
   });
 
+  // Signals
   workspace.currentDesktopChanged.connect(tileLayers);
 
   workspace.windowAdded.connect(addWindow);
@@ -145,4 +150,18 @@ export function wm() {
   workspace.windowRemoved.connect(removeWindow);
 
   workspace.windowActivated.connect(tileLayers);
+
+  // Shortcuts
+  function toggleActiveWindow() {
+    const tile = tiles.find((tile) => tile.window.internalId === workspace.activeWindow.internalId);
+    if (tile.isEnabled()) {
+      tile.disable(true);
+      tileLayers();
+    } else {
+      tile.enable(true);
+      pushWindow(tile.window);
+    }
+  }
+
+  registerShortcut("8137: Tile Window", "8137: Tile Window", "Meta+F", toggleActiveWindow);
 }

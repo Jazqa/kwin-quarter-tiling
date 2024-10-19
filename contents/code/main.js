@@ -1,5 +1,11 @@
 'use strict';
 
+var registerShortcut = 
+// @ts-ignore, KWin global
+registerShortcut ||
+    function () {
+        workspace.currentDesktop = workspace.currentDesktop;
+    };
 var readConfig = 
 // @ts-ignore, KWin global
 readConfig ||
@@ -543,6 +549,8 @@ function tile(window, callbacks) {
     function isOnDesktop(desktop) {
         return window.desktops.length === 1 && window.desktops[0].id === desktop.id;
     }
+    // Constructor
+    // Signals
     window.moveResizedChanged.connect(moveResizedChanged);
     window.outputChanged.connect(outputChanged);
     window.desktopsChanged.connect(desktopsChanged);
@@ -570,6 +578,7 @@ function wm() {
         resizeWindow: resizeWindow,
         moveWindow: moveWindow,
     };
+    // Layers
     function addLayer(output, desktop) {
         if (config.exclude(output, desktop))
             return;
@@ -584,11 +593,13 @@ function wm() {
             layer.tile(tiles);
         });
     }
+    // Tiles
     function swapTiles(i, j) {
         var tile = tiles[i];
         tiles[i] = tiles[j];
         tiles[j] = tile;
     }
+    // Windows
     function addWindow(window) {
         if (isWindowAllowed(window)) {
             var newTile = tile(window, callbacks);
@@ -656,6 +667,7 @@ function wm() {
             config.processes.indexOf(window.resourceName.toString().toLowerCase()) === -1 &&
             config.captions.some(function (caption) { return window.caption.toString().toLowerCase().indexOf(caption) === -1; }));
     }
+    // Constructor
     workspace.screens.forEach(function (output) {
         workspace.desktops.forEach(function (desktop) {
             addLayer(output, desktop);
@@ -664,10 +676,24 @@ function wm() {
     workspace.stackingOrder.forEach(function (window) {
         addWindow(window);
     });
+    // Signals
     workspace.currentDesktopChanged.connect(tileLayers);
     workspace.windowAdded.connect(addWindow);
     workspace.windowRemoved.connect(removeWindow);
     workspace.windowActivated.connect(tileLayers);
+    // Shortcuts
+    function toggleActiveWindow() {
+        var tile = tiles.find(function (tile) { return tile.window.internalId === workspace.activeWindow.internalId; });
+        if (tile.isEnabled()) {
+            tile.disable(true);
+            tileLayers();
+        }
+        else {
+            tile.enable(true);
+            pushWindow(tile.window);
+        }
+    }
+    registerShortcut("8137: Tile Window", "8137: Tile Window", "Meta+F", toggleActiveWindow);
 }
 
 wm();

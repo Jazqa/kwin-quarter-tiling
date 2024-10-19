@@ -7,8 +7,8 @@ import { Callbacks } from "./wm";
 export interface Tile {
   window: KWinWindow;
   isEnabled: () => boolean;
-  enable: () => void;
-  disable: () => void;
+  enable: (manual?: boolean) => void;
+  disable: (manual?: boolean) => void;
   isOnOutput: (output: KWinOutput) => boolean;
   isOnDesktop: (desktop: KWinVirtualDesktop) => boolean;
   remove: () => void;
@@ -122,6 +122,9 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     return window.desktops.length === 1 && window.desktops[0].id === desktop.id;
   }
 
+  // Constructor
+
+  // Signals
   window.moveResizedChanged.connect(moveResizedChanged);
   window.outputChanged.connect(outputChanged);
   window.desktopsChanged.connect(desktopsChanged);

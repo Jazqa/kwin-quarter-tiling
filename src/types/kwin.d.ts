@@ -5,6 +5,7 @@ export interface KWinWorkspaceWrapper {
   desktops: Array<KWinVirtualDesktop>;
   screens: Array<KWinOutput>;
   stackingOrder: Array<KWinWindow>;
+  activeWindow: KWinWindow;
 
   currentDesktop: KWinVirtualDesktop;
 

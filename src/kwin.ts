@@ -1,5 +1,12 @@
 import { KWinWorkspaceWrapper } from "./types/kwin";
 
+export const registerShortcut: (name: string, description: string, key: string, cb: () => void) => void =
+  // @ts-ignore, KWin global
+  registerShortcut ||
+  function (): void {
+    workspace.currentDesktop = workspace.currentDesktop;
+  };
+
 export const readConfig: (key: string, defaultValue: any) => any =
   // @ts-ignore, KWin global
   readConfig ||
