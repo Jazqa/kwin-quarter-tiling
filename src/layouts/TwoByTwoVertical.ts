@@ -67,12 +67,9 @@ export function TwoByTwoVertical(oi: number, rect: QRect): Layout {
   }
 
   function tileWindows(windows: Array<KWinWindow>) {
-    const includedWindows = windows.slice(0, limit);
-    const tiles = getTiles(rect, separators, includedWindows.length);
-
-    includedWindows.forEach((window: KWinWindow, index: number) => {
-      const tile = tiles[index];
-      window.frameGeometry = math.withGap(oi, tile);
+    const tiles = getTiles(rect, separators, windows.length);
+    windows.forEach((window, index) => {
+      window.frameGeometry = math.withGap(oi, tiles[index]);
     });
   }
 

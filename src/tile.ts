@@ -1,9 +1,11 @@
+import { workspace } from "./kwin";
 import math from "./math";
 import { KWinOutput, KWinVirtualDesktop, KWinWindow } from "./types/kwin";
 import { QRect } from "./types/qt";
 import { Callbacks } from "./wm";
 
 export interface Tile {
+  enabled: boolean;
   window: KWinWindow;
   isOnOutput: (output: KWinOutput) => boolean;
   isOnDesktop: (desktop: KWinVirtualDesktop) => boolean;
@@ -11,9 +13,14 @@ export interface Tile {
 }
 
 export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
+  let enabled = true;
+
+  let output = window.output;
+
   let move = window.move;
   let resize = window.resize;
 
+  let originalGeometry = math.clone(window.frameGeometry);
   let frameGeometry: QRect;
 
   function startMove() {
@@ -22,7 +29,13 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   }
 
   function stopMove() {
-    callbacks.moveWindow(window, frameGeometry);
+    if (output !== window.output) {
+      output = window.output;
+      callbacks.pushWindow(window);
+    } else {
+      callbacks.moveWindow(window, frameGeometry);
+    }
+
     move = false;
   }
 
@@ -37,6 +50,8 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   }
 
   function moveResizedChanged() {
+    if (!enabled) return;
+
     if (window.move && !move) {
       startMove();
     } else if (!window.move && move) {
@@ -65,6 +80,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   }
 
   return {
+    enabled,
     window,
     isOnOutput,
     isOnDesktop,

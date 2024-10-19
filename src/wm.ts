@@ -1,57 +1,13 @@
 import config from "./config";
 import { workspace } from "./kwin";
-import { Layout } from "./layouts/layout";
-import { layouts } from "./layouts/layouts";
+import { layer, Layers } from "./layer";
 import math from "./math";
+import { tile, Tile } from "./tile";
 import { KWinOutput, KWinVirtualDesktop, KWinWindow } from "./types/kwin";
 import { QRect } from "./types/qt";
-import { tile, Tile } from "./tile";
-
-interface Layers {
-  [id: string]: Layer;
-}
-
-interface Layer {
-  output: KWinOutput;
-  desktop: KWinVirtualDesktop;
-  id: string;
-  rect: QRect;
-  layout: Layout;
-}
-
-function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
-  const id = output.serialNumber + desktop.id;
-
-  const oi = math.outputIndex(output);
-
-  let rect = math.withMargin(oi, workspace.clientArea(2, output, desktop));
-  let layout = layouts[config.layout[oi]](oi, rect);
-
-  if (config.limit[oi] > -1) {
-    layout.limit = Math.min(layout.limit, config.limit[oi]);
-  }
-
-  function hasRectChanged(newRect: QRect) {
-    return (
-      rect.x !== newRect.x || rect.y !== newRect.y || rect.width !== newRect.width || rect.height !== newRect.height
-    );
-  }
-
-  function onRectChanged(newRect: QRect) {
-    rect = newRect;
-    layout.adjustRect(newRect);
-  }
-
-  return {
-    output,
-    desktop,
-    id,
-    rect,
-    layout,
-  };
-}
 
 export interface Callbacks {
+  pushWindow: (window: KWinWindow) => void;
   resizeWindow: (window: KWinWindow, oldRect: QRect) => void;
   moveWindow: (window: KWinWindow, oldRect: QRect) => void;
 }
@@ -61,6 +17,7 @@ export function wm() {
   const tiles: Array<Tile> = [];
 
   const callbacks = {
+    pushWindow,
     resizeWindow,
     moveWindow,
   };
@@ -75,15 +32,7 @@ export function wm() {
 
   function tileLayers() {
     Object.values(layers).forEach((layer) => {
-      let windows = tiles.map((tile) => {
-        if (tile.isOnOutput(layer.output) && tile.isOnDesktop(layer.desktop)) {
-          return tile.window;
-        }
-      });
-
-      windows = windows.filter((window) => window);
-
-      layer.layout.tileWindows(windows);
+      layer.tile(tiles);
     });
   }
 
@@ -142,6 +91,18 @@ export function wm() {
 
     if (i !== j) {
       swapTiles(i, j);
+    }
+
+    tileLayers();
+  }
+
+  function pushWindow(window: KWinWindow) {
+    const index = tiles.findIndex((tile) => tile.window.internalId === window.internalId);
+
+    if (index > -1) {
+      const tile = tiles[index];
+      tiles.splice(index, 1);
+      tiles.push(tile);
     }
 
     tileLayers();

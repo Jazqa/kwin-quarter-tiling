@@ -50,16 +50,11 @@ function withMargin(oi, rect) {
     width -= gap * 2 + margin.left + margin.right;
     return { x: x, y: y, width: width, height: height };
 }
-function moveTo(rectA, rectB) {
-    var rectC = clone(rectB);
-    rectC.height = rectA.height;
-    rectC.width = rectA.width;
-    return rectC;
-}
 function centerTo(rectA, rectB) {
-    rectB.x += rectB.width * 0.5 - rectA.width * 0.5;
-    rectB.y += rectB.height * 0.5 - rectA.height * 0.5;
-    return moveTo(rectA, rectB);
+    var x = rectA.x, y = rectA.y, width = rectA.width, height = rectA.height;
+    x = rectB.width * 0.5 - rectA.width * 0.5;
+    y = rectB.height * 0.5 - rectA.height * 0.5;
+    return { x: x, y: y, width: width, height: height };
 }
 function distanceTo(rectA, rectB) {
     return Math.abs(rectA.x - rectB.x) + Math.abs(rectA.y - rectB.y);
@@ -71,7 +66,6 @@ var math = {
     withGap: withGap,
     withoutGap: withoutGap,
     withMargin: withMargin,
-    moveTo: moveTo,
     centerTo: centerTo,
     distanceTo: distanceTo,
 };
@@ -245,11 +239,9 @@ function TwoByTwoHorizontal(oi, rect) {
         restore();
     }
     function tileWindows(windows) {
-        var includedWindows = windows.slice(0, limit);
-        var tiles = getTiles(rect, separators, includedWindows.length);
-        includedWindows.forEach(function (window, index) {
-            var tile = tiles[index];
-            window.frameGeometry = math.withGap(oi, tile);
+        var tiles = getTiles(rect, separators, windows.length);
+        windows.forEach(function (window, index) {
+            window.frameGeometry = math.withGap(oi, tiles[index]);
         });
     }
     function resizeWindow(window, oldRect) {
@@ -350,11 +342,9 @@ function TwoByTwoVertical(oi, rect) {
         restore();
     }
     function tileWindows(windows) {
-        var includedWindows = windows.slice(0, limit);
-        var tiles = getTiles$1(rect, separators, includedWindows.length);
-        includedWindows.forEach(function (window, index) {
-            var tile = tiles[index];
-            window.frameGeometry = math.withGap(oi, tile);
+        var tiles = getTiles$1(rect, separators, windows.length);
+        windows.forEach(function (window, index) {
+            window.frameGeometry = math.withGap(oi, tiles[index]);
         });
     }
     function resizeWindow(window, oldRect) {
@@ -422,16 +412,60 @@ var layouts = {
     "2": TwoByTwoVertical,
 };
 
+function layer(output, desktop) {
+    var id = output.serialNumber + desktop.id;
+    var oi = math.outputIndex(output);
+    var rect = math.withMargin(oi, workspace.clientArea(2, output, desktop));
+    var layout = layouts[config.layout[oi]](oi, rect);
+    if (config.limit[oi] > -1) {
+        layout.limit = Math.min(layout.limit, config.limit[oi]);
+    }
+    function tile(tiles) {
+        var includedTiles = tiles.filter(function (tile) { return tile.isOnOutput(output) && tile.isOnDesktop(desktop); });
+        var i = 0;
+        var windows = includedTiles
+            .map(function (tile) {
+            if (i < layout.limit && tile.enabled) {
+                i++;
+                return tile.window;
+            }
+            else {
+                tile.enabled = false;
+            }
+        })
+            .filter(function (window) { return window; })
+            .slice(0, layout.limit);
+        layout.tileWindows(windows);
+    }
+    return {
+        output: output,
+        desktop: desktop,
+        id: id,
+        rect: rect,
+        layout: layout,
+        tile: tile,
+    };
+}
+
 function tile(window, callbacks) {
+    var enabled = true;
+    var output = window.output;
     var move = window.move;
     var resize = window.resize;
+    var originalGeometry = math.clone(window.frameGeometry);
     var frameGeometry;
     function startMove() {
         move = true;
         frameGeometry = math.clone(window.frameGeometry);
     }
     function stopMove() {
-        callbacks.moveWindow(window, frameGeometry);
+        if (output !== window.output) {
+            output = window.output;
+            callbacks.pushWindow(window);
+        }
+        else {
+            callbacks.moveWindow(window, frameGeometry);
+        }
         move = false;
     }
     function startResize() {
@@ -467,6 +501,7 @@ function tile(window, callbacks) {
         window.moveResizedChanged.disconnect(moveResizedChanged);
     }
     return {
+        enabled: enabled,
         window: window,
         isOnOutput: isOnOutput,
         isOnDesktop: isOnDesktop,
@@ -474,26 +509,11 @@ function tile(window, callbacks) {
     };
 }
 
-function layer(output, desktop) {
-    var id = output.serialNumber + desktop.id;
-    var oi = math.outputIndex(output);
-    var rect = math.withMargin(oi, workspace.clientArea(2, output, desktop));
-    var layout = layouts[config.layout[oi]](oi, rect);
-    if (config.limit[oi] > -1) {
-        layout.limit = Math.min(layout.limit, config.limit[oi]);
-    }
-    return {
-        output: output,
-        desktop: desktop,
-        id: id,
-        rect: rect,
-        layout: layout,
-    };
-}
 function wm() {
     var layers = {};
     var tiles = [];
     var callbacks = {
+        pushWindow: pushWindow,
         resizeWindow: resizeWindow,
         moveWindow: moveWindow,
     };
@@ -505,13 +525,7 @@ function wm() {
     }
     function tileLayers() {
         Object.values(layers).forEach(function (layer) {
-            var windows = tiles.map(function (tile) {
-                if (tile.isOnOutput(layer.output) && tile.isOnDesktop(layer.desktop)) {
-                    return tile.window;
-                }
-            });
-            windows = windows.filter(function (window) { return window; });
-            layer.layout.tileWindows(windows);
+            layer.tile(tiles);
         });
     }
     function swapTiles(i, j) {
@@ -560,6 +574,15 @@ function wm() {
         var j = tiles.findIndex(function (tile) { return tile.window.internalId === nearestTile.window.internalId; });
         if (i !== j) {
             swapTiles(i, j);
+        }
+        tileLayers();
+    }
+    function pushWindow(window) {
+        var index = tiles.findIndex(function (tile) { return tile.window.internalId === window.internalId; });
+        if (index > -1) {
+            var tile_1 = tiles[index];
+            tiles.splice(index, 1);
+            tiles.push(tile_1);
         }
         tileLayers();
     }

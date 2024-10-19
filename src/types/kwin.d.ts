@@ -25,6 +25,7 @@ export interface KWinWorkspaceWrapper {
 }
 
 export interface KWinOutput {
+  geometry: QRect;
   serialNumber: string;
 }
 

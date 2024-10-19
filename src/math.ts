@@ -55,17 +55,13 @@ function withMargin(oi: number, rect: QRect): QRect {
   return { x, y, width, height };
 }
 
-function moveTo(rectA: QRect, rectB: QRect) {
-  const rectC = clone(rectB);
-  rectC.height = rectA.height;
-  rectC.width = rectA.width;
-  return rectC;
-}
-
 function centerTo(rectA: QRect, rectB: QRect) {
-  rectB.x += rectB.width * 0.5 - rectA.width * 0.5;
-  rectB.y += rectB.height * 0.5 - rectA.height * 0.5;
-  return moveTo(rectA, rectB);
+  let { x, y, width, height } = rectA;
+
+  x = rectB.width * 0.5 - rectA.width * 0.5;
+  y = rectB.height * 0.5 - rectA.height * 0.5;
+
+  return { x, y, width, height };
 }
 
 function distanceTo(rectA: QRect, rectB: QRect) {
@@ -79,7 +75,6 @@ export default {
   withGap,
   withoutGap,
   withMargin,
-  moveTo,
   centerTo,
   distanceTo,
 };
