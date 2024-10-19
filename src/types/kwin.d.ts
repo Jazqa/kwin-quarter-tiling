@@ -1,6 +1,7 @@
 import { QPoint, QRect, QSize } from "./qt";
 
 export interface KWinWorkspaceWrapper {
+  activities: Array<string>;
   desktops: Array<KWinVirtualDesktop>;
   screens: Array<KWinOutput>;
   stackingOrder: Array<KWinWindow>;

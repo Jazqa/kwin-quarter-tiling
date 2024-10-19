@@ -1,15 +1,5 @@
 'use strict';
 
-// @ts-ignore, KWin global
-var workspace = workspace || {};
-
-var __spreadArrays = (undefined && undefined.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
-};
 var readConfig = 
 // @ts-ignore, KWin global
 readConfig ||
@@ -19,121 +9,45 @@ readConfig ||
 function readConfigString(key, defaultValue) {
     return readConfig(key, defaultValue).toString();
 }
-var gaps = readConfig("gap", 8);
-var margins = {
-    top: readConfig("marginTop", 0),
-    left: readConfig("marginLeft", 0),
-    bottom: readConfig("marginBottom", 0),
-    right: readConfig("marginRight", 0),
-};
-var layouts = [
-    readConfigString("layout_0", 0),
-    readConfigString("layout_1", 0),
-    readConfigString("layout_2", 0),
-    readConfigString("layout_3", 0),
-];
-var maxWindows = [
-    readConfig("maxWindows_0", -1),
-    readConfig("maxWindows_1", -1),
-    readConfig("maxWindows_2", -1),
-    readConfig("maxWindows_3", -1),
-];
-var outputEnabled = [
-    readConfig("outputEnabled_0", -1),
-    readConfig("outputEnabled_1", -1),
-    readConfig("outputEnabled_2", -1),
-    readConfig("outputEnabled_3", -1),
-];
-var autoTile = readConfigString("autoTile", true) === "true";
-var followWindows = readConfigString("followWindows", true) === "true";
-var minWidth = readConfig("minWidth", 256);
-var minHeight = readConfig("minHeight", 256);
-var ignoredProcesses = __spreadArrays([
-    "albert",
-    "kazam",
-    "krunner",
-    "ksmserver",
-    "lattedock",
-    "pinentry",
-    "Plasma",
-    "plasma",
-    "plasma-desktop",
-    "plasmashell",
-    "plugin-container",
-    "simplescreenrecorder",
-    "yakuake",
-    "ksmserver-logout-greeter",
-    "QEMU",
-    "Latte Dock"
-], readConfigString("ignoredProcesses", "wine, steam").split(", "), [readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""]);
-var ignoredCaptions = __spreadArrays([
-    "File Upload",
-    "Move to Trash",
-    "Quit GIMP",
-    "Create a New Image"
-], readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image")
-    .split(", ")
-    .filter(function (caption) { return caption; }));
-var ignoredDesktops = readConfigString("ignoredDesktops", "").split(", ");
-function isIgnoredDesktop(desktop) {
-    var index = workspace.desktops.findIndex(function (_a) {
-        var id = _a.id;
-        return id === desktop.id;
-    });
-    return ignoredDesktops.indexOf(index.toString()) > -1;
-}
-function isOutputEnabled(output) {
-    var index = workspace.screens.findIndex(function (_a) {
-        var serialNumber = _a.serialNumber;
-        return serialNumber === output.serialNumber;
-    });
-    return outputEnabled[index];
-}
-function isIgnoredLayer(output, desktop) {
-    return !isOutputEnabled(output) || isIgnoredDesktop(desktop);
-}
-var config = {
-    gaps: gaps,
-    margins: margins,
-    layouts: layouts,
-    autoTile: autoTile,
-    followWindows: followWindows,
-    minWidth: minWidth,
-    minHeight: minHeight,
-    maxWindows: maxWindows,
-    ignoredProcesses: ignoredProcesses,
-    ignoredCaptions: ignoredCaptions,
-    ignoredDesktops: ignoredDesktops,
-    isIgnoredDesktop: isIgnoredDesktop,
-    isIgnoredLayer: isIgnoredLayer,
-};
+// @ts-ignore, KWin global
+var workspace = workspace || {};
 
+function outputIndex(output) {
+    return workspace.screens.findIndex(function (wsoutput) { return wsoutput.serialNumber === output.serialNumber; });
+}
+function desktopIndex(desktop) {
+    return workspace.desktops.findIndex(function (wsdesktop) { return wsdesktop.id === desktop.id; });
+}
 function clone(rect) {
     var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
     return { x: x, y: y, width: width, height: height };
 }
-function withGap(rect) {
+function withGap(oi, rect) {
+    var gap = config.gap[oi];
     var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
-    x += config.gaps;
-    y += config.gaps;
-    width -= config.gaps * 2;
-    height -= config.gaps * 2;
+    x += gap;
+    y += gap;
+    width -= gap * 2;
+    height -= gap * 2;
     return { x: x, y: y, width: width, height: height };
 }
-function withoutGap(rect) {
+function withoutGap(oi, rect) {
+    var gap = config.gap[oi];
     var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
-    x -= config.gaps;
-    y -= config.gaps;
-    width += config.gaps * 2;
-    height += config.gaps * 2;
+    x -= gap;
+    y -= gap;
+    width += gap * 2;
+    height += gap * 2;
     return { x: x, y: y, width: width, height: height };
 }
-function withMargin(rect) {
+function withMargin(oi, rect) {
+    var gap = config.gap[oi];
+    var margin = config.margin[oi];
     var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
-    y += config.gaps + config.margins.top;
-    x += config.gaps + config.margins.left;
-    height -= config.gaps * 2 + config.margins.top + config.margins.bottom;
-    width -= config.gaps * 2 + config.margins.left + config.margins.right;
+    y += gap + margin.top;
+    x += gap + margin.left;
+    height -= gap * 2 + margin.top + margin.bottom;
+    width -= gap * 2 + margin.left + margin.right;
     return { x: x, y: y, width: width, height: height };
 }
 function moveTo(rectA, rectB) {
@@ -151,6 +65,8 @@ function distanceTo(rectA, rectB) {
     return Math.abs(rectA.x - rectB.x) + Math.abs(rectA.y - rectB.y);
 }
 var math = {
+    outputIndex: outputIndex,
+    desktopIndex: desktopIndex,
     clone: clone,
     withGap: withGap,
     withoutGap: withoutGap,
@@ -159,6 +75,124 @@ var math = {
     centerTo: centerTo,
     distanceTo: distanceTo,
 };
+
+var __spreadArrays = (undefined && undefined.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
+var auto = readConfigString("auto", true) === "true";
+var follow = readConfigString("follow", true) === "true";
+var gap = [
+    readConfig("gap_0", 8),
+    readConfig("gap_1", 8),
+    readConfig("gap_2", 8),
+    readConfig("gap_3", 8),
+];
+var margin = [
+    {
+        top: readConfig("marginTop_0", 0),
+        left: readConfig("marginLeft_0", 0),
+        bottom: readConfig("marginBottom_0", 0),
+        right: readConfig("marginRight_0", 0),
+    },
+    {
+        top: readConfig("marginTop_1", 0),
+        left: readConfig("marginLeft_1", 0),
+        bottom: readConfig("marginBottom_1", 0),
+        right: readConfig("marginRight_1", 0),
+    },
+    {
+        top: readConfig("marginTop_2", 0),
+        left: readConfig("marginLeft_2", 0),
+        bottom: readConfig("marginBottom_2", 0),
+        right: readConfig("marginRight_2", 0),
+    },
+    {
+        top: readConfig("marginTop_3", 0),
+        left: readConfig("marginLeft_3", 0),
+        bottom: readConfig("marginBottom_3", 0),
+        right: readConfig("marginRight_3", 0),
+    },
+];
+var layout = [
+    readConfigString("layout_0", 0),
+    readConfigString("layout_1", 0),
+    readConfigString("layout_2", 0),
+    readConfigString("layout_3", 0),
+];
+var limit = [
+    readConfig("limit_0", -1),
+    readConfig("limit_1", -1),
+    readConfig("limit_2", -1),
+    readConfig("limit_3", -1),
+];
+var minWidth = readConfig("minWidth", 256);
+var minHeight = readConfig("minHeight", 256);
+var processes = __spreadArrays([
+    "albert",
+    "kazam",
+    "krunner",
+    "ksmserver",
+    "lattedock",
+    "pinentry",
+    "Plasma",
+    "plasma",
+    "plasma-desktop",
+    "plasmashell",
+    "plugin-container",
+    "simplescreenrecorder",
+    "yakuake",
+    "ksmserver-logout-greeter",
+    "QEMU",
+    "Latte Dock"
+], readConfigString("processes", "wine, steam").toLowerCase().split(", "), [readConfigString("java", false) === "true" ? "sun-awt-x11-xframepeer" : ""]);
+var captions = __spreadArrays([
+    "File Upload",
+    "Move to Trash",
+    "Quit GIMP",
+    "Create a New Image"
+], readConfigString("captions", "Quit GIMP, Create a New Image")
+    .toLowerCase()
+    .split(", ")
+    .filter(function (caption) { return caption; }));
+var outputs = readConfigString("outputs", "").split(", ");
+var desktops = readConfigString("desktops", "").split(", ");
+var exclude = function (output, desktop) {
+    return math.outputIndex(output) > -1 || math.desktopIndex(desktop) > -1;
+};
+var config = {
+    auto: auto,
+    follow: follow,
+    gap: gap,
+    margin: margin,
+    layout: layout,
+    limit: limit,
+    minWidth: minWidth,
+    minHeight: minHeight,
+    processes: processes,
+    captions: captions,
+    outputs: outputs,
+    desktops: desktops,
+    exclude: exclude,
+};
+
+function Disabled(oi, rect) {
+    var limit = 0;
+    function tileWindows(windowsOnLayout) { }
+    function resizeWindow(windowOnLayout, oldRect) { }
+    function adjustRect(rect) { }
+    function restore() { }
+    return {
+        limit: limit,
+        tileWindows: tileWindows,
+        resizeWindow: resizeWindow,
+        adjustRect: adjustRect,
+        restore: restore,
+    };
+}
 
 function getTiles(rect, separators, count) {
     var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
@@ -200,8 +234,8 @@ function getTiles(rect, separators, count) {
     }
     return tiles;
 }
-function TwoByTwoHorizontal(rect) {
-    var maxWindows = 4;
+function TwoByTwoHorizontal(oi, rect) {
+    var limit = 4;
     var hs = rect.y + rect.height * 0.5;
     var vs = rect.x + rect.width * 0.5;
     var separators = { h: [hs, hs], v: vs };
@@ -210,11 +244,11 @@ function TwoByTwoHorizontal(rect) {
         restore();
     }
     function tileWindows(windows) {
-        var includedWindows = windows.slice(0, maxWindows);
+        var includedWindows = windows.slice(0, limit);
         var tiles = getTiles(rect, separators, includedWindows.length);
         includedWindows.forEach(function (window, index) {
             var tile = tiles[index];
-            window.frameGeometry = math.withGap(tile);
+            window.frameGeometry = math.withGap(oi, tile);
         });
     }
     function resizeWindow(window, oldRect) {
@@ -257,7 +291,7 @@ function TwoByTwoHorizontal(rect) {
         separators = { h: [hs, hs], v: vs };
     }
     return {
-        maxWindows: maxWindows,
+        limit: limit,
         tileWindows: tileWindows,
         resizeWindow: resizeWindow,
         adjustRect: adjustRect,
@@ -305,8 +339,8 @@ function getTiles$1(rect, separators, count) {
     }
     return tiles;
 }
-function TwoByTwoVertical(rect) {
-    var maxWindows = 4;
+function TwoByTwoVertical(oi, rect) {
+    var limit = 4;
     var hs = rect.y + rect.height * 0.5;
     var vs = rect.x + rect.width * 0.5;
     var separators = { h: hs, v: [vs, vs] };
@@ -315,11 +349,11 @@ function TwoByTwoVertical(rect) {
         restore();
     }
     function tileWindows(windows) {
-        var includedWindows = windows.slice(0, maxWindows);
+        var includedWindows = windows.slice(0, limit);
         var tiles = getTiles$1(rect, separators, includedWindows.length);
         includedWindows.forEach(function (window, index) {
             var tile = tiles[index];
-            window.frameGeometry = math.withGap(tile);
+            window.frameGeometry = math.withGap(oi, tile);
         });
     }
     function resizeWindow(window, oldRect) {
@@ -362,7 +396,7 @@ function TwoByTwoVertical(rect) {
         separators = { h: hs, v: [vs, vs] };
     }
     return {
-        maxWindows: maxWindows,
+        limit: limit,
         tileWindows: tileWindows,
         resizeWindow: resizeWindow,
         adjustRect: adjustRect,
@@ -375,15 +409,16 @@ function TwoByTwoVertical(rect) {
  *
  *  1. Create a new class that inside src/layouts folder, make sure it implements the Layout interface as seen in /src/layout.ts
  *  2. Add an entry to the layouts object in src/layouts/layouts.ts, increasing the key by one:
- *      { "0": TwoByTwoHorizontal, "1": NewLayout }
+ *      { "0": Disabled, "1": NewLayout }
  *  3. Add a new entry to the kcfg_layouts entry in contents/code/config.ui:
  *      <property name="text">
  *          <string>NewLayout</string>
  *      </property>
  */
-var layouts$1 = {
-    "0": TwoByTwoHorizontal,
-    "1": TwoByTwoVertical,
+var layouts = {
+    "0": Disabled,
+    "1": TwoByTwoHorizontal,
+    "2": TwoByTwoVertical,
 };
 
 function tile(window, callbacks) {
@@ -440,11 +475,11 @@ function tile(window, callbacks) {
 
 function layer(output, desktop) {
     var id = output.serialNumber + desktop.id;
-    var outputIndex = workspace.screens.findIndex(function (workspaceOutput) { return workspaceOutput.serialNumber === output.serialNumber; });
-    var rect = math.withMargin(workspace.clientArea(2, output, desktop));
-    var layout = layouts$1[config.layouts[outputIndex]](rect);
-    if (config.maxWindows[outputIndex] > -1) {
-        layout.maxWindows = Math.min(layout.maxWindows, config.maxWindows[outputIndex]);
+    var oi = math.outputIndex(output);
+    var rect = math.withMargin(oi, workspace.clientArea(2, output, desktop));
+    var layout = layouts[config.layout[oi]](oi, rect);
+    if (config.limit[oi] > -1) {
+        layout.limit = Math.min(layout.limit, config.limit[oi]);
     }
     return {
         output: output,
@@ -462,7 +497,7 @@ function wm() {
         moveWindow: moveWindow,
     };
     function addLayer(output, desktop) {
-        if (config.isIgnoredLayer(output, desktop))
+        if (config.exclude(output, desktop))
             return;
         var newLayer = layer(output, desktop);
         layers[newLayer.id] = newLayer;
@@ -528,26 +563,18 @@ function wm() {
         tileLayers();
     }
     function isWindowAllowed(window) {
-        return window.resourceClass.toString().includes("dolphin");
-        /*
-        TODO: Uncomment
-        return (
-          window.managed &&
-          window.normalWindow &&
-          window.moveable &&
-          window.resizeable &&
-          window.maximizable &&
-          !window.fullScreen &&
-          !window.minimized &&
-          window.rect.width >= config.minWidth &&
-          window.rect.height >= config.minHeight &&
-          config.ignoredProcesses.indexOf(window.resourceClass.toString()) === -1 &&
-          config.ignoredProcesses.indexOf(window.resourceName.toString()) === -1 &&
-          config.ignoredCaptions.some(
-            (caption) => window.caption.toString().toLowerCase().indexOf(caption.toLowerCase()) === -1
-          )
-        );
-        */
+        return (window.managed &&
+            window.normalWindow &&
+            window.moveable &&
+            window.resizeable &&
+            window.maximizable &&
+            !window.fullScreen &&
+            !window.minimized &&
+            window.rect.width >= config.minWidth &&
+            window.rect.height >= config.minHeight &&
+            config.processes.indexOf(window.resourceClass.toString().toLowerCase()) === -1 &&
+            config.processes.indexOf(window.resourceName.toString().toLowerCase()) === -1 &&
+            config.captions.some(function (caption) { return window.caption.toString().toLowerCase().indexOf(caption) === -1; }));
     }
     workspace.screens.forEach(function (output) {
         workspace.desktops.forEach(function (desktop) {

@@ -54,8 +54,8 @@ function getTiles(rect: QRect, separators: Separators, count: number): Array<QRe
   return tiles;
 }
 
-export function TwoByTwoVertical(rect: QRect): Layout {
-  const maxWindows = 4;
+export function TwoByTwoVertical(oi: number, rect: QRect): Layout {
+  const limit = 4;
 
   let hs = rect.y + rect.height * 0.5;
   let vs = rect.x + rect.width * 0.5;
@@ -67,12 +67,12 @@ export function TwoByTwoVertical(rect: QRect): Layout {
   }
 
   function tileWindows(windows: Array<KWinWindow>) {
-    const includedWindows = windows.slice(0, maxWindows);
+    const includedWindows = windows.slice(0, limit);
     const tiles = getTiles(rect, separators, includedWindows.length);
 
     includedWindows.forEach((window: KWinWindow, index: number) => {
       const tile = tiles[index];
-      window.frameGeometry = math.withGap(tile);
+      window.frameGeometry = math.withGap(oi, tile);
     });
   }
 
@@ -120,7 +120,7 @@ export function TwoByTwoVertical(rect: QRect): Layout {
   }
 
   return {
-    maxWindows,
+    limit,
     tileWindows,
     resizeWindow,
     adjustRect,

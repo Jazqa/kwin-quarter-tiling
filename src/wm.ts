@@ -22,15 +22,13 @@ interface Layer {
 function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
   const id = output.serialNumber + desktop.id;
 
-  const outputIndex = workspace.screens.findIndex(
-    (workspaceOutput) => workspaceOutput.serialNumber === output.serialNumber
-  );
+  const oi = math.outputIndex(output);
 
-  let rect = math.withMargin(workspace.clientArea(2, output, desktop));
-  let layout = layouts[config.layouts[outputIndex]](rect);
+  let rect = math.withMargin(oi, workspace.clientArea(2, output, desktop));
+  let layout = layouts[config.layout[oi]](oi, rect);
 
-  if (config.maxWindows[outputIndex] > -1) {
-    layout.maxWindows = Math.min(layout.maxWindows, config.maxWindows[outputIndex]);
+  if (config.limit[oi] > -1) {
+    layout.limit = Math.min(layout.limit, config.limit[oi]);
   }
 
   function hasRectChanged(newRect: QRect) {
@@ -68,7 +66,7 @@ export function wm() {
   };
 
   function addLayer(output: KWinOutput, desktop: KWinVirtualDesktop) {
-    if (config.isIgnoredLayer(output, desktop)) return;
+    if (config.exclude(output, desktop)) return;
 
     const newLayer = layer(output, desktop);
 
@@ -150,10 +148,6 @@ export function wm() {
   }
 
   function isWindowAllowed(window: KWinWindow) {
-    return window.resourceClass.toString().includes("dolphin");
-
-    /*
-    TODO: Uncomment
     return (
       window.managed &&
       window.normalWindow &&
@@ -164,13 +158,10 @@ export function wm() {
       !window.minimized &&
       window.rect.width >= config.minWidth &&
       window.rect.height >= config.minHeight &&
-      config.ignoredProcesses.indexOf(window.resourceClass.toString()) === -1 &&
-      config.ignoredProcesses.indexOf(window.resourceName.toString()) === -1 &&
-      config.ignoredCaptions.some(
-        (caption) => window.caption.toString().toLowerCase().indexOf(caption.toLowerCase()) === -1
-      )
+      config.processes.indexOf(window.resourceClass.toString().toLowerCase()) === -1 &&
+      config.processes.indexOf(window.resourceName.toString().toLowerCase()) === -1 &&
+      config.captions.some((caption) => window.caption.toString().toLowerCase().indexOf(caption) === -1)
     );
-    */
   }
 
   workspace.screens.forEach((output) => {

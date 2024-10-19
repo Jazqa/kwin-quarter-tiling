@@ -1,41 +1,56 @@
 import config from "./config";
+import { workspace } from "./kwin";
+import { KWinOutput, KWinVirtualDesktop } from "./types/kwin";
 import { QRect } from "./types/qt";
+
+function outputIndex(output: KWinOutput) {
+  return workspace.screens.findIndex((wsoutput) => wsoutput.serialNumber === output.serialNumber);
+}
+
+function desktopIndex(desktop: KWinVirtualDesktop) {
+  return workspace.desktops.findIndex((wsdesktop) => wsdesktop.id === desktop.id);
+}
 
 function clone(rect: QRect): QRect {
   const { x, y, width, height } = rect;
   return { x, y, width, height };
 }
 
-function withGap(rect: QRect): QRect {
+function withGap(oi: number, rect: QRect): QRect {
+  const gap = config.gap[oi];
   let { x, y, width, height } = rect;
 
-  x += config.gaps;
-  y += config.gaps;
-  width -= config.gaps * 2;
-  height -= config.gaps * 2;
+  x += gap;
+  y += gap;
+  width -= gap * 2;
+  height -= gap * 2;
 
   return { x, y, width, height };
 }
 
-function withoutGap(rect: QRect): QRect {
+function withoutGap(oi: number, rect: QRect): QRect {
+  const gap = config.gap[oi];
   let { x, y, width, height } = rect;
 
-  x -= config.gaps;
-  y -= config.gaps;
-  width += config.gaps * 2;
-  height += config.gaps * 2;
+  x -= gap;
+  y -= gap;
+  width += gap * 2;
+  height += gap * 2;
 
   return { x, y, width, height };
 }
 
-function withMargin(rect: QRect): QRect {
+function withMargin(oi: number, rect: QRect): QRect {
+  const gap = config.gap[oi];
+  const margin = config.margin[oi];
+
   let { x, y, width, height } = rect;
 
-  y += config.gaps + config.margins.top;
-  x += config.gaps + config.margins.left;
+  y += gap + margin.top;
+  x += gap + margin.left;
 
-  height -= config.gaps * 2 + config.margins.top + config.margins.bottom;
-  width -= config.gaps * 2 + config.margins.left + config.margins.right;
+  height -= gap * 2 + margin.top + margin.bottom;
+  width -= gap * 2 + margin.left + margin.right;
 
   return { x, y, width, height };
 }
@@ -58,6 +73,8 @@ function distanceTo(rectA: QRect, rectB: QRect) {
 }
 
 export default {
+  outputIndex,
+  desktopIndex,
   clone,
   withGap,
   withoutGap,

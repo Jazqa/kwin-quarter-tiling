@@ -9,7 +9,7 @@ export interface Layout {
   /*
    * Maximum amount of windows the Layout can tile
    */
-  maxWindows: number;
+  limit: number;
 
   /*
    *  Tiles all windowsOnLayout according to Layout's tiling rules

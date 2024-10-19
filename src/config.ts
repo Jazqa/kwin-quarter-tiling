@@ -1,55 +1,71 @@
 import { workspace } from "./kwin";
 import { KWinOutput, KWinVirtualDesktop } from "./types/kwin";
+import { readConfig, readConfigString } from "./kwin";
+import math from "./math";
 
-const readConfig: (key: string, defaultValue: any) => any =
-  // @ts-ignore, KWin global
-  readConfig ||
-  function (key: string, defaultValue: any) {
-    return defaultValue;
-  };
-
-function readConfigString(key: string, defaultValue: any): string {
-  return readConfig(key, defaultValue).toString();
+interface Margin {
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
 }
 
-const gaps: number = readConfig("gap", 8);
+const auto: boolean = readConfigString("auto", true) === "true";
 
-const margins: { top: number; left: number; bottom: number; right: number } = {
-  top: readConfig("marginTop", 0),
-  left: readConfig("marginLeft", 0),
-  bottom: readConfig("marginBottom", 0),
-  right: readConfig("marginRight", 0),
-};
+const follow: boolean = readConfigString("follow", true) === "true";
 
-const layouts = [
+const gap: Array<number> = [
+  readConfig("gap_0", 8),
+  readConfig("gap_1", 8),
+  readConfig("gap_2", 8),
+  readConfig("gap_3", 8),
+];
+
+const margin: Array<Margin> = [
+  {
+    top: readConfig("marginTop_0", 0),
+    left: readConfig("marginLeft_0", 0),
+    bottom: readConfig("marginBottom_0", 0),
+    right: readConfig("marginRight_0", 0),
+  },
+  {
+    top: readConfig("marginTop_1", 0),
+    left: readConfig("marginLeft_1", 0),
+    bottom: readConfig("marginBottom_1", 0),
+    right: readConfig("marginRight_1", 0),
+  },
+  {
+    top: readConfig("marginTop_2", 0),
+    left: readConfig("marginLeft_2", 0),
+    bottom: readConfig("marginBottom_2", 0),
+    right: readConfig("marginRight_2", 0),
+  },
+  {
+    top: readConfig("marginTop_3", 0),
+    left: readConfig("marginLeft_3", 0),
+    bottom: readConfig("marginBottom_3", 0),
+    right: readConfig("marginRight_3", 0),
+  },
+];
+
+const layout = [
   readConfigString("layout_0", 0),
   readConfigString("layout_1", 0),
   readConfigString("layout_2", 0),
   readConfigString("layout_3", 0),
 ];
 
-const maxWindows: Array<number> = [
-  readConfig("maxWindows_0", -1),
-  readConfig("maxWindows_1", -1),
-  readConfig("maxWindows_2", -1),
-  readConfig("maxWindows_3", -1),
+const limit: Array<number> = [
+  readConfig("limit_0", -1),
+  readConfig("limit_1", -1),
+  readConfig("limit_2", -1),
+  readConfig("limit_3", -1),
 ];
-
-const outputEnabled: Array<boolean> = [
-  readConfig("outputEnabled_0", -1),
-  readConfig("outputEnabled_1", -1),
-  readConfig("outputEnabled_2", -1),
-  readConfig("outputEnabled_3", -1),
-];
-
-const autoTile: boolean = readConfigString("autoTile", true) === "true";
-
-const followWindows: boolean = readConfigString("followWindows", true) === "true";
 
 const minWidth: number = readConfig("minWidth", 256);
 const minHeight: number = readConfig("minHeight", 256);
 
-const ignoredProcesses: Array<string> = [
+const processes: Array<string> = [
   "albert",
   "kazam",
   "krunner",
@@ -66,48 +82,40 @@ const ignoredProcesses: Array<string> = [
   "ksmserver-logout-greeter",
   "QEMU",
   "Latte Dock",
-  ...readConfigString("ignoredProcesses", "wine, steam").split(", "),
-  ...[readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""],
+  ...readConfigString("processes", "wine, steam").toLowerCase().split(", "),
+  ...[readConfigString("java", false) === "true" ? "sun-awt-x11-xframepeer" : ""],
 ];
 
-const ignoredCaptions: Array<string> = [
+const captions: Array<string> = [
   "File Upload",
   "Move to Trash",
   "Quit GIMP",
   "Create a New Image",
-  ...readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image")
+  ...readConfigString("captions", "Quit GIMP, Create a New Image")
+    .toLowerCase()
     .split(", ")
     .filter((caption) => caption),
 ];
 
-const ignoredDesktops: Array<string> = readConfigString("ignoredDesktops", "").split(", ");
+const outputs: Array<string> = readConfigString("outputs", "").split(", ");
+const desktops: Array<string> = readConfigString("desktops", "").split(", ");
 
-function isIgnoredDesktop(desktop: KWinVirtualDesktop) {
-  const index = workspace.desktops.findIndex(({ id }) => id === desktop.id);
-  return ignoredDesktops.indexOf(index.toString()) > -1;
-}
-
-function isOutputEnabled(output: KWinOutput) {
-  const index = workspace.screens.findIndex(({ serialNumber }) => serialNumber === output.serialNumber);
-  return outputEnabled[index];
-}
-
-function isIgnoredLayer(output: KWinOutput, desktop: KWinVirtualDesktop) {
-  return !isOutputEnabled(output) || isIgnoredDesktop(desktop);
-}
+const exclude = function (output: KWinOutput, desktop: KWinVirtualDesktop) {
+  return math.outputIndex(output) > -1 || math.desktopIndex(desktop) > -1;
+};
 
 export default {
-  gaps,
-  margins,
-  layouts,
-  autoTile,
-  followWindows,
+  auto,
+  follow,
+  gap,
+  margin,
+  layout,
+  limit,
   minWidth,
   minHeight,
-  maxWindows,
-  ignoredProcesses,
-  ignoredCaptions,
-  ignoredDesktops,
-  isIgnoredDesktop,
-  isIgnoredLayer,
+  processes,
+  captions,
+  outputs,
+  desktops,
+  exclude,
 };
