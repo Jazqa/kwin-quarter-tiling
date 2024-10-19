@@ -80,4 +80,9 @@ export interface KWinWindow {
     connect: (cb: () => void) => void;
     disconnect: (cb: () => void) => void;
   };
+
+  outputChanged: {
+    connect: (cb: () => void) => void;
+    disconnect: (cb: () => void) => void;
+  };
 }

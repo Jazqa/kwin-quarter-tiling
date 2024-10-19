@@ -460,8 +460,7 @@ function tile(window, callbacks) {
     }
     function stopMove() {
         if (output !== window.output) {
-            output = window.output;
-            callbacks.pushWindow(window);
+            outputChanged(true);
         }
         else {
             callbacks.moveWindow(window, frameGeometry);
@@ -490,6 +489,13 @@ function tile(window, callbacks) {
             stopResize();
         }
     }
+    // @param force - Ignores the move check (used to ignore outputChanged signal if moveResizedChanged might do the same later)
+    function outputChanged(force) {
+        if (force || !move) {
+            output = window.output;
+            callbacks.pushWindow(window);
+        }
+    }
     function isOnOutput(targetOutput) {
         return window.output === targetOutput;
     }
@@ -497,6 +503,7 @@ function tile(window, callbacks) {
         return window.desktops.findIndex(function (desktop) { return desktop.id === targetDesktop.id; }) > -1;
     }
     window.moveResizedChanged.connect(moveResizedChanged);
+    window.outputChanged.connect(outputChanged);
     function remove() {
         window.moveResizedChanged.disconnect(moveResizedChanged);
     }

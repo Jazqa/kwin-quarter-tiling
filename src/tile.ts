@@ -30,8 +30,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
 
   function stopMove() {
     if (output !== window.output) {
-      output = window.output;
-      callbacks.pushWindow(window);
+      outputChanged(true);
     } else {
       callbacks.moveWindow(window, frameGeometry);
     }
@@ -65,6 +64,14 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     }
   }
 
+  // @param force - Ignores the move check (used to ignore outputChanged signal if moveResizedChanged might do the same later)
+  function outputChanged(force?: boolean) {
+    if (force || !move) {
+      output = window.output;
+      callbacks.pushWindow(window);
+    }
+  }
+
   function isOnOutput(targetOutput: KWinOutput) {
     return window.output === targetOutput;
   }
@@ -74,6 +81,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   }
 
   window.moveResizedChanged.connect(moveResizedChanged);
+  window.outputChanged.connect(outputChanged);
 
   function remove() {
     window.moveResizedChanged.disconnect(moveResizedChanged);
