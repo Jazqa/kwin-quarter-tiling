@@ -14,7 +14,7 @@ An easy tiling script for KWin.
 
 ## Installation
 
-Manual:
+**Manual:**
 
     git clone https://github.com/Jazqa/kwin-quarter-tiling.git && kpackagetool6 --type=KWin/Script -i ./kwin-quarter-tiling
 
@@ -28,9 +28,9 @@ The script adds new KWin shortcuts under `System Settings > Shortcuts > Global S
 
 ## Updates
 
-**Git**
+**Git:**
 
-`git clone https://github.com/Jazqa/kwin-quarter-tiling.git && kpackagetool6 --type=KWin/Script -i ./kwin-quarter-tiling`
+    git clone https://github.com/Jazqa/kwin-quarter-tiling.git && kpackagetool6 --type=KWin/Script -i ./kwin-quarter-tiling
 
 Alternatively, set this repository as the origin of `~/.local/share/kwin/scripts/quarter-tiling` to update it with `git pull`.
 
