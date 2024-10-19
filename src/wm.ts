@@ -68,7 +68,7 @@ export function wm() {
     window.desktops.forEach((desktop) => {
       const layer = layers[window.output.serialNumber + desktop.id];
       if (layer) {
-        layer.layout.resizeWindow(window, oldRect);
+        layer.resizeWindow(window, oldRect);
       }
     });
 

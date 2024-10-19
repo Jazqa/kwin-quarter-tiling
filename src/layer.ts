@@ -12,62 +12,66 @@ export interface Layers {
 }
 
 export interface Layer {
+  id: string;
+
   output: KWinOutput;
   desktop: KWinVirtualDesktop;
-  id: string;
-  rect: QRect;
-  layout: Layout;
+
   tile: (tiles: Array<Tile>) => void;
+  resizeWindow: (window: KWinWindow, oldRect: QRect) => void;
 }
 
 export function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
   const id = output.serialNumber + desktop.id;
-
   const oi = math.outputIndex(output);
 
-  let rect = math.withMargin(oi, workspace.clientArea(2, output, desktop));
-  let layout = layouts[config.layout[oi]](oi, rect);
+  let _rect = math.withMargin(oi, workspace.clientArea(2, output, desktop));
+  let _layout = layouts[config.layout[oi]](oi, _rect);
 
   if (config.limit[oi] > -1) {
-    layout.limit = Math.min(layout.limit, config.limit[oi]);
+    _layout.limit = Math.min(_layout.limit, config.limit[oi]);
   }
 
   function tile(tiles: Array<Tile>) {
-    const includedTiles = tiles.filter((tile) => tile.isOnOutput(output) && tile.isOnDesktop(desktop));
+    const windows = [];
 
     let i = 0;
-    let windows = includedTiles
-      .map((tile) => {
-        if (i < layout.limit && tile.enabled) {
-          i++;
-          return tile.window;
-        } else {
-          tile.softDisable();
-        }
-      })
-      .filter((window) => window)
-      .slice(0, layout.limit);
 
-    layout.tileWindows(windows);
+    tiles.forEach((tile) => {
+      if (tile.isOnOutput(output) && tile.isOnDesktop(desktop)) {
+        const enabled = tile.isEnabled();
+        if (i < _layout.limit && enabled) {
+          i += 1;
+          windows.push(tile.window);
+        } else if (enabled) {
+          tile.disable();
+        }
+      }
+    });
+
+    _layout.tileWindows(windows);
+  }
+
+  function resizeWindow(window: KWinWindow, oldRect: QRect) {
+    _layout.resizeWindow(window, oldRect);
   }
 
   function hasRectChanged(newRect: QRect) {
     return (
-      rect.x !== newRect.x || rect.y !== newRect.y || rect.width !== newRect.width || rect.height !== newRect.height
+      _rect.x !== newRect.x || _rect.y !== newRect.y || _rect.width !== newRect.width || _rect.height !== newRect.height
     );
   }
 
   function onRectChanged(newRect: QRect) {
-    rect = newRect;
-    layout.adjustRect(newRect);
+    _rect = newRect;
+    _layout.adjustRect(newRect);
   }
 
   return {
     output,
     desktop,
     id,
-    rect,
-    layout,
     tile,
+    resizeWindow,
   };
 }

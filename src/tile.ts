@@ -5,12 +5,10 @@ import { QRect } from "./types/qt";
 import { Callbacks } from "./wm";
 
 export interface Tile {
-  enabled: boolean;
   window: KWinWindow;
-  hardEnable: () => void;
-  softEnable: () => void;
-  hardDisable: () => void;
-  softDisable: () => void;
+  isEnabled: () => boolean;
+  enable: () => void;
+  disable: () => void;
   isOnOutput: (output: KWinOutput) => boolean;
   isOnDesktop: (desktop: KWinVirtualDesktop) => boolean;
   remove: () => void;
@@ -20,84 +18,85 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   // Enabled  can      be changed manually by the user or automatically by the script
   // Disabled can only be changed                         automatically by the script
   // In practice, disabled = true tiles can be re-enabled automatically by the script, but disabled = false tiles can only be re-enabled manually by the user
-  let enabled = true;
-  let disabled = false;
+  let _enabled = true;
+  let _disabled = false;
 
-  function hardEnable() {
-    enabled = true;
-    disabled = false;
+  let _output = window.output;
+  let _desktops = window.desktops;
+
+  let _move = window.move;
+  let _resize = window.resize;
+
+  let _originalGeometry = math.clone(window.frameGeometry);
+  let _oldGeometry: QRect;
+
+  function isEnabled() {
+    return _enabled;
   }
 
-  function softEnable() {
-    if (disabled) {
-      enabled = true;
-      disabled = false;
+  // @param manual - Indicates whether the action was performed manually by the user or automatically by the script
+  function enable(manual?: boolean) {
+    if (manual || _disabled) {
+      _disabled = false;
+      _enabled = true;
+      _originalGeometry = math.clone(window.frameGeometry);
     }
   }
 
-  function hardDisable() {
-    enabled = false;
+  // @param manual - Indicates whether the action was performed manually by the user or automatically by the script
+  function disable(manual?: boolean) {
+    if (!manual) _disabled = true;
+    _enabled = false;
+    window.frameGeometry.width = _originalGeometry.width;
+    window.frameGeometry.height = _originalGeometry.height;
   }
-
-  function softDisable() {
-    enabled = false;
-    disabled = true;
-  }
-
-  let output = window.output;
-  let desktops = window.desktops;
-
-  let move = window.move;
-  let resize = window.resize;
-
-  let originalGeometry = math.clone(window.frameGeometry);
-  let frameGeometry: QRect;
 
   function startMove() {
-    move = true;
-    frameGeometry = math.clone(window.frameGeometry);
+    _move = true;
+    _oldGeometry = math.clone(window.frameGeometry);
   }
 
   function stopMove() {
-    if (output !== window.output) {
+    if (_output !== window.output) {
       outputChanged(true);
-    } else {
-      callbacks.moveWindow(window, frameGeometry);
+    } else if (_enabled) {
+      callbacks.moveWindow(window, _oldGeometry);
     }
 
-    move = false;
+    _move = false;
   }
 
   function startResize() {
-    resize = true;
-    frameGeometry = math.clone(window.frameGeometry);
+    _resize = true;
+    _oldGeometry = math.clone(window.frameGeometry);
   }
 
   function stopResize() {
-    callbacks.resizeWindow(window, frameGeometry);
-    resize = false;
+    callbacks.resizeWindow(window, _oldGeometry);
+    _resize = false;
   }
 
   function moveResizedChanged() {
-    if (!enabled) return;
-
-    if (window.move && !move) {
+    if (window.move && !_move) {
       startMove();
-    } else if (!window.move && move) {
+    } else if (!window.move && _move) {
       stopMove();
     }
 
-    if (window.resize && !resize) {
+    if (!_enabled) return;
+
+    if (window.resize && !_resize) {
       startResize();
-    } else if (!window.resize && resize) {
+    } else if (!window.resize && _resize) {
       stopResize();
     }
   }
 
   // @param force - Ignores the move check (used to ignore outputChanged signal if moveResizedChanged might do the same later)
   function outputChanged(force?: boolean) {
-    if (force || !move) {
-      output = window.output;
+    if (force || !_move) {
+      _output = window.output;
+      enable();
       callbacks.pushWindow(window);
     }
   }
@@ -108,13 +107,13 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
 
   // cf3f
   function desktopsChanged() {
-    if (desktops.length > 1) {
-      softDisable();
-    } else if (desktops.length === 1) {
-      softEnable();
+    if (window.desktops.length > 1) {
+      disable();
+    } else if (window.desktops.length === 1) {
+      enable();
     }
 
-    desktops = window.desktops;
+    _desktops = window.desktops;
     callbacks.pushWindow(window);
   }
 
@@ -134,12 +133,10 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   }
 
   return {
-    enabled,
     window,
-    hardEnable,
-    softEnable,
-    hardDisable,
-    softDisable,
+    isEnabled,
+    enable,
+    disable,
     isOnOutput,
     isOnDesktop,
     remove,
