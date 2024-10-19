@@ -1,117 +1,123 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
-      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
     <kcfgfile name=""/>
+
     <group name="">
-      <entry name="autoTile" type="bool">
-        <label>Automatically tiles windows (if unchecked, a shortcut needs to be used to manually tile windows)</label>
-        <default>true</default>
-      </entry>
-      <entry name="ignoreJava" type="bool">
-        <label>Java windows will not be tiled</label>
-        <default>false</default>
-      </entry>
-      <entry name="followWindows" type="bool">
-        <label>Automatically moves windows to available desktops</label>
-        <default>true</default>
-      </entry>
-      <entry name="gap" type="int">
-        <label>Leaves a gap between windows</label>
-        <default>8</default>
-		  </entry>
-      <entry name="marginTop" type="int">
-        <label>Reduces available tiling area from the top of the screen</label>
-        <default>0</default>
-		  </entry>
-      <entry name="marginLeft" type="int">
-        <label>Reduces available tiling area from the left of the screen</label>
-        <default>0</default>
-		  </entry>
-      <entry name="marginBottom" type="int">
-        <label>Reduces available tiling area from the bottom of the screen</label>
-        <default>0</default>
-		  </entry>
-      <entry name="marginRight" type="int">
-        <label>Reduces available tiling area from the right of the screen</label>
-        <default>0</default>
-		  </entry>
+        <entry name="auto" type="bool">
+            <default>true</default>
+        </entry>
+        <entry name="follow" type="bool">
+            <default>false</default>
+        </entry>
 
-      <entry name="layout_0" type="int">
-        <label>Tiling layout (Screen 1)</label>
-        <default>0</default>
-		  </entry>
-      <entry name="layout_1" type="int">
-        <label>Tiling layout (Screen 2)</label>
-        <default>0</default>
-		  </entry>
-      <entry name="layout_2" type="int">
-        <label>Tiling layout (Screen 3)</label>
-        <default>0</default>
-		  </entry>
-      <entry name="layout_3" type="int">
-        <label>Tiling layout (Screen 4)</label>
-        <default>0</default>
-		  </entry>
+        <entry name="gap_0" type="int">
+            <default>8</default>
+        </entry>
+        <entry name="gap_1" type="int">
+            <default>8</default>
+        </entry>
+        <entry name="gap_2" type="int">
+            <default>8</default>
+        </entry>
+        <entry name="gap_3" type="int">
+            <default>8</default>
+        </entry>
 
-      <entry name="maxWindows_0" type="int">
-        <label>Max windows (Screen 1)</label>
-        <default>-1</default>
-		  </entry>
-      <entry name="maxWindows_1" type="int">
-        <label>Max windows (Screen 2)</label>
-        <default>-1</default>
-		  </entry>
-      <entry name="maxWindows_2" type="int">
-        <label>Max windows (Screen 3)</label>
-        <default>-1</default>
-		  </entry>
-      <entry name="maxWindows_3" type="int">
-        <label>Max windows (Screen 4)</label>
-        <default>-1</default>
-		  </entry>
+        <entry name="marginLeft_0" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginTop_0" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginRight_0" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginBottom_0" type="int">
+            <default>0</default>
+        </entry>
 
-      <entry name="outputEnabled_0" type="bool">
-        <label>Output enabled (Screen 1)</label>
-        <default>-1</default>
-		  </entry>
-      <entry name="outputEnabled_1" type="bool">
-        <label>Output enabled (Screen 2)</label>
-        <default>-1</default>
-		  </entry>
-      <entry name="outputEnabled_2" type="bool">
-        <label>Output enabled (Screen 3)</label>
-        <default>-1</default>
-		  </entry>
-      <entry name="outputEnabled_3" type="bool">
-        <label>Output enabled (Screen 4)</label>
-        <default>-1</default>
-		  </entry>
-      
-      <entry name="minWidth" type="int">
-        <label>Windows with width below this value will not be tiled</label>
-        <default>256</default>
-      </entry>
-      <entry name="minHeight" type="int">
-        <label>Windows with height below this value will not be tiled</label>
-        <default>256</default>
-      </entry>
-      <entry name="ignoredDesktops" type="string">
-  	    <label>Windows on these desktops will not be tiled</label>
-  	    <default></default>
-      </entry>
-      <entry name="ignoredActivities" type="string">
-  	    <label>Windows on these activities will not be tiled</label>
-  	    <default></default>
-      </entry>
-      <entry name="ignoredProcesses" type="string">
-  	    <label>Windows belonging to these programs will not be tiled (e.g. "kate", "steam")</label>
-  	    <default>wine, steam</default>
-      </entry>
-      <entry name="ignoredCaptions" type="string">
-  	    <label>Windows with these captions will not be tiled (e.g. "Quit GIMP")</label>
-  	    <default>Quit GIMP, Create a New Image</default>
-      </entry>
-   	</group>
+        <entry name="marginLeft_1" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginTop_1" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginRight_1" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginBottom_1" type="int">
+            <default>0</default>
+        </entry>
+
+        <entry name="marginLeft_2" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginTop_2" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginRight_2" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginBottom_2" type="int">
+            <default>0</default>
+        </entry>
+
+        <entry name="marginLeft_3" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginTop_3" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginRight_3" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginBottom_3" type="int">
+            <default>0</default>
+        </entry>
+
+        <entry name="layout_0" type="int">
+            <default>1</default>
+        </entry>
+        <entry name="layout_1" type="int">
+            <default>1</default>
+        </entry>
+        <entry name="layout_2" type="int">
+            <default>1</default>
+        </entry>
+        <entry name="layout_3" type="int">
+            <default>1</default>
+        </entry>
+
+        <entry name="limit_0" type="int">
+            <default>-1</default>
+        </entry>
+        <entry name="limit_1" type="int">
+            <default>-1</default>
+        </entry>
+        <entry name="limit_2" type="int">
+            <default>-1</default>
+        </entry>
+        <entry name="limit_3" type="int">
+            <default>-1</default>
+        </entry>
+
+        <entry name="minWidth" type="int">
+            <default>256</default>
+        </entry>
+        <entry name="minHeight" type="int">
+            <default>256</default>
+        </entry>
+
+        <entry name="desktops" type="string">
+            <default></default>
+        </entry>
+
+        <entry name="processes" type="string">
+            <default>wine, steam</default>
+        </entry>
+        <entry name="captions" type="string">
+            <default>Quit GIMP, Create a new Image</default>
+        </entry>
+    </group>
+
 </kcfg>

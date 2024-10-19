@@ -284,7 +284,7 @@ ApplicationWindow {
                     TextArea {
                         implicitWidth: 100
                         implicitHeight: 30
-                        text: ""
+                        text: "7, 8"
                         objectName: "kcfg_ignoredActivities"
                     }
                 }
@@ -297,7 +297,7 @@ ApplicationWindow {
                     TextArea {
                         implicitWidth: 100
                         implicitHeight: 30
-                        text: ""
+                        text: "7, 8"
                         objectName: "kcfg_ignoredDesktops"
                     }
                 }
