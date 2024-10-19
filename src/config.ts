@@ -49,10 +49,10 @@ const margin: Array<Margin> = [
 ];
 
 const layout = [
-  readConfigString("layout_0", 0),
-  readConfigString("layout_1", 0),
-  readConfigString("layout_2", 0),
-  readConfigString("layout_3", 0),
+  readConfigString("layout_0", 1),
+  readConfigString("layout_1", 1),
+  readConfigString("layout_2", 1),
+  readConfigString("layout_3", 1),
 ];
 
 const limit: Array<number> = [
@@ -101,7 +101,10 @@ const outputs: Array<string> = readConfigString("outputs", "").split(", ");
 const desktops: Array<string> = readConfigString("desktops", "").split(", ");
 
 const exclude = function (output: KWinOutput, desktop: KWinVirtualDesktop) {
-  return math.outputIndex(output) > -1 || math.desktopIndex(desktop) > -1;
+  return (
+    outputs.indexOf(math.outputIndex(output).toString()) > -1 ||
+    desktops.indexOf(math.desktopIndex(desktop).toString()) > -1
+  );
 };
 
 export default {
