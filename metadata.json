@@ -1,7 +1,7 @@
 {
     "KPlugin": {
         "Name": "Quarter Tiling",
-        "Description": "A script providing an easily approachable middle ground between a tiling and a floating window manager",
+        "Description": "Tiles windows in a selected layout",
         "Icon": "preferences-system-windows",
         "Authors": [
             {

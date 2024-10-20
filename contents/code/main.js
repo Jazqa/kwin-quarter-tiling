@@ -1,5 +1,11 @@
 'use strict';
 
+var registerUserActionsMenu = 
+// @ts-ignore, KWin global
+registerUserActionsMenu ||
+    function () {
+        workspace.currentDesktop = workspace.currentDesktop;
+    };
 var registerShortcut = 
 // @ts-ignore, KWin global
 registerShortcut ||
@@ -886,18 +892,36 @@ function wm() {
     workspace.windowRemoved.connect(removeWindow);
     workspace.windowActivated.connect(tileLayers);
     // Shortcuts
-    function toggleActiveWindow() {
+    function toggleActiveTile() {
         var tile = tiles.find(function (tile) { return tile.window.internalId === workspace.activeWindow.internalId; });
+        toggleTile(tile);
+    }
+    function toggleTile(tile) {
         if (tile.isEnabled()) {
             tile.disable(true);
             tileLayers();
+            workspace.activeWindow = tile.window;
         }
         else {
             tile.enable(true);
             pushWindow(tile.window);
         }
     }
-    registerShortcut("(Quarter Tiling) Tile Window", "Toggles tiling for the active window", "Meta+F", toggleActiveWindow);
+    registerShortcut("(Quarter Tiling) Tile Window", "Toggles tiling for the active window", "Meta+F", toggleActiveTile);
+    function actionMenu(window) {
+        var tile = tiles.find(function (tile) { return tile.window.internalId === window.internalId; });
+        if (tile) {
+            return {
+                text: "Tile Window",
+                checkable: true,
+                checked: tile.isEnabled(),
+                triggered: function () {
+                    toggleTile(tile);
+                },
+            };
+        }
+    }
+    registerUserActionsMenu(actionMenu);
 }
 
 wm();

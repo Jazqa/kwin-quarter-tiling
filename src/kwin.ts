@@ -1,5 +1,12 @@
 import { KWinOutput, KWinVirtualDesktop, KWinWorkspaceWrapper } from "./types/kwin";
 
+export const registerUserActionsMenu: (obj: Object) => void =
+  // @ts-ignore, KWin global
+  registerUserActionsMenu ||
+  function (): void {
+    workspace.currentDesktop = workspace.currentDesktop;
+  };
+
 export const registerShortcut: (name: string, description: string, key: string, cb: () => void) => void =
   // @ts-ignore, KWin global
   registerShortcut ||

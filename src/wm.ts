@@ -1,5 +1,5 @@
 import config from "./config";
-import { registerShortcut, workspace } from "./kwin";
+import { registerShortcut, registerUserActionsMenu, workspace } from "./kwin";
 import { layer, Layers } from "./layer";
 import math from "./math";
 import { tile, Tile } from "./tile";
@@ -169,21 +169,38 @@ export function wm() {
   workspace.windowActivated.connect(tileLayers);
 
   // Shortcuts
-  function toggleActiveWindow() {
+
+  function toggleActiveTile() {
     const tile = tiles.find((tile) => tile.window.internalId === workspace.activeWindow.internalId);
+    toggleTile(tile);
+  }
+
+  function toggleTile(tile: Tile) {
     if (tile.isEnabled()) {
       tile.disable(true);
       tileLayers();
+      workspace.activeWindow = tile.window;
     } else {
       tile.enable(true);
       pushWindow(tile.window);
     }
   }
 
-  registerShortcut(
-    "(Quarter Tiling) Tile Window",
-    "Toggles tiling for the active window",
-    "Meta+F",
-    toggleActiveWindow
-  );
+  registerShortcut("(Quarter Tiling) Tile Window", "Toggles tiling for the active window", "Meta+F", toggleActiveTile);
+
+  function actionMenu(window: KWinWindow) {
+    const tile = tiles.find((tile) => tile.window.internalId === window.internalId);
+    if (tile) {
+      return {
+        text: "Tile Window",
+        checkable: true,
+        checked: tile.isEnabled(),
+        triggered: function () {
+          toggleTile(tile);
+        },
+      };
+    }
+  }
+
+  registerUserActionsMenu(actionMenu);
 }
