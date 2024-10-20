@@ -1,4 +1,4 @@
-import { KWinWorkspaceWrapper } from "./types/kwin";
+import { KWinOutput, KWinVirtualDesktop, KWinWorkspaceWrapper } from "./types/kwin";
 
 export const registerShortcut: (name: string, description: string, key: string, cb: () => void) => void =
   // @ts-ignore, KWin global
@@ -20,3 +20,7 @@ export function readConfigString(key: string, defaultValue: any): string {
 
 // @ts-ignore, KWin global
 export const workspace: KWinWorkspaceWrapper = workspace || {};
+
+export function maximizeArea(output: KWinOutput, desktop: KWinVirtualDesktop) {
+  return workspace.clientArea(2, output, desktop);
+}

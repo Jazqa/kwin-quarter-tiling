@@ -1,5 +1,5 @@
 import config from "./config";
-import { workspace } from "./kwin";
+import { maximizeArea, workspace } from "./kwin";
 import { Layout } from "./layouts/layout";
 import { layouts } from "./layouts/layouts";
 import math from "./math";
@@ -25,7 +25,7 @@ export function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
   const id = output.serialNumber + desktop.id;
   const oi = math.outputIndex(output);
 
-  let _rect = math.withMargin(oi, workspace.clientArea(2, output, desktop));
+  let _rect = math.withMargin(oi, maximizeArea(output, desktop));
   let _layout = layouts[config.layout[oi]](oi, _rect);
 
   if (config.limit[oi] > -1) {

@@ -1,4 +1,4 @@
-import { workspace } from "./kwin";
+import { maximizeArea, workspace } from "./kwin";
 import math from "./math";
 import { KWinOutput, KWinVirtualDesktop, KWinWindow } from "./types/kwin";
 import { QRect } from "./types/qt";
@@ -30,25 +30,37 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   let _originalGeometry = math.clone(window.frameGeometry);
   let _oldGeometry: QRect;
 
+  if (window.minimized || window.fullScreen || isMaximized()) {
+    disable();
+  }
+
   function isEnabled() {
     return _enabled;
   }
 
-  // @param manual - Indicates whether the action was performed manually by the user or automatically by the script
-  function enable(manual?: boolean) {
+  // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
+  // @param capture - Inciates whether the window's frameGeometry should be used as its originalGeometry when restored later
+  function enable(manual?: boolean, capture?: boolean) {
     if (manual || _disabled) {
       _disabled = false;
       _enabled = true;
-      _originalGeometry = math.clone(window.frameGeometry);
+
+      if (capture) {
+        _originalGeometry = math.clone(window.frameGeometry);
+      }
     }
   }
 
-  // @param manual - Indicates whether the action was performed manually by the user or automatically by the script
-  function disable(manual?: boolean) {
+  // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
+  // @param restore - Indicates the window's frameGeometry should be restored to its original rect
+  function disable(manual?: boolean, restore?: boolean) {
     if (!manual) _disabled = true;
     _enabled = false;
-    window.frameGeometry.width = _originalGeometry.width;
-    window.frameGeometry.height = _originalGeometry.height;
+
+    if (restore) {
+      window.frameGeometry.width = _originalGeometry.width;
+      window.frameGeometry.height = _originalGeometry.height;
+    }
   }
 
   function startMove() {
@@ -92,6 +104,28 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     }
   }
 
+  function maximizedChanged() {
+    if (isMaximized()) {
+      disable();
+    } else {
+      enable();
+    }
+
+    callbacks.enableWindow(window);
+  }
+
+  function isMaximized() {
+    const desktop = _desktops[0] || window.desktops[0] || workspace.desktops[0];
+    const area = maximizeArea(_output, desktop);
+
+    const h = window.frameGeometry.width === area.width && window.frameGeometry.x === area.x;
+    const v = window.frameGeometry.height === area.height && window.frameGeometry.y === area.y;
+
+    if (h || v) {
+      return true;
+    }
+  }
+
   // @param force - Ignores the move check (used to ignore outputChanged signal if moveResizedChanged might do the same later)
   function outputChanged(force?: boolean) {
     if (force || !_move) {
@@ -128,6 +162,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   window.moveResizedChanged.connect(moveResizedChanged);
   window.outputChanged.connect(outputChanged);
   window.desktopsChanged.connect(desktopsChanged);
+  window.maximizedChanged.connect(maximizedChanged);
 
   function remove() {
     window.moveResizedChanged.disconnect(moveResizedChanged);

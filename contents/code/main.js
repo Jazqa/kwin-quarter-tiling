@@ -17,6 +17,9 @@ function readConfigString(key, defaultValue) {
 }
 // @ts-ignore, KWin global
 var workspace = workspace || {};
+function maximizeArea(output, desktop) {
+    return workspace.clientArea(2, output, desktop);
+}
 
 function outputIndex(output) {
     return workspace.screens.findIndex(function (wsoutput) { return wsoutput.serialNumber === output.serialNumber; });
@@ -421,7 +424,7 @@ var layouts = {
 function layer(output, desktop) {
     var id = output.serialNumber + desktop.id;
     var oi = math.outputIndex(output);
-    var _rect = math.withMargin(oi, workspace.clientArea(2, output, desktop));
+    var _rect = math.withMargin(oi, maximizeArea(output, desktop));
     var _layout = layouts[config.layout[oi]](oi, _rect);
     if (config.limit[oi] > -1) {
         _layout.limit = Math.min(_layout.limit, config.limit[oi]);
@@ -467,24 +470,33 @@ function tile(window, callbacks) {
     var _resize = window.resize;
     var _originalGeometry = math.clone(window.frameGeometry);
     var _oldGeometry;
+    if (window.minimized || window.fullScreen || isMaximized()) {
+        disable();
+    }
     function isEnabled() {
         return _enabled;
     }
-    // @param manual - Indicates whether the action was performed manually by the user or automatically by the script
-    function enable(manual) {
+    // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
+    // @param capture - Inciates whether the window's frameGeometry should be used as its originalGeometry when restored later
+    function enable(manual, capture) {
         if (manual || _disabled) {
             _disabled = false;
             _enabled = true;
-            _originalGeometry = math.clone(window.frameGeometry);
+            if (capture) {
+                _originalGeometry = math.clone(window.frameGeometry);
+            }
         }
     }
-    // @param manual - Indicates whether the action was performed manually by the user or automatically by the script
-    function disable(manual) {
+    // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
+    // @param restore - Indicates the window's frameGeometry should be restored to its original rect
+    function disable(manual, restore) {
         if (!manual)
             _disabled = true;
         _enabled = false;
-        window.frameGeometry.width = _originalGeometry.width;
-        window.frameGeometry.height = _originalGeometry.height;
+        if (restore) {
+            window.frameGeometry.width = _originalGeometry.width;
+            window.frameGeometry.height = _originalGeometry.height;
+        }
     }
     function startMove() {
         _move = true;
@@ -523,6 +535,24 @@ function tile(window, callbacks) {
             stopResize();
         }
     }
+    function maximizedChanged() {
+        if (isMaximized()) {
+            disable();
+        }
+        else {
+            enable();
+        }
+        callbacks.enableWindow(window);
+    }
+    function isMaximized() {
+        var desktop = _desktops[0] || window.desktops[0] || workspace.desktops[0];
+        var area = maximizeArea(_output, desktop);
+        var h = window.frameGeometry.width === area.width && window.frameGeometry.x === area.x;
+        var v = window.frameGeometry.height === area.height && window.frameGeometry.y === area.y;
+        if (h || v) {
+            return true;
+        }
+    }
     // @param force - Ignores the move check (used to ignore outputChanged signal if moveResizedChanged might do the same later)
     function outputChanged(force) {
         if (force || !_move) {
@@ -554,6 +584,7 @@ function tile(window, callbacks) {
     window.moveResizedChanged.connect(moveResizedChanged);
     window.outputChanged.connect(outputChanged);
     window.desktopsChanged.connect(desktopsChanged);
+    window.maximizedChanged.connect(maximizedChanged);
     function remove() {
         window.moveResizedChanged.disconnect(moveResizedChanged);
         window.outputChanged.disconnect(outputChanged);
@@ -574,6 +605,7 @@ function wm() {
     var layers = {};
     var tiles = [];
     var callbacks = {
+        enableWindow: enableWindow,
         pushWindow: pushWindow,
         resizeWindow: resizeWindow,
         moveWindow: moveWindow,
@@ -644,6 +676,9 @@ function wm() {
         }
         tileLayers();
     }
+    function enableWindow(window) {
+        tileLayers();
+    }
     function pushWindow(window) {
         var index = tiles.findIndex(function (tile) { return tile.window.internalId === window.internalId; });
         if (index > -1) {
@@ -658,9 +693,6 @@ function wm() {
             window.normalWindow &&
             window.moveable &&
             window.resizeable &&
-            window.maximizable &&
-            !window.fullScreen &&
-            !window.minimized &&
             window.rect.width >= config.minWidth &&
             window.rect.height >= config.minHeight &&
             config.processes.indexOf(window.resourceClass.toString().toLowerCase()) === -1 &&

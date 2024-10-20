@@ -7,6 +7,7 @@ import { KWinOutput, KWinVirtualDesktop, KWinWindow } from "./types/kwin";
 import { QRect } from "./types/qt";
 
 export interface Callbacks {
+  enableWindow: (window: KWinWindow) => void;
   pushWindow: (window: KWinWindow) => void;
   resizeWindow: (window: KWinWindow, oldRect: QRect) => void;
   moveWindow: (window: KWinWindow, oldRect: QRect) => void;
@@ -17,6 +18,7 @@ export function wm() {
   const tiles: Array<Tile> = [];
 
   const callbacks = {
+    enableWindow,
     pushWindow,
     resizeWindow,
     moveWindow,
@@ -102,6 +104,10 @@ export function wm() {
     tileLayers();
   }
 
+  function enableWindow(window: KWinWindow) {
+    tileLayers();
+  }
+
   function pushWindow(window: KWinWindow) {
     const index = tiles.findIndex((tile) => tile.window.internalId === window.internalId);
 
@@ -120,9 +126,6 @@ export function wm() {
       window.normalWindow &&
       window.moveable &&
       window.resizeable &&
-      window.maximizable &&
-      !window.fullScreen &&
-      !window.minimized &&
       window.rect.width >= config.minWidth &&
       window.rect.height >= config.minHeight &&
       config.processes.indexOf(window.resourceClass.toString().toLowerCase()) === -1 &&

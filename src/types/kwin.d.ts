@@ -80,17 +80,26 @@ export interface KWinWindow {
     connect: (cb: (rect: QRect) => void) => void;
     disconnect: (cb: (rect: QRect) => void) => void;
   };
-
   moveResizedChanged: {
     connect: (cb: () => void) => void;
     disconnect: (cb: () => void) => void;
   };
-
+  fullScreenChanged: {
+    connect: (cb: () => void) => void;
+    disconnect: (cb: () => void) => void;
+  };
+  maximizedChanged: {
+    connect: (cb: () => void) => void;
+    disconnect: (cb: () => void) => void;
+  };
+  minimizedChanged: {
+    connect: (cb: () => void) => void;
+    disconnect: (cb: () => void) => void;
+  };
   outputChanged: {
     connect: (cb: () => void) => void;
     disconnect: (cb: () => void) => void;
   };
-
   desktopsChanged: {
     connect: (cb: () => void) => void;
     disconnect: (cb: () => void) => void;
