@@ -1,7 +1,5 @@
 # Yet Another KWin Tiling Script
 
-## Description
-
 An easy tiling script for KWin.
 
 ## Preview

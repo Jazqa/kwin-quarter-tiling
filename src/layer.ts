@@ -34,6 +34,11 @@ export function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
 
   // @returns boolean - Indicates whether the tile array was modifier during tiling
   function tile(tiles: Array<Tile>) {
+    const newRect = math.withMargin(oi, maximizeArea(output, desktop));
+    if (hasRectChanged(newRect)) {
+      onRectChanged(newRect);
+    }
+
     let i = 0;
     const includedTiles = [];
     tiles.forEach((tile) => {

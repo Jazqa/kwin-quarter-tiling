@@ -621,6 +621,10 @@ function layer(output, desktop) {
     }
     // @returns boolean - Indicates whether the tile array was modifier during tiling
     function tile(tiles) {
+        var newRect = math.withMargin(oi, maximizeArea(output, desktop));
+        if (hasRectChanged(newRect)) {
+            onRectChanged(newRect);
+        }
         var i = 0;
         var includedTiles = [];
         tiles.forEach(function (tile) {
@@ -644,6 +648,13 @@ function layer(output, desktop) {
     }
     function resizeWindow(window, oldRect) {
         _layout.resizeWindow(window, oldRect);
+    }
+    function hasRectChanged(newRect) {
+        return (_rect.x !== newRect.x || _rect.y !== newRect.y || _rect.width !== newRect.width || _rect.height !== newRect.height);
+    }
+    function onRectChanged(newRect) {
+        _rect = newRect;
+        _layout.adjustRect(newRect);
     }
     return {
         output: output,
@@ -997,7 +1008,7 @@ function wm() {
         }
     }
     registerShortcut("(YAKTS) Tile Window", "Toggles tiling for the active window", "Meta+F", toggleActiveTile);
-    function actionMenu(window) {
+    function actionsMenu(window) {
         var tile = tiles.find(function (tile) { return tile.window.internalId === window.internalId; });
         if (tile) {
             return {
@@ -1010,7 +1021,7 @@ function wm() {
             };
         }
     }
-    registerUserActionsMenu(actionMenu);
+    registerUserActionsMenu(actionsMenu);
 }
 
 wm();

@@ -1,6 +1,6 @@
 import { KWinOutput, KWinVirtualDesktop, KWinWorkspaceWrapper } from "./types/kwin";
 
-export const registerUserActionsMenu: (obj: Object) => void =
+export const registerUserActionsMenu: (actionsMenu: Object) => void =
   // @ts-ignore, KWin global
   registerUserActionsMenu ||
   function (): void {
