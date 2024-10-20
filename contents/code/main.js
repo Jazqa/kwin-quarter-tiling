@@ -579,7 +579,7 @@ function tile(window, callbacks) {
     var _oldGeometry;
     var _isKeyboard = false;
     var _oldGeometryKeyboard;
-    if (window.minimized || window.fullScreen || isMaximized()) {
+    if (!config.auto || window.minimized || window.fullScreen || isMaximized()) {
         disable();
     }
     function isEnabled() {

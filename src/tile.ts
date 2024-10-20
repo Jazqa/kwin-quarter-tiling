@@ -1,3 +1,4 @@
+import config from "./config";
 import { maximizeArea, workspace } from "./kwin";
 import math from "./math";
 import { KWinOutput, KWinVirtualDesktop, KWinWindow } from "./types/kwin";
@@ -34,7 +35,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   let _isKeyboard = false;
   let _oldGeometryKeyboard: QRect | undefined;
 
-  if (window.minimized || window.fullScreen || isMaximized()) {
+  if (!config.auto || window.minimized || window.fullScreen || isMaximized()) {
     disable();
   }
 
