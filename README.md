@@ -2,7 +2,7 @@
 
 A tiling script for Plasma 6.
 
-Plasma 5 version is archived in [`plasma-5`](https://github.com/Jazqa/kwin-quarter-tiling/tree/plasma-5)` branch and can be downloaded from [here](https://github.com/Jazqa/kwin-quarter-tiling/releases).
+Plasma 5 version is archived in [`plasma-5`](https://github.com/Jazqa/kwin-quarter-tiling/tree/plasma-5) branch and can be downloaded from [here](https://github.com/Jazqa/kwin-quarter-tiling/releases/tag/2.0).
 
 ## Preview
 
