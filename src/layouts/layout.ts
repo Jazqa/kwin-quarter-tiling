@@ -19,15 +19,15 @@ export interface Layout {
   /*
    *  Tiles all windowsOnLayout according to Layout's tiling rules
    *
-   *  @param windowsOnLayout - Array of windows on the layout (windowManager.windows filtered by the output and desktop of the layout)
+   *  @param windowsOnLayout - Array of windows that exist on the layout (tile.output and tile.desktops match layout)
    */
-  tileWindows: (windowsOnLayout: Array<KWinWindow>) => void;
+  getRects: (windowsOnLayout: Array<KWinWindow>) => void;
 
   /*
-   *  Resizes a clientOnLayout and adjusts the Layout's tiling accordingly
+   *  Resizes a windowOnLayout and adjusts the Layout's tiling accordingly
    *
-   *  @param windowOnLayout - A window that exists on the layout (client.output and client.desktops match those of the layout)
-   *  @param oldRect - Rect of the window when windowStartUserMovedResized was triggered (windowManager.snapshot.rect)
+   *  @param windowOnLayout - A window that exists on the layout (window.output and window.desktops match layout)
+   *  @param oldRect - Rect of the window when windowStartUserMovedResized was triggered
    */
   resizeWindow: (windowOnLayout: KWinWindow, oldRect: QRect) => void;
 
@@ -43,3 +43,5 @@ export interface Layout {
    */
   restore: () => void;
 }
+
+export type LayoutFactory = (oi: number, rect: QRect) => Layout;

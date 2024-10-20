@@ -2,17 +2,18 @@ import math from "../math";
 import { KWinWindow } from "../types/kwin";
 import { QRect } from "../types/qt";
 import { Layout } from "./layout";
+import { Tile } from "../tile";
 
 interface Separators {
   h: Array<number>;
   v: number;
 }
 
-function getTiles(rect: QRect, separators: Separators, count: number): Array<QRect> {
+function _getRects(rect: QRect, separators: Separators, count: number): Array<QRect> {
   const { x, y, width, height } = rect;
   const { v, h } = separators;
 
-  const tiles = [
+  const rects = [
     {
       x,
       y,
@@ -40,23 +41,24 @@ function getTiles(rect: QRect, separators: Separators, count: number): Array<QRe
   ];
 
   if (count < 4) {
-    tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
+    rects[0].height = rects[3].y + rects[3].height - rects[0].y;
   }
 
   if (count < 3) {
-    tiles[1].height = tiles[2].y + tiles[2].height - tiles[1].y;
+    rects[1].height = rects[2].y + rects[2].height - rects[1].y;
   }
 
   if (count < 2) {
-    tiles[0].width = tiles[1].x + tiles[1].width - tiles[0].x;
+    rects[0].width = rects[1].x + rects[1].width - rects[0].x;
   }
 
-  return tiles;
+  return rects;
 }
 
 export function TwoByTwoHorizontal(oi: number, rect: QRect): Layout {
   const id = "2X2H";
   const limit = 4;
+  const minSizeMultiplier = 0.1;
 
   let hs = rect.y + rect.height * 0.5;
   let vs = rect.x + rect.width * 0.5;
@@ -67,11 +69,8 @@ export function TwoByTwoHorizontal(oi: number, rect: QRect): Layout {
     restore();
   }
 
-  function tileWindows(windows: Array<KWinWindow>) {
-    const tiles = getTiles(rect, separators, windows.length);
-    windows.forEach((window, index) => {
-      window.frameGeometry = math.withGap(oi, tiles[index]);
-    });
+  function getRects(windows: Array<KWinWindow>) {
+    return _getRects(rect, separators, windows.length);
   }
 
   function resizeWindow(window: KWinWindow, oldRect: QRect) {
@@ -99,11 +98,11 @@ export function TwoByTwoHorizontal(oi: number, rect: QRect): Layout {
       }
     }
 
-    const maxV = 0.75 * (rect.x + rect.width);
-    const minV = rect.x + rect.width * 0.25;
+    const maxV = (1 - minSizeMultiplier) * (rect.x + rect.width);
+    const minV = rect.x + rect.width * minSizeMultiplier;
 
-    const maxH = 0.75 * (rect.y + rect.height);
-    const minH = rect.y + rect.height * 0.25;
+    const maxH = (1 - minSizeMultiplier) * (rect.y + rect.height);
+    const minH = rect.y + rect.height * minSizeMultiplier;
 
     separators.v = Math.min(Math.max(minV, separators.v), maxV);
 
@@ -120,7 +119,7 @@ export function TwoByTwoHorizontal(oi: number, rect: QRect): Layout {
   return {
     id,
     limit,
-    tileWindows,
+    getRects,
     resizeWindow,
     adjustRect,
     restore,

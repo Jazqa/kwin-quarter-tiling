@@ -72,8 +72,8 @@ function withMargin(oi: number, rect: QRect): QRect {
 function centerTo(rectA: QRect, rectB: QRect) {
   let { x, y, width, height } = rectA;
 
-  x = rectB.width * 0.5 - rectA.width * 0.5;
-  y = rectB.height * 0.5 - rectA.height * 0.5;
+  x = rectB.x + rectB.width * 0.5 - width * 0.5;
+  y = rectB.y + rectB.height * 0.5 - height * 0.5;
 
   return { x, y, width, height };
 }

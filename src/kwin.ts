@@ -1,5 +1,7 @@
 import { KWinOutput, KWinVirtualDesktop, KWinWorkspaceWrapper } from "./types/kwin";
 
+export const DEV = true;
+
 export const registerShortcut: (name: string, description: string, key: string, cb: () => void) => void =
   // @ts-ignore, KWin global
   registerShortcut ||

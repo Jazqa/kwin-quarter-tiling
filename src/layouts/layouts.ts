@@ -1,6 +1,7 @@
 import { Disabled } from "./Disabled";
 import { TwoByTwoHorizontal } from "./TwoByTwoHorizontal";
 import { TwoByTwoVertical } from "./TwoByTwoVertical";
+import { Layout, LayoutFactory } from "./layout";
 
 /*
  * Adding a new layout to the script and its options:
@@ -14,7 +15,11 @@ import { TwoByTwoVertical } from "./TwoByTwoVertical";
  *      </property>
  */
 
-export const layouts = {
+interface Layouts {
+  [index: string]: LayoutFactory;
+}
+
+export const layouts: Layouts = {
   "0": Disabled,
   "1": TwoByTwoHorizontal,
   "2": TwoByTwoVertical,

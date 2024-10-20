@@ -1,0 +1,7 @@
+npm run transpile && 
+kwriteconfig6 --file kwinrc --group Plugins --key quarter-tilingEnabled false && 
+qdbus org.kde.KWin /KWin reconfigure &&
+kpackagetool6 --type=KWin/Script -r quarter-tiling &&
+kpackagetool6 --type=KWin/Script -i . &&
+kwriteconfig6 --file kwinrc --group Plugins --key quarter-tilingEnabled true && 
+qdbus org.kde.KWin /KWin reconfigure

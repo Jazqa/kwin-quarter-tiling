@@ -1,5 +1,5 @@
 import config from "./config";
-import { registerShortcut, workspace } from "./kwin";
+import { DEV, registerShortcut, workspace } from "./kwin";
 import { layer, Layers } from "./layer";
 import math from "./math";
 import { tile, Tile } from "./tile";
@@ -45,6 +45,8 @@ export function wm() {
   }
 
   function tileLayers() {
+    if (_tiling) return;
+
     _tiling = true;
 
     Object.values(layers).forEach((layer) => {

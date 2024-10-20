@@ -1,4 +1,4 @@
-import { maximizeArea, workspace } from "./kwin";
+import { DEV, maximizeArea, workspace } from "./kwin";
 import math from "./math";
 import { KWinOutput, KWinVirtualDesktop, KWinWindow } from "./types/kwin";
 import { QRect } from "./types/qt";
@@ -7,8 +7,9 @@ import { Callbacks } from "./wm";
 export interface Tile {
   window: KWinWindow;
   isEnabled: () => boolean;
-  enable: (manual?: boolean) => void;
-  disable: (manual?: boolean) => void;
+  enable: (manual?: boolean, capture?: boolean) => void;
+  disable: (manual?: boolean, restore?: boolean) => void;
+  setFrameGeometry: (rect: QRect) => void;
   isOnOutput: (output: KWinOutput) => boolean;
   isOnDesktop: (desktop: KWinVirtualDesktop) => boolean;
   remove: () => void;
@@ -29,6 +30,8 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
 
   let _originalGeometry = math.clone(window.frameGeometry);
   let _oldGeometry: QRect;
+
+  let _isKeyboard = false;
   let _oldGeometryKeyboard: QRect | undefined;
 
   if (window.minimized || window.fullScreen || isMaximized()) {
@@ -42,6 +45,8 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
   // @param capture - Inciates whether the window's frameGeometry should be used as its originalGeometry when restored later
   function enable(manual?: boolean, capture?: boolean) {
+    if (DEV) console.log(`tile.ts: "${window.caption}".enable(${manual}, ${capture})`);
+
     if (manual || _disabled) {
       _disabled = false;
       _enabled = true;
@@ -55,13 +60,30 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
   // @param restore - Indicates the window's frameGeometry should be restored to its original rect
   function disable(manual?: boolean, restore?: boolean) {
+    if (DEV) console.log(`tile.ts: "${window.caption}".disable(${manual}, ${restore})`);
+
     if (!manual) _disabled = true;
     _enabled = false;
 
     if (restore) {
-      window.frameGeometry.width = _originalGeometry.width;
-      window.frameGeometry.height = _originalGeometry.height;
+      window.frameGeometry = math.centerTo(_originalGeometry, window.output.geometry);
+      workspace.activeWindow = window;
     }
+  }
+
+  // b43a
+  function setFrameGeometry(rect: QRect) {
+    if (rect.width < window.minSize.width) {
+      rect.width = window.minSize.width;
+    }
+
+    if (rect.height < window.minSize.height) {
+      rect.height = window.minSize.height;
+    }
+
+    window.frameGeometry = rect;
+
+    _oldGeometryKeyboard = undefined;
   }
 
   function startMove(oldRect: QRect) {
@@ -94,26 +116,37 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
       startMove(window.frameGeometry);
     } else if (!window.move && _move) {
       stopMove();
-    }
-
-    if (!_enabled) return;
-
-    if (window.resize && !_resize) {
+    } else if (!_enabled) {
+      return;
+    } else if (window.resize && !_resize) {
       startResize(window.frameGeometry);
     } else if (!window.resize && _resize) {
       stopResize();
     }
   }
 
+  // frameGeometryAboutToChange and frameGeometryChanged are used only for moving windows via KWin's default shortcuts
+  // _isKeyboard and _oldGeometryKeyboard are used to identify signals triggered by the shortcut
+  function frameGeometryAboutToChange() {
+    if (!callbacks.isTiling() && !window.move && !window.resize && !_move && !_resize) {
+      _isKeyboard = true;
+    }
+  }
   function frameGeometryChanged(oldRect: QRect) {
-    if (!window.move && !window.resize && !_move && !_resize && !callbacks.isTiling()) {
-      if (!_oldGeometryKeyboard) {
-        _oldGeometryKeyboard = oldRect;
-      } else {
+    if (!callbacks.isTiling() && !window.move && !window.resize && !_move && !_resize && _isKeyboard) {
+      if (_oldGeometryKeyboard) {
+        if (DEV) console.log(`tile.ts: "${window.caption}".frameGeometryChanged(2)`);
+
         startMove(_oldGeometryKeyboard);
         stopMove();
         _oldGeometryKeyboard = undefined;
+      } else {
+        if (DEV) console.log(`tile.ts: "${window.caption}".frameGeometryChanged(1)`);
+
+        _oldGeometryKeyboard = oldRect;
       }
+
+      _isKeyboard = false;
     }
   }
 
@@ -199,6 +232,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   window.minimizedChanged.connect(minimizedChanged);
   window.fullScreenChanged.connect(fullScreenChanged);
   window.frameGeometryChanged.connect(frameGeometryChanged);
+  window.frameGeometryAboutToChange.connect(frameGeometryAboutToChange);
 
   function remove() {
     window.moveResizedChanged.disconnect(moveResizedChanged);
@@ -207,6 +241,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     window.maximizedChanged.disconnect(maximizedChanged);
     window.fullScreenChanged.disconnect(fullScreenChanged);
     window.frameGeometryChanged.disconnect(frameGeometryChanged);
+    window.frameGeometryAboutToChange.disconnect(frameGeometryAboutToChange);
   }
 
   return {
@@ -214,6 +249,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     isEnabled,
     enable,
     disable,
+    setFrameGeometry,
     isOnOutput,
     isOnDesktop,
     remove,

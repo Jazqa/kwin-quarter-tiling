@@ -32,24 +32,28 @@ export function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
     _layout.limit = Math.min(_layout.limit, config.limit[oi]);
   }
 
+  // @returns boolean - Indicates whether the tile array was modifier during tiling
   function tile(tiles: Array<Tile>) {
-    const windows = [];
-
     let i = 0;
-
+    const includedTiles = [];
     tiles.forEach((tile) => {
+      if (!tile.isEnabled()) return;
+
       if (tile.isOnOutput(output) && tile.isOnDesktop(desktop)) {
-        const enabled = tile.isEnabled();
-        if (i < _layout.limit && enabled) {
+        if (i < _layout.limit) {
           i += 1;
-          windows.push(tile.window);
-        } else if (enabled) {
+          includedTiles.push(tile);
+        } else {
           tile.disable();
         }
       }
     });
 
-    _layout.tileWindows(windows);
+    const rects = _layout.getRects(includedTiles);
+    includedTiles.forEach((tile, index) => {
+      const rect = math.withGap(oi, rects[index]);
+      tile.setFrameGeometry(rect);
+    });
   }
 
   function resizeWindow(window: KWinWindow, oldRect: QRect) {

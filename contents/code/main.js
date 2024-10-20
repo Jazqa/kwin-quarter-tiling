@@ -72,8 +72,8 @@ function withMargin(oi, rect) {
 }
 function centerTo(rectA, rectB) {
     var x = rectA.x, y = rectA.y, width = rectA.width, height = rectA.height;
-    x = rectB.width * 0.5 - rectA.width * 0.5;
-    y = rectB.height * 0.5 - rectA.height * 0.5;
+    x = rectB.x + rectB.width * 0.5 - width * 0.5;
+    y = rectB.y + rectB.height * 0.5 - height * 0.5;
     return { x: x, y: y, width: width, height: height };
 }
 function distanceTo(rectA, rectB) {
@@ -197,24 +197,24 @@ var config = {
 function Disabled(oi, rect) {
     var id = "Disabled";
     var limit = 0;
-    function tileWindows(windowsOnLayout) { }
-    function resizeWindow(windowOnLayout, oldRect) { }
+    function getRects(windows) { }
+    function resizeWindow(windows, oldRect) { }
     function adjustRect(rect) { }
     function restore() { }
     return {
         id: id,
         limit: limit,
-        tileWindows: tileWindows,
+        getRects: getRects,
         resizeWindow: resizeWindow,
         adjustRect: adjustRect,
         restore: restore,
     };
 }
 
-function getTiles(rect, separators, count) {
+function _getRects(rect, separators, count) {
     var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
     var v = separators.v, h = separators.h;
-    var tiles = [
+    var rects = [
         {
             x: x,
             y: y,
@@ -241,19 +241,20 @@ function getTiles(rect, separators, count) {
         },
     ];
     if (count < 4) {
-        tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
+        rects[0].height = rects[3].y + rects[3].height - rects[0].y;
     }
     if (count < 3) {
-        tiles[1].height = tiles[2].y + tiles[2].height - tiles[1].y;
+        rects[1].height = rects[2].y + rects[2].height - rects[1].y;
     }
     if (count < 2) {
-        tiles[0].width = tiles[1].x + tiles[1].width - tiles[0].x;
+        rects[0].width = rects[1].x + rects[1].width - rects[0].x;
     }
-    return tiles;
+    return rects;
 }
 function TwoByTwoHorizontal(oi, rect) {
     var id = "2X2H";
     var limit = 4;
+    var minSizeMultiplier = 0.1;
     var hs = rect.y + rect.height * 0.5;
     var vs = rect.x + rect.width * 0.5;
     var separators = { h: [hs, hs], v: vs };
@@ -261,11 +262,8 @@ function TwoByTwoHorizontal(oi, rect) {
         rect = newRect;
         restore();
     }
-    function tileWindows(windows) {
-        var tiles = getTiles(rect, separators, windows.length);
-        windows.forEach(function (window, index) {
-            window.frameGeometry = math.withGap(oi, tiles[index]);
-        });
+    function getRects(windows) {
+        return _getRects(rect, separators, windows.length);
     }
     function resizeWindow(window, oldRect) {
         var newRect = math.clone(window.frameGeometry);
@@ -293,10 +291,10 @@ function TwoByTwoHorizontal(oi, rect) {
                 separators.h[0] += newRect.y === oldRect.y ? newRect.height - oldRect.height : 0;
             }
         }
-        var maxV = 0.75 * (rect.x + rect.width);
-        var minV = rect.x + rect.width * 0.25;
-        var maxH = 0.75 * (rect.y + rect.height);
-        var minH = rect.y + rect.height * 0.25;
+        var maxV = (1 - minSizeMultiplier) * (rect.x + rect.width);
+        var minV = rect.x + rect.width * minSizeMultiplier;
+        var maxH = (1 - minSizeMultiplier) * (rect.y + rect.height);
+        var minH = rect.y + rect.height * minSizeMultiplier;
         separators.v = Math.min(Math.max(minV, separators.v), maxV);
         separators.h[0] = Math.min(Math.max(minH, separators.h[0]), maxH);
         separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
@@ -309,17 +307,17 @@ function TwoByTwoHorizontal(oi, rect) {
     return {
         id: id,
         limit: limit,
-        tileWindows: tileWindows,
+        getRects: getRects,
         resizeWindow: resizeWindow,
         adjustRect: adjustRect,
         restore: restore,
     };
 }
 
-function getTiles$1(rect, separators, count) {
+function _getRects$1(rect, separators, count) {
     var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
     var v = separators.v, h = separators.h;
-    var tiles = [
+    var rects = [
         {
             x: x,
             y: y,
@@ -346,15 +344,15 @@ function getTiles$1(rect, separators, count) {
         },
     ];
     if (count < 4) {
-        tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
+        rects[0].width = rects[3].x + rects[3].width - rects[0].x;
     }
     if (count < 3) {
-        tiles[1].width = tiles[2].x + tiles[2].width - tiles[1].x;
+        rects[1].width = rects[2].x + rects[2].width - rects[1].x;
     }
     if (count < 2) {
-        tiles[0].height = tiles[1].y + tiles[1].height - tiles[0].y;
+        rects[0].height = rects[1].y + rects[1].height - rects[0].y;
     }
-    return tiles;
+    return rects;
 }
 function TwoByTwoVertical(oi, rect) {
     var id = "2X2V";
@@ -366,11 +364,8 @@ function TwoByTwoVertical(oi, rect) {
         rect = newRect;
         restore();
     }
-    function tileWindows(windows) {
-        var tiles = getTiles$1(rect, separators, windows.length);
-        windows.forEach(function (window, index) {
-            window.frameGeometry = math.withGap(oi, tiles[index]);
-        });
+    function getRects(windows) {
+        return _getRects$1(rect, separators, windows.length);
     }
     function resizeWindow(window, oldRect) {
         var newRect = math.clone(window.frameGeometry);
@@ -414,24 +409,13 @@ function TwoByTwoVertical(oi, rect) {
     return {
         id: id,
         limit: limit,
-        tileWindows: tileWindows,
+        getRects: getRects,
         resizeWindow: resizeWindow,
         adjustRect: adjustRect,
         restore: restore,
     };
 }
 
-/*
- * Adding a new layout to the script and its options:
- *
- *  1. Create a new class that inside src/layouts folder, make sure it implements the Layout interface as seen in /src/layout.ts
- *  2. Add an entry to the layouts object in src/layouts/layouts.ts, increasing the key by one:
- *      { "0": Disabled, "1": NewLayout }
- *  3. Add a new entry to the kcfg_layouts entry in contents/code/config.ui:
- *      <property name="text">
- *          <string>NewLayout</string>
- *      </property>
- */
 var layouts = {
     "0": Disabled,
     "1": TwoByTwoHorizontal,
@@ -446,22 +430,28 @@ function layer(output, desktop) {
     if (config.limit[oi] > -1) {
         _layout.limit = Math.min(_layout.limit, config.limit[oi]);
     }
+    // @returns boolean - Indicates whether the tile array was modifier during tiling
     function tile(tiles) {
-        var windows = [];
         var i = 0;
+        var includedTiles = [];
         tiles.forEach(function (tile) {
+            if (!tile.isEnabled())
+                return;
             if (tile.isOnOutput(output) && tile.isOnDesktop(desktop)) {
-                var enabled = tile.isEnabled();
-                if (i < _layout.limit && enabled) {
+                if (i < _layout.limit) {
                     i += 1;
-                    windows.push(tile.window);
+                    includedTiles.push(tile);
                 }
-                else if (enabled) {
+                else {
                     tile.disable();
                 }
             }
         });
-        _layout.tileWindows(windows);
+        var rects = _layout.getRects(includedTiles);
+        includedTiles.forEach(function (tile, index) {
+            var rect = math.withGap(oi, rects[index]);
+            tile.setFrameGeometry(rect);
+        });
     }
     function resizeWindow(window, oldRect) {
         _layout.resizeWindow(window, oldRect);
@@ -487,6 +477,7 @@ function tile(window, callbacks) {
     var _resize = window.resize;
     var _originalGeometry = math.clone(window.frameGeometry);
     var _oldGeometry;
+    var _isKeyboard = false;
     var _oldGeometryKeyboard;
     if (window.minimized || window.fullScreen || isMaximized()) {
         disable();
@@ -497,6 +488,7 @@ function tile(window, callbacks) {
     // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
     // @param capture - Inciates whether the window's frameGeometry should be used as its originalGeometry when restored later
     function enable(manual, capture) {
+        console.log("tile.ts: \"" + window.caption + "\".enable(" + manual + ", " + capture + ")");
         if (manual || _disabled) {
             _disabled = false;
             _enabled = true;
@@ -508,13 +500,25 @@ function tile(window, callbacks) {
     // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
     // @param restore - Indicates the window's frameGeometry should be restored to its original rect
     function disable(manual, restore) {
+        console.log("tile.ts: \"" + window.caption + "\".disable(" + manual + ", " + restore + ")");
         if (!manual)
             _disabled = true;
         _enabled = false;
         if (restore) {
-            window.frameGeometry.width = _originalGeometry.width;
-            window.frameGeometry.height = _originalGeometry.height;
+            window.frameGeometry = math.centerTo(_originalGeometry, window.output.geometry);
+            workspace.activeWindow = window;
         }
+    }
+    // b43a
+    function setFrameGeometry(rect) {
+        if (rect.width < window.minSize.width) {
+            rect.width = window.minSize.width;
+        }
+        if (rect.height < window.minSize.height) {
+            rect.height = window.minSize.height;
+        }
+        window.frameGeometry = rect;
+        _oldGeometryKeyboard = undefined;
     }
     function startMove(oldRect) {
         _move = true;
@@ -544,25 +548,36 @@ function tile(window, callbacks) {
         else if (!window.move && _move) {
             stopMove();
         }
-        if (!_enabled)
+        else if (!_enabled) {
             return;
-        if (window.resize && !_resize) {
+        }
+        else if (window.resize && !_resize) {
             startResize(window.frameGeometry);
         }
         else if (!window.resize && _resize) {
             stopResize();
         }
     }
+    // frameGeometryAboutToChange and frameGeometryChanged are used only for moving windows via KWin's default shortcuts
+    // _isKeyboard and _oldGeometryKeyboard are used to identify signals triggered by the shortcut
+    function frameGeometryAboutToChange() {
+        if (!callbacks.isTiling() && !window.move && !window.resize && !_move && !_resize) {
+            _isKeyboard = true;
+        }
+    }
     function frameGeometryChanged(oldRect) {
-        if (!window.move && !window.resize && !_move && !_resize && !callbacks.isTiling()) {
-            if (!_oldGeometryKeyboard) {
-                _oldGeometryKeyboard = oldRect;
-            }
-            else {
+        if (!callbacks.isTiling() && !window.move && !window.resize && !_move && !_resize && _isKeyboard) {
+            if (_oldGeometryKeyboard) {
+                console.log("tile.ts: \"" + window.caption + "\".frameGeometryChanged(2)");
                 startMove(_oldGeometryKeyboard);
                 stopMove();
                 _oldGeometryKeyboard = undefined;
             }
+            else {
+                console.log("tile.ts: \"" + window.caption + "\".frameGeometryChanged(1)");
+                _oldGeometryKeyboard = oldRect;
+            }
+            _isKeyboard = false;
         }
     }
     function fullScreenChanged() {
@@ -637,6 +652,7 @@ function tile(window, callbacks) {
     window.minimizedChanged.connect(minimizedChanged);
     window.fullScreenChanged.connect(fullScreenChanged);
     window.frameGeometryChanged.connect(frameGeometryChanged);
+    window.frameGeometryAboutToChange.connect(frameGeometryAboutToChange);
     function remove() {
         window.moveResizedChanged.disconnect(moveResizedChanged);
         window.outputChanged.disconnect(outputChanged);
@@ -644,12 +660,14 @@ function tile(window, callbacks) {
         window.maximizedChanged.disconnect(maximizedChanged);
         window.fullScreenChanged.disconnect(fullScreenChanged);
         window.frameGeometryChanged.disconnect(frameGeometryChanged);
+        window.frameGeometryAboutToChange.disconnect(frameGeometryAboutToChange);
     }
     return {
         window: window,
         isEnabled: isEnabled,
         enable: enable,
         disable: disable,
+        setFrameGeometry: setFrameGeometry,
         isOnOutput: isOnOutput,
         isOnDesktop: isOnDesktop,
         remove: remove,
@@ -681,6 +699,8 @@ function wm() {
         layers[id] = newLayer;
     }
     function tileLayers() {
+        if (_tiling)
+            return;
         _tiling = true;
         Object.values(layers).forEach(function (layer) {
             layer.tile(tiles);

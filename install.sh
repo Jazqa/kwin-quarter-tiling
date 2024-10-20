@@ -1,2 +1,2 @@
 #!/bin/sh
-kpackagetool6 --type=KWin/Script -i .
+npm run transpile && kpackagetool6 --type=KWin/Script -i .

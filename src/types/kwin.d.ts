@@ -76,6 +76,10 @@ export interface KWinWindow {
 
   frameGeometry: QRect;
 
+  frameGeometryAboutToChange: {
+    connect: (cb: (rect: QRect) => void) => void;
+    disconnect: (cb: (rect: QRect) => void) => void;
+  };
   frameGeometryChanged: {
     connect: (cb: (rect: QRect) => void) => void;
     disconnect: (cb: (rect: QRect) => void) => void;

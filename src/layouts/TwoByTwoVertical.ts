@@ -1,4 +1,5 @@
 import math from "../math";
+import { Tile } from "../tile";
 import { KWinWindow } from "../types/kwin";
 import { QRect } from "../types/qt";
 import { Layout } from "./layout";
@@ -8,11 +9,11 @@ interface Separators {
   v: Array<number>;
 }
 
-function getTiles(rect: QRect, separators: Separators, count: number): Array<QRect> {
+function _getRects(rect: QRect, separators: Separators, count: number): Array<QRect> {
   const { x, y, width, height } = rect;
   const { v, h } = separators;
 
-  const tiles = [
+  const rects = [
     {
       x,
       y,
@@ -40,18 +41,18 @@ function getTiles(rect: QRect, separators: Separators, count: number): Array<QRe
   ];
 
   if (count < 4) {
-    tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
+    rects[0].width = rects[3].x + rects[3].width - rects[0].x;
   }
 
   if (count < 3) {
-    tiles[1].width = tiles[2].x + tiles[2].width - tiles[1].x;
+    rects[1].width = rects[2].x + rects[2].width - rects[1].x;
   }
 
   if (count < 2) {
-    tiles[0].height = tiles[1].y + tiles[1].height - tiles[0].y;
+    rects[0].height = rects[1].y + rects[1].height - rects[0].y;
   }
 
-  return tiles;
+  return rects;
 }
 
 export function TwoByTwoVertical(oi: number, rect: QRect): Layout {
@@ -67,11 +68,8 @@ export function TwoByTwoVertical(oi: number, rect: QRect): Layout {
     restore();
   }
 
-  function tileWindows(windows: Array<KWinWindow>) {
-    const tiles = getTiles(rect, separators, windows.length);
-    windows.forEach((window, index) => {
-      window.frameGeometry = math.withGap(oi, tiles[index]);
-    });
+  function getRects(windows: Array<KWinWindow>) {
+    return _getRects(rect, separators, windows.length);
   }
 
   function resizeWindow(window: KWinWindow, oldRect: QRect) {
@@ -120,7 +118,7 @@ export function TwoByTwoVertical(oi: number, rect: QRect): Layout {
   return {
     id,
     limit,
-    tileWindows,
+    getRects,
     resizeWindow,
     adjustRect,
     restore,
