@@ -1,8 +1,8 @@
 # Yet Another KWin Tiling Script
 
-An easy tiling script for KWin.
+A tiling script for Plasma 6.
 
-NOTE: The script requires Plasma 6 and KWin 5.27. Plasma 5 version of the script (known as [Quarter Tiling](https://github.com/Jazqa/kwin-quarter-tiling/tree/plasma-5)) is archived in the `plasma-5` branch of this repository and can be downloaded from the [releases] page.
+Plasma 5 version is archived in [`plasma-5`](https://github.com/Jazqa/kwin-quarter-tiling/tree/plasma-5)` branch and can be downloaded from [here](https://github.com/Jazqa/kwin-quarter-tiling/releases).
 
 ## Preview
 
