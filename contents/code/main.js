@@ -996,7 +996,7 @@ function wm() {
             pushWindow(tile.window);
         }
     }
-    registerShortcut("(Quarter Tiling) Tile Window", "Toggles tiling for the active window", "Meta+F", toggleActiveTile);
+    registerShortcut("(YAKTS) Tile Window", "Toggles tiling for the active window", "Meta+F", toggleActiveTile);
     function actionMenu(window) {
         var tile = tiles.find(function (tile) { return tile.window.internalId === window.internalId; });
         if (tile) {

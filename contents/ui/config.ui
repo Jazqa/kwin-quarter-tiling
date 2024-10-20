@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>KWin::QuarterTilingConfigForm</class>
- <widget class="QWidget" name="KWin::QuarterTilingConfigForm">
+ <class>KWin::YAKTSConfigForm</class>
+ <widget class="QWidget" name="KWin::YAKTSConfigForm">
   <property name="geometry">
    <rect>
     <x>0</x>

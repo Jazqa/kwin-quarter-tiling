@@ -1,6 +1,6 @@
 {
-  "name": "kwin-quarter-tiling",
-  "version": "2.0.0",
+  "name": "yakts",
+  "version": "3.0.0",
   "description": "A tiling script for KWin",
   "main": "contents/code/main.js",
   "scripts": {
@@ -11,14 +11,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Jazqa/kwin-quarter-tiling.git"
+    "url": "git+https://github.com/Jazqa/kwin-yakts.git"
   },
   "author": "Jazqa",
   "license": "GPL-2.0",
   "bugs": {
-    "url": "https://github.com/Jazqa/kwin-quarter-tiling/issues"
+    "url": "https://github.com/Jazqa/kwin-yakts/issues"
   },
-  "homepage": "https://github.com/Jazqa/kwin-quarter-tiling#readme",
+  "homepage": "https://github.com/Jazqa/kwin-yakts#readme",
   "devDependencies": {
     "pre-commit": "^1.2.2",
     "rollup": "^1.27.0",

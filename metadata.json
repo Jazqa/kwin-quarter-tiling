@@ -1,7 +1,7 @@
 {
     "KPlugin": {
-        "Name": "Quarter Tiling",
-        "Description": "Tiles windows in a selected layout",
+        "Name": "YAKTS",
+        "Description": "Yet another KWin tiling script",
         "Icon": "preferences-system-windows",
         "Authors": [
             {
@@ -9,10 +9,10 @@
                 "Name": "Jasu Koponen"
             }
         ],
-        "Id": "quarter-tiling",
-        "Version": "1.0",
+        "Id": "yakts",
+        "Version": "3.0",
         "License": "GPLv2",
-        "Website": "https://github.com/Jazqa/kwin-quarter-tiling"
+        "Website": "https://github.com/Jazqa/kwin-yakts"
     },
     "X-Plasma-API": "javascript",
     "X-Plasma-MainScript": "code/main.js",

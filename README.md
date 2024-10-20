@@ -1,4 +1,4 @@
-# Quarter Tiling Script for KWin
+# Yet Another KWin Tiling Script
 
 ## Description
 
@@ -16,13 +16,13 @@ An easy tiling script for KWin.
 
 **Manual:**
 
-    git clone https://github.com/Jazqa/kwin-quarter-tiling.git
-    cd ./kwin-quarter-tiling
+    git clone https://github.com/Jazqa/kwin-yakts.git
+    cd ./kwin-yakts
     git checkout plasma-6
-    kpackagetool6 --type=KWin/Script -r quarter-tiling || true
+    kpackagetool6 --type=KWin/Script -r yakts || true
     kpackagetool6 --type=KWin/Script -i .
     cd ..
-    rm -rf ./kwin-quarter-tiling
+    rm -rf ./kwin-yakts
 
 ## Configuration
 
@@ -32,27 +32,27 @@ The script can be configured through its configuration interface under `System S
 
 KWin shortcuts can be found in `System Settings > Shortcuts > Global Shortcuts > KWin`.
 
-All `(Quarter Tiling) <ACTION>` -shortcuts are used exclusively by the script, but the script supports a variety of KWin shortcuts as well. For example, KWin's `Move Window <DIRECTION>` -shortcuts also move the script's tiles.
+All `(YAKTS) <ACTION>` -shortcuts are used exclusively by the script, but the script supports a variety of KWin shortcuts as well. For example, KWin's `Move Window <DIRECTION>` -shortcuts also move the script's tiles.
 
-Binding the `(Quarter Tiling) Tile Window` -shortcut is recommended, because it makes untiling problematic windows easy.
+Binding the `(YAKTS) Tile Window` -shortcut is recommended, because it makes untiling problematic windows easy.
 
 ## Updates
 
 **Git:**
 
-    git clone https://github.com/Jazqa/kwin-quarter-tiling.git
-    cd ./kwin-quarter-tiling
+    git clone https://github.com/Jazqa/kwin-yakts.git
+    cd ./kwin-yakts
     git checkout plasma-6
-    kpackagetool6 --type=KWin/Script -r quarter-tiling || true
+    kpackagetool6 --type=KWin/Script -r yakts || true
     kpackagetool6 --type=KWin/Script -i .
     cd ..
-    rm -rf ./kwin-quarter-tiling
+    rm -rf ./kwin-yakts
 
-Alternatively, set this repository as the origin of `~/.local/share/kwin/scripts/quarter-tiling` to update it with `git pull`.
+Alternatively, set this repository as the origin of `~/.local/share/kwin/scripts/yakts` to update it with `git pull`.
 
 ## Uninstallation
 
-    kpackagetool6 --type=KWin/Script -r quarter-tiling
+    kpackagetool6 --type=KWin/Script -r yakts
     qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.cleanUp
 
 The script can also be uninstalled from `System Settings > Window Management > KWin Scripts`.
