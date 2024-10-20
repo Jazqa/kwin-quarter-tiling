@@ -24,7 +24,11 @@ The script can be configured through its configuration interface under `System S
 
 ## Shortcuts
 
-The script adds new KWin shortcuts under `System Settings > Shortcuts > Global Shortcuts > KWin`. All `8137: <ACTION>` shortcuts are used exclusively by the script.
+KWin shortcuts can be found in `System Settings > Shortcuts > Global Shortcuts > KWin`.
+
+All `(Quarter Tiling) <ACTION>` -shortcuts are used exclusively by the script, but the script supports a variety of KWin shortcuts as well. For example, KWin's `Move Window <DIRECTION>` -shortcuts also move the script's tiles.
+
+**Binding the `(Quarter Tiling) Tile Window` -shortcut is recommended, because it makes untiling problematic windows easy.**
 
 ## Updates
 
