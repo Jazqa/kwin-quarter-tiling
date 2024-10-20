@@ -38,7 +38,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -88,6 +88,9 @@
          </item>
          <item row="1" column="2">
           <widget class="QSpinBox" name="kcfg_limit_0">
+           <property name="specialValueText">
+            <string comment="-1">Layout default</string>
+           </property>
            <property name="minimum">
             <number>-1</number>
            </property>
@@ -137,7 +140,11 @@
           </widget>
          </item>
          <item row="3" column="3">
-          <widget class="QSpinBox" name="kcfg_marginRight_0"/>
+          <widget class="QSpinBox" name="kcfg_marginRight_0">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="2" column="2">
           <widget class="QLabel" name="label_4">
@@ -163,7 +170,11 @@
           </spacer>
          </item>
          <item row="5" column="2">
-          <widget class="QSpinBox" name="kcfg_marginBottom_0"/>
+          <widget class="QSpinBox" name="kcfg_marginBottom_0">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="4" column="2">
           <widget class="QLabel" name="label_6">
@@ -176,7 +187,11 @@
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QSpinBox" name="kcfg_marginLeft_0"/>
+          <widget class="QSpinBox" name="kcfg_marginLeft_0">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="2" column="1">
           <widget class="QLabel" name="label_3">
@@ -189,7 +204,11 @@
           </widget>
          </item>
          <item row="3" column="2">
-          <widget class="QSpinBox" name="kcfg_gap_0"/>
+          <widget class="QSpinBox" name="kcfg_gap_0">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="3" column="0">
           <spacer name="horizontalSpacer_5">
@@ -205,7 +224,11 @@
           </spacer>
          </item>
          <item row="1" column="2">
-          <widget class="QSpinBox" name="kcfg_marginTop_0"/>
+          <widget class="QSpinBox" name="kcfg_marginTop_0">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="2" column="3">
           <widget class="QLabel" name="label_5">
@@ -269,6 +292,9 @@
          </item>
          <item row="1" column="2">
           <widget class="QSpinBox" name="kcfg_limit_1">
+           <property name="specialValueText">
+            <string comment="-1">Layout default</string>
+           </property>
            <property name="minimum">
             <number>-1</number>
            </property>
@@ -331,7 +357,11 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QSpinBox" name="kcfg_marginTop_1"/>
+          <widget class="QSpinBox" name="kcfg_marginTop_1">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="2">
           <widget class="QLabel" name="label_7">
@@ -344,7 +374,11 @@
           </widget>
          </item>
          <item row="3" column="3">
-          <widget class="QSpinBox" name="kcfg_marginRight_1"/>
+          <widget class="QSpinBox" name="kcfg_marginRight_1">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="2" column="2">
           <widget class="QLabel" name="label_4">
@@ -380,7 +414,11 @@
           </widget>
          </item>
          <item row="3" column="2">
-          <widget class="QSpinBox" name="kcfg_gap_1"/>
+          <widget class="QSpinBox" name="kcfg_gap_1">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="4" column="2">
           <widget class="QLabel" name="label_6">
@@ -393,10 +431,18 @@
           </widget>
          </item>
          <item row="5" column="2">
-          <widget class="QSpinBox" name="kcfg_marginBottom_1"/>
+          <widget class="QSpinBox" name="kcfg_marginBottom_1">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QSpinBox" name="kcfg_marginLeft_1"/>
+          <widget class="QSpinBox" name="kcfg_marginLeft_1">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -450,6 +496,9 @@
          </item>
          <item row="1" column="2">
           <widget class="QSpinBox" name="kcfg_limit_2">
+           <property name="specialValueText">
+            <string comment="-1">Layout default</string>
+           </property>
            <property name="minimum">
             <number>-1</number>
            </property>
@@ -512,7 +561,11 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QSpinBox" name="kcfg_marginTop_2"/>
+          <widget class="QSpinBox" name="kcfg_marginTop_2">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="2">
           <widget class="QLabel" name="label_7">
@@ -525,7 +578,11 @@
           </widget>
          </item>
          <item row="3" column="3">
-          <widget class="QSpinBox" name="kcfg_marginRight_2"/>
+          <widget class="QSpinBox" name="kcfg_marginRight_2">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="2" column="2">
           <widget class="QLabel" name="label_4">
@@ -561,7 +618,11 @@
           </widget>
          </item>
          <item row="3" column="2">
-          <widget class="QSpinBox" name="kcfg_gap_2"/>
+          <widget class="QSpinBox" name="kcfg_gap_2">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="4" column="2">
           <widget class="QLabel" name="label_6">
@@ -574,10 +635,18 @@
           </widget>
          </item>
          <item row="5" column="2">
-          <widget class="QSpinBox" name="kcfg_marginBottom_2"/>
+          <widget class="QSpinBox" name="kcfg_marginBottom_2">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QSpinBox" name="kcfg_marginLeft_2"/>
+          <widget class="QSpinBox" name="kcfg_marginLeft_2">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -631,6 +700,9 @@
          </item>
          <item row="1" column="2">
           <widget class="QSpinBox" name="kcfg_limit_3">
+           <property name="specialValueText">
+            <string comment="-1">Layout default</string>
+           </property>
            <property name="minimum">
             <number>-1</number>
            </property>
@@ -693,7 +765,11 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QSpinBox" name="kcfg_marginTop_3"/>
+          <widget class="QSpinBox" name="kcfg_marginTop_3">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="0" column="2">
           <widget class="QLabel" name="label_7">
@@ -706,7 +782,14 @@
           </widget>
          </item>
          <item row="3" column="3">
-          <widget class="QSpinBox" name="kcfg_marginRight_3"/>
+          <widget class="QSpinBox" name="kcfg_marginRight_3">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+           <property name="prefix">
+            <string/>
+           </property>
+          </widget>
          </item>
          <item row="2" column="2">
           <widget class="QLabel" name="label_4">
@@ -742,7 +825,11 @@
           </widget>
          </item>
          <item row="3" column="2">
-          <widget class="QSpinBox" name="kcfg_gap_3"/>
+          <widget class="QSpinBox" name="kcfg_gap_3">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="4" column="2">
           <widget class="QLabel" name="label_6">
@@ -755,10 +842,18 @@
           </widget>
          </item>
          <item row="5" column="2">
-          <widget class="QSpinBox" name="kcfg_marginBottom_3"/>
+          <widget class="QSpinBox" name="kcfg_marginBottom_3">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QSpinBox" name="kcfg_marginLeft_3"/>
+          <widget class="QSpinBox" name="kcfg_marginLeft_3">
+           <property name="suffix">
+            <string> px</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -788,6 +883,9 @@
          <widget class="QSpinBox" name="kcfg_minWidth">
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+          <property name="suffix">
+           <string> px</string>
           </property>
           <property name="maximum">
            <number>4096</number>
@@ -826,6 +924,9 @@
         </item>
         <item row="0" column="4">
          <widget class="QSpinBox" name="kcfg_minHeight">
+          <property name="suffix">
+           <string> px</string>
+          </property>
           <property name="maximum">
            <number>4096</number>
           </property>
@@ -861,6 +962,9 @@
             <width>16777215</width>
             <height>32</height>
            </size>
+          </property>
+          <property name="placeholderText">
+           <string>6, 7</string>
           </property>
          </widget>
         </item>
