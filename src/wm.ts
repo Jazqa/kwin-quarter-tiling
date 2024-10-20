@@ -7,6 +7,7 @@ import { KWinOutput, KWinVirtualDesktop, KWinWindow } from "./types/kwin";
 import { QRect } from "./types/qt";
 
 export interface Callbacks {
+  isTiling: () => boolean;
   enableWindow: (window: KWinWindow) => void;
   pushWindow: (window: KWinWindow) => void;
   resizeWindow: (window: KWinWindow, oldRect: QRect) => void;
@@ -14,15 +15,22 @@ export interface Callbacks {
 }
 
 export function wm() {
+  let _tiling = false;
+
   const layers: Layers = {};
   const tiles: Array<Tile> = [];
 
   const callbacks = {
+    isTiling,
     enableWindow,
     pushWindow,
     resizeWindow,
     moveWindow,
   };
+
+  function isTiling() {
+    return _tiling;
+  }
 
   // Layers
   function addLayer(output: KWinOutput, desktop: KWinVirtualDesktop) {
@@ -37,9 +45,13 @@ export function wm() {
   }
 
   function tileLayers() {
+    _tiling = true;
+
     Object.values(layers).forEach((layer) => {
       layer.tile(tiles);
     });
+
+    _tiling = false;
   }
 
   // Tiles

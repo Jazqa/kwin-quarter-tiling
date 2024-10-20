@@ -470,6 +470,7 @@ function tile(window, callbacks) {
     var _resize = window.resize;
     var _originalGeometry = math.clone(window.frameGeometry);
     var _oldGeometry;
+    var _oldGeometryKeyboard;
     if (window.minimized || window.fullScreen || isMaximized()) {
         disable();
     }
@@ -498,9 +499,9 @@ function tile(window, callbacks) {
             window.frameGeometry.height = _originalGeometry.height;
         }
     }
-    function startMove() {
+    function startMove(oldRect) {
         _move = true;
-        _oldGeometry = math.clone(window.frameGeometry);
+        _oldGeometry = math.clone(oldRect);
     }
     function stopMove() {
         if (_output !== window.output) {
@@ -511,9 +512,9 @@ function tile(window, callbacks) {
         }
         _move = false;
     }
-    function startResize() {
+    function startResize(oldRect) {
         _resize = true;
-        _oldGeometry = math.clone(window.frameGeometry);
+        _oldGeometry = math.clone(oldRect);
     }
     function stopResize() {
         callbacks.resizeWindow(window, _oldGeometry);
@@ -521,7 +522,7 @@ function tile(window, callbacks) {
     }
     function moveResizedChanged() {
         if (window.move && !_move) {
-            startMove();
+            startMove(window.frameGeometry);
         }
         else if (!window.move && _move) {
             stopMove();
@@ -529,10 +530,22 @@ function tile(window, callbacks) {
         if (!_enabled)
             return;
         if (window.resize && !_resize) {
-            startResize();
+            startResize(window.frameGeometry);
         }
         else if (!window.resize && _resize) {
             stopResize();
+        }
+    }
+    function frameGeometryChanged(oldRect) {
+        if (!window.move && !window.resize && !_move && !_resize && !callbacks.isTiling()) {
+            if (!_oldGeometryKeyboard) {
+                _oldGeometryKeyboard = oldRect;
+            }
+            else {
+                startMove(_oldGeometryKeyboard);
+                stopMove();
+                _oldGeometryKeyboard = undefined;
+            }
         }
     }
     function fullScreenChanged() {
@@ -606,12 +619,14 @@ function tile(window, callbacks) {
     window.maximizedChanged.connect(maximizedChanged);
     window.minimizedChanged.connect(minimizedChanged);
     window.fullScreenChanged.connect(fullScreenChanged);
+    window.frameGeometryChanged.connect(frameGeometryChanged);
     function remove() {
         window.moveResizedChanged.disconnect(moveResizedChanged);
         window.outputChanged.disconnect(outputChanged);
         window.desktopsChanged.disconnect(desktopsChanged);
         window.maximizedChanged.disconnect(maximizedChanged);
         window.fullScreenChanged.disconnect(fullScreenChanged);
+        window.frameGeometryChanged.disconnect(frameGeometryChanged);
     }
     return {
         window: window,
@@ -625,14 +640,19 @@ function tile(window, callbacks) {
 }
 
 function wm() {
+    var _tiling = false;
     var layers = {};
     var tiles = [];
     var callbacks = {
+        isTiling: isTiling,
         enableWindow: enableWindow,
         pushWindow: pushWindow,
         resizeWindow: resizeWindow,
         moveWindow: moveWindow,
     };
+    function isTiling() {
+        return _tiling;
+    }
     // Layers
     function addLayer(output, desktop) {
         if (config.exclude(output, desktop))
@@ -644,9 +664,11 @@ function wm() {
         layers[id] = newLayer;
     }
     function tileLayers() {
+        _tiling = true;
         Object.values(layers).forEach(function (layer) {
             layer.tile(tiles);
         });
+        _tiling = false;
     }
     // Tiles
     function swapTiles(i, j) {

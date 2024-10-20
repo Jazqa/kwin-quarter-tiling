@@ -29,6 +29,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
 
   let _originalGeometry = math.clone(window.frameGeometry);
   let _oldGeometry: QRect;
+  let _oldGeometryKeyboard: QRect | undefined;
 
   if (window.minimized || window.fullScreen || isMaximized()) {
     disable();
@@ -63,9 +64,9 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     }
   }
 
-  function startMove() {
+  function startMove(oldRect: QRect) {
     _move = true;
-    _oldGeometry = math.clone(window.frameGeometry);
+    _oldGeometry = math.clone(oldRect);
   }
 
   function stopMove() {
@@ -78,9 +79,9 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     _move = false;
   }
 
-  function startResize() {
+  function startResize(oldRect: QRect) {
     _resize = true;
-    _oldGeometry = math.clone(window.frameGeometry);
+    _oldGeometry = math.clone(oldRect);
   }
 
   function stopResize() {
@@ -90,7 +91,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
 
   function moveResizedChanged() {
     if (window.move && !_move) {
-      startMove();
+      startMove(window.frameGeometry);
     } else if (!window.move && _move) {
       stopMove();
     }
@@ -98,9 +99,21 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     if (!_enabled) return;
 
     if (window.resize && !_resize) {
-      startResize();
+      startResize(window.frameGeometry);
     } else if (!window.resize && _resize) {
       stopResize();
+    }
+  }
+
+  function frameGeometryChanged(oldRect: QRect) {
+    if (!window.move && !window.resize && !_move && !_resize && !callbacks.isTiling()) {
+      if (!_oldGeometryKeyboard) {
+        _oldGeometryKeyboard = oldRect;
+      } else {
+        startMove(_oldGeometryKeyboard);
+        stopMove();
+        _oldGeometryKeyboard = undefined;
+      }
     }
   }
 
@@ -185,6 +198,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   window.maximizedChanged.connect(maximizedChanged);
   window.minimizedChanged.connect(minimizedChanged);
   window.fullScreenChanged.connect(fullScreenChanged);
+  window.frameGeometryChanged.connect(frameGeometryChanged);
 
   function remove() {
     window.moveResizedChanged.disconnect(moveResizedChanged);
@@ -192,6 +206,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     window.desktopsChanged.disconnect(desktopsChanged);
     window.maximizedChanged.disconnect(maximizedChanged);
     window.fullScreenChanged.disconnect(fullScreenChanged);
+    window.frameGeometryChanged.disconnect(frameGeometryChanged);
   }
 
   return {
