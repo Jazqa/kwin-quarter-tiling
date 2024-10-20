@@ -178,5 +178,10 @@ export function wm() {
     }
   }
 
-  registerShortcut("8137: Tile Window", "8137: Tile Window", "Meta+F", toggleActiveWindow);
+  registerShortcut(
+    "(Quarter Tiling) Tile Window",
+    "Toggles tiling for the active window",
+    "Meta+F",
+    toggleActiveWindow
+  );
 }
