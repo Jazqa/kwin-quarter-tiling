@@ -16,11 +16,11 @@ An easy tiling script for KWin.
 
 **Manual:**
 
-    git clone https://github.com/Jazqa/kwin-quarter-tiling.git && cd ./kwin-quarter-tiling && git checkout plasma-6 && kpackagetool6 --type=KWin/Script -i . && cd ..
-
-**Note**: `kpackagetool6` can't overwrite an existing installation, so you may have to uninstall the script first:
-
-    kpackagetool6 --type=KWin/Script -r quarter-tiling
+    git clone https://github.com/Jazqa/kwin-quarter-tiling.git
+    cd ./kwin-quarter-tiling
+    git checkout plasma-6
+    kpackagetool6 --type=KWin/Script -r quarter-tiling || true
+    kpackagetool6 --type=KWin/Script -i .
 
 ## Configuration
 
@@ -38,13 +38,13 @@ All `(Quarter Tiling) <ACTION>` -shortcuts are used exclusively by the script, b
 
 **Git:**
 
-    git clone https://github.com/Jazqa/kwin-quarter-tiling.git && cd ./kwin-quarter-tiling && git checkout plasma-6 && kpackagetool6 --type=KWin/Script -i . && cd ..
+    git clone https://github.com/Jazqa/kwin-quarter-tiling.git
+    cd ./kwin-quarter-tiling
+    git checkout plasma-6
+    kpackagetool6 --type=KWin/Script -r quarter-tiling || true
+    kpackagetool6 --type=KWin/Script -i .
 
 Alternatively, set this repository as the origin of `~/.local/share/kwin/scripts/quarter-tiling` to update it with `git pull`.
-
-**Note**: `kpackagetool6` can't overwrite an existing installation, so you may have to uninstall the script first:
-
-    kpackagetool6 --type=KWin/Script -r quarter-tiling
 
 ## Uninstallation
 
