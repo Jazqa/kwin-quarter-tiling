@@ -22,20 +22,19 @@ Other: [KDE Store](https://store.kde.org/p/1187647/)
 
 Manually:
 
-    git clone https://github.com/Jazqa/kwin-quarter-tiling.git
-    plasmapkg2 --type kwinscript -i kwin-quarter-tiling
+    git clone https://github.com/Jazqa/kwin-yakts.git
+    plasmapkg2 --type kwinscript -i ./kwin-yakts
     mkdir -p ~/.local/share/kservices5
     ln -sf ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
 
 ## Configuration
 
-The script is configured through the configuration interface under "Kwin Scripts". If you encounter programs that do not work with tiling, you can ignore them via the configuration interface. 
+The script is configured through the configuration interface under "Kwin Scripts". If you encounter programs that do not work with tiling, you can ignore them via the configuration interface.
 
 **NOTE: If the configuration interface is not visible, the `metadata.desktop` file of the script needs to be added to `~/.local/share/kservices5` folder as `kwin-script-quarter-tiling.desktop`. This is something KWin does not do automatically when installing the script, so you might need to do it manually:**
 
     mkdir -p ~/.local/share/kservices5
     ln -sf ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
-
 
 ## Shortcuts
 
