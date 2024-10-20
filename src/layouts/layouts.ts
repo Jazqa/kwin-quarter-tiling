@@ -1,8 +1,9 @@
 import { Columns } from "./Columns";
 import { Disabled } from "./Disabled";
+import { LayoutFactory } from "./layout";
+import { Rows } from "./Rows";
 import { TwoByTwoHorizontal } from "./TwoByTwoHorizontal";
 import { TwoByTwoVertical } from "./TwoByTwoVertical";
-import { LayoutFactory } from "./layout";
 
 /*
  * Adding a new layout to the script and its options:
@@ -25,4 +26,5 @@ export const layouts: Layouts = {
   "1": TwoByTwoHorizontal,
   "2": TwoByTwoVertical,
   "3": Columns,
+  "4": Rows,
 };

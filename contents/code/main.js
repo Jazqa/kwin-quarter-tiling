@@ -264,8 +264,6 @@ function Columns(oi, rect) {
         // Stops resizing from screen edges
         if (i < 0 || i === separators.length - 1)
             return;
-        if (!resized[0])
-            resized[i] = 0;
         var diff = oldRect.width - newRect.width;
         if (separatorDir > 0) {
             diff = newRect.width - oldRect.width;
@@ -298,6 +296,96 @@ function Disabled(oi, rect) {
     function getRects(windows) { }
     function resizeWindow(windows, oldRect) { }
     function adjustRect(rect) { }
+    function restore() { }
+    return {
+        id: id,
+        limit: limit,
+        getRects: getRects,
+        resizeWindow: resizeWindow,
+        adjustRect: adjustRect,
+        restore: restore,
+    };
+}
+
+function Rows(oi, rect) {
+    var id = "Rows";
+    var minHeight = 300;
+    var limit = rect.height / (minHeight * 1.5);
+    var height = rect.y + rect.height;
+    var separators = [];
+    var resized = [];
+    function adjustRect(newRect) {
+        rect = newRect;
+    }
+    function flushSeparators(windows) {
+        if (windows.length > separators.length) {
+            for (var i = 0; i < resized.length; i++) {
+                if (resized[i]) {
+                    resized[i] *= 0.5;
+                }
+            }
+        }
+        separators.splice(windows.length - 1);
+        resized.splice(windows.length - 1);
+    }
+    function getRects(windows) {
+        flushSeparators(windows);
+        for (var i = 0; i < windows.length; i++) {
+            var j = i + 1;
+            var d = windows.length / j;
+            var base = height / d;
+            var res = resized[i] || 0;
+            separators[i] = base + res;
+        }
+        var rects = [];
+        for (var i = 0; i < separators.length; i++) {
+            var end = separators[i];
+            var start = rect.y;
+            if (i > 0) {
+                start = separators[i - 1];
+            }
+            rects.push({ x: rect.x, y: start, width: rect.width, height: end - start });
+        }
+        return rects;
+    }
+    function resizeWindow(window, oldRect) {
+        var newRect = math.clone(window.frameGeometry);
+        var y = oldRect.y;
+        var separatorDir = -1; // Down
+        if (newRect.y - oldRect.y === 0) {
+            y = oldRect.y + oldRect.height;
+            separatorDir = 1; // Up
+        }
+        var i = -1;
+        var distance = y - rect.y;
+        var distanceAbs = Math.abs(distance);
+        for (var j = 0; j < separators.length; j++) {
+            var newDistance = y - separators[j];
+            var newDistanceAbs = Math.abs(newDistance);
+            if (newDistanceAbs < distanceAbs) {
+                distance = newDistance;
+                distanceAbs = newDistanceAbs;
+                i = j;
+            }
+        }
+        // Stops resizing from screen edges
+        if (i < 0 || i === separators.length - 1)
+            return;
+        var diff = oldRect.height - newRect.height;
+        if (separatorDir > 0) {
+            diff = newRect.height - oldRect.height;
+        }
+        if (!resized[i]) {
+            resized[i] = 0;
+        }
+        var newSeparator = separators[i] + diff;
+        // Stops resizing over screen edges or other separators
+        if (newSeparator <= rect.y + minHeight || newSeparator >= rect.y + rect.height - minHeight)
+            return;
+        if (newSeparator <= separators[i - 1] + minHeight || newSeparator >= separators[i + 1] - minHeight)
+            return;
+        resized[i] = resized[i] + diff;
+    }
     function restore() { }
     return {
         id: id,
@@ -520,6 +608,7 @@ var layouts = {
     "1": TwoByTwoHorizontal,
     "2": TwoByTwoVertical,
     "3": Columns,
+    "4": Rows,
 };
 
 function layer(output, desktop) {
