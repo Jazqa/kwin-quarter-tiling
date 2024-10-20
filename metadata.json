@@ -1,0 +1,21 @@
+{
+    "KPlugin": {
+        "Name": "YAKTS",
+        "Description": "Yet another KWin tiling script",
+        "Icon": "preferences-system-windows",
+        "Authors": [
+            {
+                "Email": "jasu.koponen@hotmail.com",
+                "Name": "Jasu Koponen"
+            }
+        ],
+        "Id": "yakts",
+        "Version": "3.0",
+        "License": "GPLv2",
+        "Website": "https://github.com/Jazqa/kwin-yakts"
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "code/main.js",
+    "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
+    "KPackageStructure": "KWin/Script"
+}

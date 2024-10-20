@@ -1,12 +1,17 @@
 'use strict';
 
-var __spreadArrays = (undefined && undefined.__spreadArrays) || function () {
-    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
-    for (var r = Array(s), k = 0, i = 0; i < il; i++)
-        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
-            r[k] = a[j];
-    return r;
-};
+var registerUserActionsMenu = 
+// @ts-ignore, KWin global
+registerUserActionsMenu ||
+    function () {
+        workspace.currentDesktop = workspace.currentDesktop;
+    };
+var registerShortcut = 
+// @ts-ignore, KWin global
+registerShortcut ||
+    function () {
+        workspace.currentDesktop = workspace.currentDesktop;
+    };
 var readConfig = 
 // @ts-ignore, KWin global
 readConfig ||
@@ -16,7 +21,142 @@ readConfig ||
 function readConfigString(key, defaultValue) {
     return readConfig(key, defaultValue).toString();
 }
-var ignoredClients = __spreadArrays([
+// @ts-ignore, KWin global
+var workspace = workspace || {};
+function maximizeArea(output, desktop) {
+    return workspace.clientArea(2, output, desktop);
+}
+
+// 2ed6
+// Used to fetch configuration values for individual outputs (configuration value format: kcfg_<key>_<index>)
+// Unlike proper .qml, the required .ui configuration interface doesn't support detecting outputs, so the configuration interface is hard-coded for up to 4 outputs
+function kcfgOutputIndex(output) {
+    var index = workspace.screens.findIndex(function (wsoutput) { return wsoutput.serialNumber === output.serialNumber; });
+    // Theoretically supports more than 4 outputs by defaulting to 1st's configuration
+    if (index === -1) {
+        index = 0;
+    }
+    return index;
+}
+function outputIndex(output) {
+    return workspace.screens.findIndex(function (wsoutput) { return wsoutput.serialNumber === output.serialNumber; });
+}
+function desktopIndex(desktop) {
+    return workspace.desktops.findIndex(function (wsdesktop) { return wsdesktop.id === desktop.id; });
+}
+function clone(rect) {
+    var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
+    return { x: x, y: y, width: width, height: height };
+}
+function withGap(oi, rect) {
+    var gap = config.gap[oi];
+    var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
+    x += gap;
+    y += gap;
+    width -= gap * 2;
+    height -= gap * 2;
+    return { x: x, y: y, width: width, height: height };
+}
+function withoutGap(oi, rect) {
+    var gap = config.gap[oi];
+    var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
+    x -= gap;
+    y -= gap;
+    width += gap * 2;
+    height += gap * 2;
+    return { x: x, y: y, width: width, height: height };
+}
+function withMargin(oi, rect) {
+    var gap = config.gap[oi];
+    var margin = config.margin[oi];
+    var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
+    y += gap + margin.top;
+    x += gap + margin.left;
+    height -= gap * 2 + margin.top + margin.bottom;
+    width -= gap * 2 + margin.left + margin.right;
+    return { x: x, y: y, width: width, height: height };
+}
+function centerTo(rectA, rectB) {
+    var x = rectA.x, y = rectA.y, width = rectA.width, height = rectA.height;
+    x = rectB.x + rectB.width * 0.5 - width * 0.5;
+    y = rectB.y + rectB.height * 0.5 - height * 0.5;
+    return { x: x, y: y, width: width, height: height };
+}
+function distanceTo(rectA, rectB) {
+    return Math.abs(rectA.x - rectB.x) + Math.abs(rectA.y - rectB.y);
+}
+var math = {
+    kcfgOutputIndex: kcfgOutputIndex,
+    outputIndex: outputIndex,
+    desktopIndex: desktopIndex,
+    clone: clone,
+    withGap: withGap,
+    withoutGap: withoutGap,
+    withMargin: withMargin,
+    centerTo: centerTo,
+    distanceTo: distanceTo,
+};
+
+var __spreadArrays = (undefined && undefined.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
+var auto = [
+    readConfigString("auto_0", true) === "true",
+    readConfigString("auto_1", true) === "true",
+    readConfigString("auto_2", true) === "true",
+    readConfigString("auto_3", true) === "true",
+];
+var gap = [
+    readConfig("gap_0", 8),
+    readConfig("gap_1", 8),
+    readConfig("gap_2", 8),
+    readConfig("gap_3", 8),
+];
+var margin = [
+    {
+        top: readConfig("marginTop_0", 0),
+        left: readConfig("marginLeft_0", 0),
+        bottom: readConfig("marginBottom_0", 0),
+        right: readConfig("marginRight_0", 0),
+    },
+    {
+        top: readConfig("marginTop_1", 0),
+        left: readConfig("marginLeft_1", 0),
+        bottom: readConfig("marginBottom_1", 0),
+        right: readConfig("marginRight_1", 0),
+    },
+    {
+        top: readConfig("marginTop_2", 0),
+        left: readConfig("marginLeft_2", 0),
+        bottom: readConfig("marginBottom_2", 0),
+        right: readConfig("marginRight_2", 0),
+    },
+    {
+        top: readConfig("marginTop_3", 0),
+        left: readConfig("marginLeft_3", 0),
+        bottom: readConfig("marginBottom_3", 0),
+        right: readConfig("marginRight_3", 0),
+    },
+];
+var layout = [
+    readConfigString("layout_0", 1),
+    readConfigString("layout_1", 1),
+    readConfigString("layout_2", 1),
+    readConfigString("layout_3", 1),
+];
+var limit = [
+    readConfig("limit_0", -1),
+    readConfig("limit_1", -1),
+    readConfig("limit_2", -1),
+    readConfig("limit_3", -1),
+];
+var minWidth = readConfig("minWidth", 256);
+var minHeight = readConfig("minHeight", 256);
+var processes = __spreadArrays([
     "albert",
     "kazam",
     "krunner",
@@ -33,162 +173,237 @@ var ignoredClients = __spreadArrays([
     "ksmserver-logout-greeter",
     "QEMU",
     "Latte Dock"
-], readConfigString("ignoredClients", "wine, steam").split(", "), [readConfigString("ignoreJava", false) === "true" ? "sun-awt-x11-xframepeer" : ""]);
-var ignoredCaptions = __spreadArrays([
+], readConfigString("processes", "wine, steam").toLowerCase().split(", "), [readConfigString("java", false) === "true" ? "sun-awt-x11-xframepeer" : ""]);
+var captions = __spreadArrays([
+    "Configure — System Settings",
     "File Upload",
     "Move to Trash",
     "Quit GIMP",
     "Create a New Image"
-], readConfigString("ignoredCaptions", "Quit GIMP, Create a New Image")
+], readConfigString("captions", "Quit GIMP, Create a New Image")
     .split(", ")
     .filter(function (caption) { return caption; }));
-var ignoredDesktops = readConfigString("ignoredDesktops", "").split(", ");
-var ignoredScreens = readConfigString("ignoredScreens", "").split(", ");
-function isIgnoredDesktop(desktop) {
-    return ignoredDesktops.indexOf(desktop.toString()) > -1;
-}
-function isIgnoredScreen(screen) {
-    return ignoredScreens.indexOf(screen.toString()) > -1;
-}
-var minWidth = readConfig("minWidth", 256);
-var minHeight = readConfig("minHeight", 256);
-var gaps = readConfig("gap", 8);
-var maxClients = readConfig("maxClients", -1);
-var autoTile = readConfigString("autoTile", true) === "true";
-var followClients = readConfigString("followClients", true) === "true";
-var layout = readConfigString("layout", 0);
-var margins = {
-    top: readConfig("marginTop", 0),
-    left: readConfig("marginLeft", 0),
-    bottom: readConfig("marginBottom", 0),
-    right: readConfig("marginRight", 0)
+var desktops = readConfigString("desktops", "").split(", ");
+var exclude = function (output, desktop) {
+    // 04c1
+    // layout[math.outputIndex(output)] ===  "DISABLED"
+    return desktops.indexOf(math.desktopIndex(desktop).toString()) > -1;
 };
 var config = {
-    ignoredCaptions: ignoredCaptions,
-    ignoredClients: ignoredClients,
-    ignoredDesktops: ignoredDesktops,
-    ignoredScreens: ignoredScreens,
-    isIgnoredDesktop: isIgnoredDesktop,
-    isIgnoredScreen: isIgnoredScreen,
+    auto: auto,
+    gap: gap,
+    margin: margin,
+    layout: layout,
+    limit: limit,
     minWidth: minWidth,
     minHeight: minHeight,
-    gaps: gaps,
-    maxClients: maxClients,
-    margins: margins,
-    autoTile: autoTile,
-    followClients: followClients,
-    layout: layout
+    processes: processes,
+    captions: captions,
+    desktops: desktops,
+    exclude: exclude,
 };
 
-// @ts-ignore, KWin global
-// @ts-ignore, KWin global
-var workspace = workspace || {};
+function Columns(oi, rect) {
+    var id = "Columns";
+    var minWidth = 500;
+    var limit = rect.width / (minWidth * 1.5);
+    var width = rect.x + rect.width;
+    var separators = [];
+    var resized = [];
+    function adjustRect(newRect) {
+        rect = newRect;
+    }
+    function flushSeparators(windows) {
+        if (windows.length > separators.length) {
+            for (var i = 0; i < resized.length; i++) {
+                if (resized[i]) {
+                    resized[i] *= 0.5;
+                }
+            }
+        }
+        separators.splice(windows.length - 1);
+        resized.splice(windows.length - 1);
+    }
+    function getRects(windows) {
+        flushSeparators(windows);
+        for (var i = 0; i < windows.length; i++) {
+            var j = i + 1;
+            var d = windows.length / j;
+            var base = width / d;
+            var res = resized[i] || 0;
+            separators[i] = base + res;
+        }
+        var rects = [];
+        for (var i = 0; i < separators.length; i++) {
+            var end = separators[i];
+            var start = rect.x;
+            if (i > 0) {
+                start = separators[i - 1];
+            }
+            rects.push({ x: start, y: rect.y, width: end - start, height: rect.height });
+        }
+        return rects;
+    }
+    function resizeWindow(window, oldRect) {
+        var newRect = math.clone(window.frameGeometry);
+        var x = oldRect.x;
+        var separatorDir = -1; // Right
+        if (newRect.x - oldRect.x === 0) {
+            x = oldRect.x + oldRect.width;
+            separatorDir = 1; // Left
+        }
+        var i = -1;
+        var distance = x - rect.x;
+        var distanceAbs = Math.abs(distance);
+        for (var j = 0; j < separators.length; j++) {
+            var newDistance = x - separators[j];
+            var newDistanceAbs = Math.abs(newDistance);
+            if (newDistanceAbs < distanceAbs) {
+                distance = newDistance;
+                distanceAbs = newDistanceAbs;
+                i = j;
+            }
+        }
+        // Stops resizing from screen edges
+        if (i < 0 || i === separators.length - 1)
+            return;
+        var diff = oldRect.width - newRect.width;
+        if (separatorDir > 0) {
+            diff = newRect.width - oldRect.width;
+        }
+        if (!resized[i]) {
+            resized[i] = 0;
+        }
+        var newSeparator = separators[i] + diff;
+        // Stops resizing over screen edges or other separators
+        if (newSeparator <= rect.x + minWidth || newSeparator >= rect.x + rect.width - minWidth)
+            return;
+        if (newSeparator <= separators[i - 1] + minWidth || newSeparator >= separators[i + 1] - minWidth)
+            return;
+        resized[i] = resized[i] + diff;
+    }
+    function restore() { }
+    return {
+        id: id,
+        limit: limit,
+        getRects: getRects,
+        resizeWindow: resizeWindow,
+        adjustRect: adjustRect,
+        restore: restore,
+    };
+}
 
-function includes(client) {
-    var isMaximized = client.geometry.width === workspace.clientArea(2, client.screen, 0).width &&
-        client.geometry.height === workspace.clientArea(2, client.screen, 0).height;
-    return isMaximized ||
-        client.comboBox ||
-        client.desktopWindow ||
-        client.dialog ||
-        client.dndIcon ||
-        client.dock ||
-        client.dropdownMenu ||
-        client.menu ||
-        client.minimized ||
-        client.notification ||
-        client.popupMenu ||
-        client.specialWindow ||
-        client.splash ||
-        client.shade ||
-        client.toolbar ||
-        client.tooltip ||
-        client.utility ||
-        client.transient ||
-        client.desktop < 1 ||
-        client.screen < 0 ||
-        client.geometry.width < config.minWidth ||
-        client.geometry.height < config.minHeight ||
-        config.ignoredCaptions.some(function (caption) { return client.caption.toString().toLowerCase().indexOf(caption.toLowerCase()) > -1; }) ||
-        config.ignoredClients.indexOf(client.resourceClass.toString()) > -1 ||
-        config.ignoredClients.indexOf(client.resourceName.toString()) > -1 ||
-        config.isIgnoredDesktop(client.desktop) ||
-        config.isIgnoredScreen(client.screen)
-        ? true
-        : false;
+function Disabled(oi, rect) {
+    var id = "Disabled";
+    var limit = 0;
+    function getRects(windows) { }
+    function resizeWindow(windows, oldRect) { }
+    function adjustRect(rect) { }
+    function restore() { }
+    return {
+        id: id,
+        limit: limit,
+        getRects: getRects,
+        resizeWindow: resizeWindow,
+        adjustRect: adjustRect,
+        restore: restore,
+    };
 }
-var blacklist = {
-    includes: includes,
-};
 
-var size = config.gaps;
-var adjust = function (amount) {
-    // Note: Gap size can't be zero, because it would screw up the maximized window logic
-    var min = 1;
-    var max = 64;
-    size = Math.min(Math.max(size + amount, min), max);
-};
-function increase() {
-    adjust(1);
+function Rows(oi, rect) {
+    var id = "Rows";
+    var minHeight = 300;
+    var limit = rect.height / (minHeight * 1.5);
+    var height = rect.y + rect.height;
+    var separators = [];
+    var resized = [];
+    function adjustRect(newRect) {
+        rect = newRect;
+    }
+    function flushSeparators(windows) {
+        if (windows.length > separators.length) {
+            for (var i = 0; i < resized.length; i++) {
+                if (resized[i]) {
+                    resized[i] *= 0.5;
+                }
+            }
+        }
+        separators.splice(windows.length - 1);
+        resized.splice(windows.length - 1);
+    }
+    function getRects(windows) {
+        flushSeparators(windows);
+        for (var i = 0; i < windows.length; i++) {
+            var j = i + 1;
+            var d = windows.length / j;
+            var base = height / d;
+            var res = resized[i] || 0;
+            separators[i] = base + res;
+        }
+        var rects = [];
+        for (var i = 0; i < separators.length; i++) {
+            var end = separators[i];
+            var start = rect.y;
+            if (i > 0) {
+                start = separators[i - 1];
+            }
+            rects.push({ x: rect.x, y: start, width: rect.width, height: end - start });
+        }
+        return rects;
+    }
+    function resizeWindow(window, oldRect) {
+        var newRect = math.clone(window.frameGeometry);
+        var y = oldRect.y;
+        var separatorDir = -1; // Down
+        if (newRect.y - oldRect.y === 0) {
+            y = oldRect.y + oldRect.height;
+            separatorDir = 1; // Up
+        }
+        var i = -1;
+        var distance = y - rect.y;
+        var distanceAbs = Math.abs(distance);
+        for (var j = 0; j < separators.length; j++) {
+            var newDistance = y - separators[j];
+            var newDistanceAbs = Math.abs(newDistance);
+            if (newDistanceAbs < distanceAbs) {
+                distance = newDistance;
+                distanceAbs = newDistanceAbs;
+                i = j;
+            }
+        }
+        // Stops resizing from screen edges
+        if (i < 0 || i === separators.length - 1)
+            return;
+        var diff = oldRect.height - newRect.height;
+        if (separatorDir > 0) {
+            diff = newRect.height - oldRect.height;
+        }
+        if (!resized[i]) {
+            resized[i] = 0;
+        }
+        var newSeparator = separators[i] + diff;
+        // Stops resizing over screen edges or other separators
+        if (newSeparator <= rect.y + minHeight || newSeparator >= rect.y + rect.height - minHeight)
+            return;
+        if (newSeparator <= separators[i - 1] + minHeight || newSeparator >= separators[i + 1] - minHeight)
+            return;
+        resized[i] = resized[i] + diff;
+    }
+    function restore() { }
+    return {
+        id: id,
+        limit: limit,
+        getRects: getRects,
+        resizeWindow: resizeWindow,
+        adjustRect: adjustRect,
+        restore: restore,
+    };
 }
-function decrease() {
-    adjust(-1);
-}
-var gaps$1 = {
-    increase: increase,
-    decrease: decrease,
-    size: size
-};
 
-function clone(geometry) {
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    return { x: x, y: y, width: width, height: height };
-}
-function distance(geometryA, geometryB) {
-    return Math.abs(geometryA.x - geometryB.x) + Math.abs(geometryA.y - geometryB.y);
-}
-function gapArea(geometry) {
-    var size = gaps$1.size;
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    x += size;
-    y += size;
-    width -= size * 2;
-    height -= size * 2;
-    return { x: x, y: y, width: width, height: height };
-}
-function fullArea(geometry) {
-    var size = gaps$1.size;
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    x -= size;
-    y -= size;
-    width += size * 2;
-    height += size * 2;
-    return { x: x, y: y, width: width, height: height };
-}
-function moveTo(geometryA, geometryB) {
-    var geometryC = clone(geometryB);
-    geometryC.height = geometryA.height;
-    geometryC.width = geometryA.width;
-    return geometryC;
-}
-function center(geometryA, geometryB) {
-    geometryB.x += geometryB.width * 0.5 - geometryA.width * 0.5;
-    geometryB.y += geometryB.height * 0.5 - geometryA.height * 0.5;
-    return moveTo(geometryA, geometryB);
-}
-var geometryUtils = {
-    clone: clone,
-    distance: distance,
-    gapArea: gapArea,
-    fullArea: fullArea,
-    moveTo: moveTo,
-    center: center
-};
-
-function getTiles(geometry, separators, count) {
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
+function _getRects(rect, separators, count) {
+    var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
     var v = separators.v, h = separators.h;
-    var tiles = [
+    var rects = [
         {
             x: x,
             y: y,
@@ -215,278 +430,83 @@ function getTiles(geometry, separators, count) {
         },
     ];
     if (count < 4) {
-        tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
+        rects[0].height = rects[3].y + rects[3].height - rects[0].y;
     }
     if (count < 3) {
-        tiles[1].height = tiles[2].y + tiles[2].height - tiles[1].y;
+        rects[1].height = rects[2].y + rects[2].height - rects[1].y;
     }
     if (count < 2) {
-        tiles[0].width = tiles[1].x + tiles[1].width - tiles[0].x;
+        rects[0].width = rects[1].x + rects[1].width - rects[0].x;
     }
-    return tiles;
+    return rects;
 }
-function QuarterHorizontal(geometry) {
-    var maxClients = 4;
-    var hs = geometry.y + geometry.height * 0.5;
-    var vs = geometry.x + geometry.width * 0.5;
+function TwoByTwoHorizontal(oi, rect) {
+    var id = "2X2H";
+    var limit = 4;
+    var minSizeMultiplier = 0.15;
+    var hs = rect.y + rect.height * 0.5;
+    var vs = rect.x + rect.width * 0.5;
     var separators = { h: [hs, hs], v: vs };
-    function restore() {
-        hs = geometry.y + geometry.height * 0.5;
-        vs = geometry.x + geometry.width * 0.5;
-        separators = { h: [hs, hs], v: vs };
-    }
-    function adjustGeometry(newGeometry) {
-        geometry = newGeometry;
+    function adjustRect(newRect) {
+        rect = newRect;
         restore();
     }
-    function tileClients(clients) {
-        var includedClients = clients.slice(0, maxClients);
-        var tiles = getTiles(geometry, separators, includedClients.length);
-        includedClients.forEach(function (client, index) {
-            var tile = tiles[index];
-            client.geometry = geometryUtils.gapArea(tile);
-        });
+    function getRects(windows) {
+        return _getRects(rect, separators, windows.length);
     }
-    function resizeClient(client, previousGeometry) {
-        var newGeometry = client.geometry;
-        previousGeometry = previousGeometry;
-        if (previousGeometry.x >= separators.v) {
+    function resizeWindow(window, oldRect) {
+        var newRect = math.clone(window.frameGeometry);
+        if (oldRect.x >= separators.v) {
             // Right
-            separators.v += newGeometry.x - previousGeometry.x;
-            if (previousGeometry.y >= separators.h[1]) {
+            separators.v += newRect.x - oldRect.x;
+            if (oldRect.y >= separators.h[1]) {
                 // Bottom right
-                separators.h[1] += newGeometry.y - previousGeometry.y;
+                separators.h[1] += newRect.y - oldRect.y;
             }
             else {
                 // Top right
-                separators.h[1] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
+                separators.h[1] += newRect.y === oldRect.y ? newRect.height - oldRect.height : 0;
             }
         }
         else {
-            separators.v += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
+            separators.v += newRect.x === oldRect.x ? newRect.width - oldRect.width : 0;
             // Left
-            if (previousGeometry.y >= separators.h[0]) {
+            if (oldRect.y >= separators.h[0]) {
                 // Bottom left
-                separators.h[0] += newGeometry.y - previousGeometry.y;
+                separators.h[0] += newRect.y - oldRect.y;
             }
             else {
                 // Top left
-                separators.h[0] += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
+                separators.h[0] += newRect.y === oldRect.y ? newRect.height - oldRect.height : 0;
             }
         }
-        var maxV = 0.9 * (geometry.x + geometry.width);
-        var minV = geometry.x + geometry.width * 0.1;
-        var maxH = 0.9 * (geometry.y + geometry.height);
-        var minH = geometry.y + geometry.height * 0.1;
+        var maxV = (1 - minSizeMultiplier) * (rect.x + rect.width);
+        var minV = rect.x + rect.width * minSizeMultiplier;
+        var maxH = (1 - minSizeMultiplier) * (rect.y + rect.height);
+        var minH = rect.y + rect.height * minSizeMultiplier;
         separators.v = Math.min(Math.max(minV, separators.v), maxV);
         separators.h[0] = Math.min(Math.max(minH, separators.h[0]), maxH);
         separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
     }
-    return {
-        restore: restore,
-        maxClients: maxClients,
-        tileClients: tileClients,
-        resizeClient: resizeClient,
-        geometry: geometry,
-        separators: separators,
-        adjustGeometry: adjustGeometry,
-    };
-}
-
-function getTiles$1(geometry, separators, count) {
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    var v = separators.v, h = separators.h;
-    var tiles = [
-        {
-            x: x,
-            y: y,
-            width: v - x,
-            height: h - y,
-        },
-        {
-            x: v,
-            y: y,
-            width: x + width - v,
-            height: h - y,
-        },
-        {
-            x: v,
-            y: h,
-            width: x + width - v,
-            height: y + height - h,
-        },
-        {
-            x: x,
-            y: h,
-            width: v - x,
-            height: y + height - h,
-        },
-    ];
-    if (count < 4) {
-        tiles[0].height = tiles[3].y + tiles[3].height - tiles[0].y;
-    }
-    if (count < 3) {
-        tiles[1].height = tiles[2].y + tiles[2].height - tiles[1].y;
-    }
-    if (count < 2) {
-        tiles[0].width = tiles[1].x + tiles[1].width - tiles[0].x;
-    }
-    return tiles;
-}
-function QuarterSingleHorizontal(geometry) {
-    var maxClients = 4;
-    var hs = geometry.y + geometry.height * 0.5;
-    var vs = geometry.x + geometry.width * 0.5;
-    var separators = { h: hs, v: vs };
     function restore() {
-        hs = geometry.y + geometry.height * 0.5;
-        vs = geometry.x + geometry.width * 0.5;
-        separators = { h: hs, v: vs };
-    }
-    function adjustGeometry(newGeometry) {
-        geometry = newGeometry;
-        restore();
-    }
-    function tileClients(clients) {
-        var includedClients = clients.slice(0, maxClients);
-        var tiles = getTiles$1(geometry, separators, includedClients.length);
-        includedClients.forEach(function (client, index) {
-            var tile = tiles[index];
-            client.geometry = geometryUtils.gapArea(tile);
-        });
-    }
-    function resizeClient(client, previousGeometry) {
-        var newGeometry = client.geometry;
-        previousGeometry = previousGeometry;
-        if (previousGeometry.x >= separators.v) {
-            separators.v += newGeometry.x - previousGeometry.x;
-        }
-        else {
-            separators.v += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
-        }
-        if (previousGeometry.y >= separators.h) {
-            separators.h += newGeometry.y - previousGeometry.y;
-        }
-        else {
-            separators.h += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
-        }
-        var maxV = 0.9 * (geometry.x + geometry.width);
-        var minV = geometry.x + geometry.width * 0.1;
-        var maxH = 0.9 * (geometry.y + geometry.height);
-        var minH = geometry.y + geometry.height * 0.1;
-        separators.v = Math.min(Math.max(minV, separators.v), maxV);
-        separators.h = Math.min(Math.max(minH, separators.h), maxH);
+        hs = rect.y + rect.height * 0.5;
+        vs = rect.x + rect.width * 0.5;
+        separators = { h: [hs, hs], v: vs };
     }
     return {
+        id: id,
+        limit: limit,
+        getRects: getRects,
+        resizeWindow: resizeWindow,
+        adjustRect: adjustRect,
         restore: restore,
-        maxClients: maxClients,
-        tileClients: tileClients,
-        resizeClient: resizeClient,
-        geometry: geometry,
-        separators: separators,
-        adjustGeometry: adjustGeometry,
     };
 }
 
-function getTiles$2(geometry, separators, count) {
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
+function _getRects$1(rect, separators, count) {
+    var x = rect.x, y = rect.y, width = rect.width, height = rect.height;
     var v = separators.v, h = separators.h;
-    var tiles = [
-        {
-            x: x,
-            y: y,
-            width: v - x,
-            height: h - y,
-        },
-        {
-            x: x,
-            y: h,
-            width: v - x,
-            height: y + height - h,
-        },
-        {
-            x: v,
-            y: h,
-            width: x + width - v,
-            height: y + height - h,
-        },
-        {
-            x: v,
-            y: y,
-            width: x + width - v,
-            height: h - y,
-        },
-    ];
-    if (count < 4) {
-        tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
-    }
-    if (count < 3) {
-        tiles[1].width = tiles[2].x + tiles[2].width - tiles[1].x;
-    }
-    if (count < 2) {
-        tiles[0].height = tiles[1].y + tiles[1].height - tiles[0].y;
-    }
-    return tiles;
-}
-function QuarterSingleVertical(geometry) {
-    var maxClients = 4;
-    var hs = geometry.y + geometry.height * 0.5;
-    var vs = geometry.x + geometry.width * 0.5;
-    var separators = { h: hs, v: vs };
-    function restore() {
-        hs = geometry.y + geometry.height * 0.5;
-        vs = geometry.x + geometry.width * 0.5;
-        separators = { h: hs, v: vs };
-    }
-    function adjustGeometry(newGeometry) {
-        geometry = newGeometry;
-        restore();
-    }
-    function tileClients(clients) {
-        var includedClients = clients.slice(0, maxClients);
-        var tiles = getTiles$2(geometry, separators, includedClients.length);
-        includedClients.forEach(function (client, index) {
-            var tile = tiles[index];
-            client.geometry = geometryUtils.gapArea(tile);
-        });
-    }
-    function resizeClient(client, previousGeometry) {
-        var newGeometry = client.geometry;
-        previousGeometry = previousGeometry;
-        if (previousGeometry.x >= separators.v) {
-            separators.v += newGeometry.x - previousGeometry.x;
-        }
-        else {
-            separators.v += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
-        }
-        if (previousGeometry.y >= separators.h) {
-            separators.h += newGeometry.y - previousGeometry.y;
-        }
-        else {
-            separators.h += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
-        }
-        var maxV = 0.9 * (geometry.x + geometry.width);
-        var minV = geometry.x + geometry.width * 0.1;
-        var maxH = 0.9 * (geometry.y + geometry.height);
-        var minH = geometry.y + geometry.height * 0.1;
-        separators.v = Math.min(Math.max(minV, separators.v), maxV);
-        separators.h = Math.min(Math.max(minH, separators.h), maxH);
-    }
-    return {
-        restore: restore,
-        maxClients: maxClients,
-        tileClients: tileClients,
-        resizeClient: resizeClient,
-        geometry: geometry,
-        separators: separators,
-        adjustGeometry: adjustGeometry,
-    };
-}
-
-function getTiles$3(geometry, separators, count) {
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    var v = separators.v, h = separators.h;
-    var tiles = [
+    var rects = [
         {
             x: x,
             y: y,
@@ -513,759 +533,510 @@ function getTiles$3(geometry, separators, count) {
         },
     ];
     if (count < 4) {
-        tiles[0].width = tiles[3].x + tiles[3].width - tiles[0].x;
+        rects[0].width = rects[3].x + rects[3].width - rects[0].x;
     }
     if (count < 3) {
-        tiles[1].width = tiles[2].x + tiles[2].width - tiles[1].x;
+        rects[1].width = rects[2].x + rects[2].width - rects[1].x;
     }
     if (count < 2) {
-        tiles[0].height = tiles[1].y + tiles[1].height - tiles[0].y;
+        rects[0].height = rects[1].y + rects[1].height - rects[0].y;
     }
-    return tiles;
+    return rects;
 }
-function QuarterVertical(geometry) {
-    var maxClients = 4;
-    var hs = geometry.y + geometry.height * 0.5;
-    var vs = geometry.x + geometry.width * 0.5;
+function TwoByTwoVertical(oi, rect) {
+    var id = "2X2V";
+    var limit = 4;
+    var minSizeMultiplier = 0.15;
+    var hs = rect.y + rect.height * 0.5;
+    var vs = rect.x + rect.width * 0.5;
     var separators = { h: hs, v: [vs, vs] };
-    function restore() {
-        hs = geometry.y + geometry.height * 0.5;
-        vs = geometry.x + geometry.width * 0.5;
-        separators = { h: hs, v: [vs, vs] };
-    }
-    function adjustGeometry(newGeometry) {
-        geometry = newGeometry;
+    function adjustRect(newRect) {
+        rect = newRect;
         restore();
     }
-    function tileClients(clients) {
-        var includedClients = clients.slice(0, maxClients);
-        var tiles = getTiles$3(geometry, separators, includedClients.length);
-        includedClients.forEach(function (client, index) {
-            var tile = tiles[index];
-            client.geometry = geometryUtils.gapArea(tile);
-        });
+    function getRects(windows) {
+        return _getRects$1(rect, separators, windows.length);
     }
-    function resizeClient(client, previousGeometry) {
-        var newGeometry = client.geometry;
-        previousGeometry = previousGeometry;
-        if (previousGeometry.y >= separators.h) {
+    function resizeWindow(window, oldRect) {
+        var newRect = math.clone(window.frameGeometry);
+        if (oldRect.y >= separators.h) {
             // Right
-            separators.h += newGeometry.y - previousGeometry.y;
-            if (previousGeometry.x >= separators.v[1]) {
+            separators.h += newRect.y - oldRect.y;
+            if (oldRect.x >= separators.v[1]) {
                 // Bottom right
-                separators.v[1] += newGeometry.x - previousGeometry.x;
+                separators.v[1] += newRect.x - oldRect.x;
             }
             else {
                 // Top right
-                separators.v[1] += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
+                separators.v[1] += newRect.x === oldRect.x ? newRect.width - oldRect.width : 0;
             }
         }
         else {
-            separators.h += newGeometry.y === previousGeometry.y ? newGeometry.height - previousGeometry.height : 0;
+            separators.h += newRect.y === oldRect.y ? newRect.height - oldRect.height : 0;
             // Left
-            if (previousGeometry.x >= separators.v[0]) {
+            if (oldRect.x >= separators.v[0]) {
                 // Bottom left
-                separators.v[0] += newGeometry.x - previousGeometry.x;
+                separators.v[0] += newRect.x - oldRect.x;
             }
             else {
                 // Top left
-                separators.v[0] += newGeometry.x === previousGeometry.x ? newGeometry.width - previousGeometry.width : 0;
+                separators.v[0] += newRect.x === oldRect.x ? newRect.width - oldRect.width : 0;
             }
         }
-        var maxV = 0.9 * (geometry.x + geometry.width);
-        var minV = geometry.x + geometry.width * 0.1;
-        var maxH = 0.9 * (geometry.y + geometry.height);
-        var minH = geometry.y + geometry.height * 0.1;
+        var maxV = (1 - minSizeMultiplier) * (rect.x + rect.width);
+        var minV = rect.x + rect.width * minSizeMultiplier;
+        var maxH = (1 - minSizeMultiplier) * (rect.y + rect.height);
+        var minH = rect.y + rect.height * minSizeMultiplier;
         separators.v[0] = Math.min(Math.max(minV, separators.v[0]), maxV);
         separators.v[1] = Math.min(Math.max(minV, separators.v[1]), maxV);
         separators.h = Math.min(Math.max(minH, separators.h), maxH);
     }
+    function restore() {
+        hs = rect.y + rect.height * 0.5;
+        vs = rect.x + rect.width * 0.5;
+        separators = { h: hs, v: [vs, vs] };
+    }
     return {
+        id: id,
+        limit: limit,
+        getRects: getRects,
+        resizeWindow: resizeWindow,
+        adjustRect: adjustRect,
         restore: restore,
-        maxClients: maxClients,
-        tileClients: tileClients,
-        resizeClient: resizeClient,
-        geometry: geometry,
-        separators: separators,
-        adjustGeometry: adjustGeometry,
     };
 }
 
-/*
- * Adding a new layout to the script and its options:
- *
- *  1. Create a new class that inside src/layouts folder, make sure it implements the Layout interface as seen in /src/layout.ts
- *  2. Add an entry to the layouts object in src/layouts/layouts.ts, increasing the key by one:
- *      { "0": QuarterVertical, "1": NewLayout }
- *  3. Add a new entry to the kcfg_layouts entry in contents/code/config.ui:
- *      <property name="text">
- *          <string>NewLayout</string>
- *      </property>
- */
 var layouts = {
-    "0": QuarterHorizontal,
-    "1": QuarterVertical,
-    "2": QuarterSingleHorizontal,
-    "3": QuarterSingleVertical
+    "0": Disabled,
+    "1": TwoByTwoHorizontal,
+    "2": TwoByTwoVertical,
+    "3": Columns,
+    "4": Rows,
 };
 
-var SelectedLayout = layouts[config.layout];
-function availableArea(geometry) {
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    y += gaps$1.size + config.margins.top;
-    x += gaps$1.size + config.margins.left;
-    height -= gaps$1.size * 2 + config.margins.top + config.margins.bottom;
-    width -= gaps$1.size * 2 + config.margins.left + config.margins.right;
-    return { x: x, y: y, width: width, height: height };
-}
-function toplevel(screen, desktop) {
-    if (config.isIgnoredScreen(screen) || config.isIgnoredDesktop(desktop)) {
-        return null;
+function layer(output, desktop) {
+    var id = output.serialNumber + desktop.id;
+    var oi = math.kcfgOutputIndex(output);
+    var _rect = math.withMargin(oi, maximizeArea(output, desktop));
+    var _layout = layouts[config.layout[oi]](oi, _rect);
+    if (config.limit[oi] > -1) {
+        _layout.limit = Math.min(_layout.limit, config.limit[oi]);
     }
-    // Geometry
-    var geometry = availableArea(workspace.clientArea(2, screen, desktop));
-    function hasGeometryChanged(newGeometry) {
-        return (geometry.x !== newGeometry.x ||
-            geometry.y !== newGeometry.y ||
-            geometry.width !== newGeometry.width ||
-            geometry.height !== newGeometry.height);
-    }
-    function onGeometryChanged(newGeometry) {
-        geometry = newGeometry;
-        layout.adjustGeometry(newGeometry);
-    }
-    // Layout
-    var layout = SelectedLayout(geometry);
-    if (config.maxClients > -1) {
-        layout.maxClients = Math.min(layout.maxClients, config.maxClients);
-    }
-    function tileClients(clients) {
-        var currentGeometry = availableArea(workspace.clientArea(2, screen, desktop));
-        if (hasGeometryChanged(currentGeometry)) {
-            onGeometryChanged(currentGeometry);
+    // @returns boolean - Indicates whether the tile array was modifier during tiling
+    function tile(tiles) {
+        var newRect = math.withMargin(oi, maximizeArea(output, desktop));
+        if (hasRectChanged(newRect)) {
+            onRectChanged(newRect);
         }
-        layout.tileClients(clients);
-    }
-    return {
-        screen: screen,
-        desktop: desktop,
-        layout: layout,
-        tileClients: tileClients,
-    };
-}
-
-// toplevels[screen][desktop]: Toplevel
-var toplevels = [];
-function addAll() {
-    toplevels = [];
-    for (var i = 0; i < workspace.numScreens; i++) {
-        toplevels[i] = [];
-        for (var j = 1; j <= workspace.desktops; j++) {
-            toplevels[i][j] = toplevel(i, j);
-        }
-    }
-}
-function addDesktop(desktop) {
-    for (var i = 0; i < workspace.numScreens; i++) {
-        if (toplevels && toplevels[i] && !toplevels[i][desktop]) {
-            toplevels[i][desktop] = toplevel(i, desktop);
-        }
-    }
-}
-function removeDesktop(desktop) {
-    forEachScreen(desktop, function (screen, desktop) {
-        delete toplevels[screen][desktop];
-    });
-}
-function tileClients(clients) {
-    var screens = [];
-    var desktops = [];
-    clients.forEach(function (client) {
-        if (screens.indexOf(client.screen) === -1) {
-            screens.push(client.screen);
-        }
-        if (desktops.indexOf(client.desktop) === -1) {
-            desktops.push(client.desktop);
-        }
-    });
-    screens.forEach(function (screen) {
-        desktops.forEach(function (desktop) {
-            if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-                toplevels[screen][desktop].tileClients(clients.filter(function (client) {
-                    return client.screen === screen && client.desktop === desktop;
-                }));
-            }
-        });
-    });
-}
-function resizeClient(client, previousGeometry) {
-    var screen = client.screen, desktop = client.desktop;
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        toplevels[screen][desktop].layout.resizeClient(client, previousGeometry);
-    }
-}
-function maxClients$1(screen, desktop) {
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        return toplevels[screen][desktop].layout.maxClients;
-    }
-    else {
-        return 0;
-    }
-}
-function isFull(clients, screen, desktop) {
-    return clients.length >= maxClients$1(screen, desktop);
-}
-function isEmpty(clients, screen, desktop) {
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        return clients.length === 0;
-    }
-    else {
-        return false;
-    }
-}
-function forEach(callback) {
-    for (var i = 0; i < workspace.numScreens; i++) {
-        for (var j = 1; j <= workspace.desktops; j++) {
-            if (toplevels && toplevels[i] && toplevels[i][j]) {
-                var shouldReturn = callback(i, j);
-                if (shouldReturn) {
-                    return;
+        var i = 0;
+        var includedTiles = [];
+        tiles.forEach(function (tile) {
+            if (!tile.isEnabled())
+                return;
+            if (tile.isOnOutput(output) && tile.isOnDesktop(desktop)) {
+                if (i < _layout.limit) {
+                    i += 1;
+                    includedTiles.push(tile);
+                }
+                else {
+                    tile.disable();
                 }
             }
-        }
+        });
+        var rects = _layout.getRects(includedTiles);
+        includedTiles.forEach(function (tile, index) {
+            var rect = math.withGap(oi, rects[index]);
+            tile.setFrameGeometry(rect);
+        });
     }
-}
-function forEachScreen(desktop, callback) {
-    for (var i = 0; i < workspace.numScreens; i++) {
-        if (toplevels && toplevels[i] && toplevels[i][desktop]) {
-            var shouldReturn = callback(i, desktop);
-            if (shouldReturn) {
-                return;
-            }
-        }
+    function resizeWindow(window, oldRect) {
+        _layout.resizeWindow(window, oldRect);
     }
-}
-function forEachDesktop(screen, callback) {
-    for (var i = 1; i <= workspace.desktops; i++) {
-        if (toplevels && toplevels[screen] && toplevels[screen][i]) {
-            var shouldReturn = callback(screen, i);
-            if (shouldReturn) {
-                return;
-            }
-        }
+    function hasRectChanged(newRect) {
+        return (_rect.x !== newRect.x || _rect.y !== newRect.y || _rect.width !== newRect.width || _rect.height !== newRect.height);
     }
-}
-function restoreLayout(screen, desktop) {
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        toplevels[screen][desktop].layout.restore();
+    function onRectChanged(newRect) {
+        _rect = newRect;
+        _layout.adjustRect(newRect);
     }
+    return {
+        output: output,
+        desktop: desktop,
+        id: id,
+        tile: tile,
+        resizeWindow: resizeWindow,
+    };
 }
-function adjustMaxClients(screen, desktop, amount) {
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        toplevels[screen][desktop].layout.maxClients += amount;
-    }
-}
-var toplevelManager = {
-    addAll: addAll,
-    addDesktop: addDesktop,
-    removeDesktop: removeDesktop,
-    tileClients: tileClients,
-    resizeClient: resizeClient,
-    maxClients: maxClients$1,
-    isFull: isFull,
-    isEmpty: isEmpty,
-    forEach: forEach,
-    forEachScreen: forEachScreen,
-    forEachDesktop: forEachDesktop,
-    restoreLayout: restoreLayout,
-    adjustMaxClients: adjustMaxClients,
-};
 
-var clients = [];
-var disabled = {};
-var disconnectors = {};
-function filter(screen, desktop) {
-    var includedClients = clients.filter(function (client) {
-        return (client.screen === screen &&
-            client.desktop === desktop &&
-            (client.activities.length === 0 || client.activities.indexOf(workspace.currentActivity) > -1));
-    });
-    return includedClients;
-}
-function find(client) {
-    var index = -1;
-    clients.some(function (includedClient, includedIndex) {
-        if (client.windowId === includedClient.windowId) {
-            index = includedIndex;
+function tile(window, callbacks) {
+    // Enabled  can      be changed manually by the user or automatically by the script
+    // Disabled can only be changed                         automatically by the script
+    // In practice, disabled = true tiles can be re-enabled automatically by the script, but disabled = false tiles can only be re-enabled manually by the user
+    var _enabled = true;
+    var _disabled = false;
+    var _output = window.output;
+    var _desktops = window.desktops;
+    var _move = window.move;
+    var _resize = window.resize;
+    var _originalGeometry = math.clone(window.frameGeometry);
+    var _oldGeometry;
+    var _isKeyboard = false;
+    var _oldGeometryKeyboard;
+    if (isDisabledByDefault()) {
+        disable();
+    }
+    function isAutoTilingEnabled() {
+        return config.auto[math.kcfgOutputIndex(window.output)];
+    }
+    function isDisabledByDefault() {
+        return !isAutoTilingEnabled() || window.minimized || window.fullScreen || isMaximized();
+    }
+    function isEnabled() {
+        return _enabled;
+    }
+    // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
+    // @param capture - Inciates whether the window's frameGeometry should be used as its originalGeometry when restored later
+    function enable(manual, capture) {
+        if (manual || (_disabled && isAutoTilingEnabled())) {
+            _disabled = false;
+            _enabled = true;
+            if (capture) {
+                _originalGeometry = math.clone(window.frameGeometry);
+            }
+        }
+    }
+    // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
+    // @param restore - Indicates the window's frameGeometry should be restored to its original rect
+    function disable(manual, restore) {
+        if (!manual)
+            _disabled = true;
+        _enabled = false;
+        if (restore) {
+            window.frameGeometry = math.centerTo(_originalGeometry, window.output.geometry);
+            workspace.activeWindow = window;
+        }
+    }
+    // b43a
+    function setFrameGeometry(rect) {
+        if (rect.width < window.minSize.width) {
+            rect.width = window.minSize.width;
+        }
+        if (rect.height < window.minSize.height) {
+            rect.height = window.minSize.height;
+        }
+        window.frameGeometry = rect;
+        _oldGeometryKeyboard = undefined;
+    }
+    function startMove(oldRect) {
+        _move = true;
+        _oldGeometry = math.clone(oldRect);
+    }
+    function stopMove() {
+        if (_output !== window.output) {
+            outputChanged(true);
+        }
+        else if (_enabled) {
+            callbacks.moveWindow(window, _oldGeometry);
+        }
+        _move = false;
+    }
+    function startResize(oldRect) {
+        _resize = true;
+        _oldGeometry = math.clone(oldRect);
+    }
+    function stopResize() {
+        callbacks.resizeWindow(window, _oldGeometry);
+        _resize = false;
+    }
+    function moveResizedChanged() {
+        if (window.move && !_move) {
+            startMove(window.frameGeometry);
+        }
+        else if (!window.move && _move) {
+            stopMove();
+        }
+        else if (!_enabled) {
+            return;
+        }
+        else if (window.resize && !_resize) {
+            startResize(window.frameGeometry);
+        }
+        else if (!window.resize && _resize) {
+            stopResize();
+        }
+    }
+    // frameGeometryAboutToChange and frameGeometryChanged are used only for moving windows via KWin's default shortcuts
+    // _isKeyboard and _oldGeometryKeyboard are used to identify signals triggered by the shortcut
+    function frameGeometryAboutToChange() {
+        if (!callbacks.isTiling() && !window.move && !window.resize && !_move && !_resize) {
+            _isKeyboard = true;
+        }
+    }
+    function frameGeometryChanged(oldRect) {
+        if (!callbacks.isTiling() && !window.move && !window.resize && !_move && !_resize && _isKeyboard) {
+            if (_oldGeometryKeyboard) {
+                startMove(_oldGeometryKeyboard);
+                stopMove();
+                _oldGeometryKeyboard = undefined;
+            }
+            else {
+                _oldGeometryKeyboard = oldRect;
+            }
+            _isKeyboard = false;
+        }
+    }
+    function fullScreenChanged() {
+        if (window.fullScreen) {
+            disable();
+        }
+        else {
+            enable();
+        }
+        callbacks.enableWindow(window);
+    }
+    function maximizedChanged() {
+        if (window.fullScreen)
+            return;
+        if (isMaximized()) {
+            disable();
+        }
+        else {
+            enable();
+        }
+        callbacks.enableWindow(window);
+    }
+    function minimizedChanged() {
+        if (window.minimized) {
+            disable();
+        }
+        else {
+            enable();
+        }
+        callbacks.pushWindow(window);
+    }
+    function isMaximized() {
+        var desktop = _desktops[0] || window.desktops[0] || workspace.desktops[0];
+        var area = maximizeArea(_output, desktop);
+        var h = window.frameGeometry.width === area.width && window.frameGeometry.x === area.x;
+        var v = window.frameGeometry.height === area.height && window.frameGeometry.y === area.y;
+        if (h || v) {
             return true;
         }
-    });
-    return index;
-}
-function splicePush(client) {
-    var index = find(client);
-    if (index > -1) {
-        clients.splice(index, 1);
-        clients.push(client);
     }
-}
-function add(client, checked) {
-    var screen = client.screen, desktop = client.desktop;
-    if (checked || !blacklist.includes(client)) {
-        var index = enable(client);
-        if (index > -1) {
-            clients.splice(index, 0, client);
-        }
-        else {
-            clients.push(client);
-        }
-        var disableClient_1 = function () { return disable(client, undefined, true); };
-        var splicePushClient_1 = function () { return splicePush(client); };
-        client.clientStartUserMovedResized.connect(startMove);
-        client.clientFinishUserMovedResized.connect(finishMove);
-        client.screenChanged.connect(splicePushClient_1);
-        client.desktopChanged.connect(splicePushClient_1);
-        client.shadeChanged.connect(disableClient_1);
-        disconnectors[client.windowId] = function (client) {
-            client.clientStartUserMovedResized.disconnect(startMove);
-            client.clientFinishUserMovedResized.disconnect(finishMove);
-            client.screenChanged.disconnect(splicePushClient_1);
-            client.desktopChanged.disconnect(splicePushClient_1);
-            client.shadeChanged.disconnect(disableClient_1);
-        };
-        tileAll(screen, desktop);
-    }
-}
-function addWithForce(client) {
-    if (!blacklist.includes(client)) {
-        add(client, true);
-        // If the client couldn't be added on its screen or desktop, finds an available screen and desktop for it
-        if (find(client) === -1) {
-            var freeScreen = -1;
-            toplevelManager.forEachScreen(client.desktop, function (screen, desktop) {
-                if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
-                    freeScreen = screen;
-                    return true;
-                }
-            });
-            if (freeScreen > -1) {
-                client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
-                add(client, true);
+    // @param force - Ignores the move check (used to ignore outputChanged signal if moveResizedChanged might do the same later)
+    function outputChanged(force) {
+        if (force || !_move) {
+            _output = window.output;
+            if (isAutoTilingEnabled()) {
+                enable();
             }
             else {
-                var freeDesktop = -1;
-                toplevelManager.forEach(function (screen, desktop) {
-                    if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
-                        freeScreen = screen;
-                        freeDesktop = desktop;
-                        if (config.followClients) {
-                            workspace.currentDesktop = desktop;
-                        }
-                        return true;
-                    }
-                });
-                if (freeScreen > -1 && freeDesktop > -1) {
-                    client.desktop = freeDesktop;
-                    client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
-                    add(client, true);
-                    if (config.followClients) {
-                        workspace.activeClient = client;
-                    }
-                }
+                disable();
             }
+            callbacks.pushWindow(window);
         }
     }
-}
-function addAll$1() {
-    if (config.autoTile) {
-        workspace.clientList().forEach(function (client) { return add(client); });
+    function isOnOutput(output) {
+        return window.output.serialNumber === output.serialNumber;
     }
-}
-function remove(client, index, shouldNotFollow) {
-    index = index || find(client);
-    if (index > -1) {
-        clients.splice(index, 1);
-        disconnectors[client.windowId](client);
-        delete disconnectors[client.windowId];
-        tileAll(client.screen, client.desktop);
-        // Checks if the current desktop is completely empty, finds the closest desktop with clients and switches to it
-        if (!shouldNotFollow && config.followClients && client.desktop === workspace.currentDesktop) {
-            var currentDesktop_1 = workspace.currentDesktop;
-            var clientList = workspace.clientList();
-            var hasClientsLeft = clientList.some(function (clientB) {
-                if (clientB.windowId !== client.windowId) {
-                    return clientB.desktop === currentDesktop_1;
-                }
-            });
-            if (!hasClientsLeft) {
-                var busyDesktops_1 = [];
-                clientList.forEach(function (clientB) {
-                    if (clientB.desktop !== currentDesktop_1) {
-                        busyDesktops_1.push(clientB.desktop);
-                    }
-                });
-                var nextDesktop = busyDesktops_1.reduce(function (previous, current) {
-                    return Math.abs(currentDesktop_1 - current) < Math.abs(currentDesktop_1 - previous) ? current : previous;
-                });
-                workspace.currentDesktop = nextDesktop;
-            }
+    // cf3f
+    function desktopsChanged() {
+        if (window.desktops.length > 1) {
+            disable();
         }
-    }
-    else if (disabled[client.windowId]) {
-        delete disabled[client.windowId];
-    }
-}
-function toggle(client, index) {
-    index = index || find(client);
-    if (index > -1) {
-        remove(client, index);
-        client.geometry = geometryUtils.center(client.geometry, workspace.clientArea(2, client.screen, client.desktop));
-    }
-    else {
-        add(client);
-    }
-}
-var snapshot = { geometry: { x: 0, y: 0, width: 0, height: 0 }, screen: -1 };
-function findClosest(clientA, indexA) {
-    var closestClientIndex = indexA || find(clientA);
-    var closestDistance = geometryUtils.distance(clientA.geometry, snapshot.geometry);
-    clients.forEach(function (clientB, indexB) {
-        if (clientA.windowId !== clientB.windowId &&
-            clientA.screen === clientB.screen &&
-            clientA.desktop === clientB.desktop) {
-            var distance = geometryUtils.distance(clientA.geometry, clientB.geometry);
-            if (distance < closestDistance) {
-                closestClientIndex = indexB;
-                closestDistance = distance;
-            }
+        else if (window.desktops.length === 1) {
+            enable();
         }
-    });
-    return closestClientIndex;
-}
-function startMove(client) {
-    snapshot.geometry = client.geometry;
-    snapshot.screen = client.screen;
-}
-function finishMove(client) {
-    var index = find(client);
-    if (index > -1) {
-        if (client.screen === snapshot.screen) {
-            if (client.geometry.width === snapshot.geometry.width && client.geometry.height === snapshot.geometry.height) {
-                swap(index, findClosest(client, index));
-            }
-            else {
-                resize(client, snapshot.geometry);
-            }
-        }
-        else {
-            tileAll(snapshot.screen, client.desktop);
-        }
-        tileAll(client.screen, client.desktop);
+        _desktops = window.desktops;
+        callbacks.pushWindow(window);
     }
-}
-function swap(i, j) {
-    var t = clients[i];
-    clients[i] = clients[j];
-    clients[j] = t;
-}
-function resize(client, previousGeometry) {
-    toplevelManager.resizeClient(client, previousGeometry);
-}
-function tileAll(screen, desktop) {
-    var includedClients = filter(screen, desktop);
-    // Removes extra clients that exist on the toplevel
-    while (includedClients.length > toplevelManager.maxClients(screen, desktop)) {
-        var removableClient = includedClients.splice(includedClients.length - 1, 1)[0];
-        remove(removableClient);
+    // cf3f
+    function isOnDesktop(desktop) {
+        return window.desktops.length === 1 && window.desktops[0].id === desktop.id;
     }
-    toplevelManager.tileClients(includedClients);
-}
-function enable(client) {
-    if (disabled[client.windowId]) {
-        var _a = disabled[client.windowId], index = _a.index, screen_1 = _a.screen, desktop = _a.desktop, disconnect = _a.disconnect;
-        delete disabled[client.windowId];
-        disconnect();
-        toplevelManager.adjustMaxClients(screen_1, desktop, 1);
-        return index;
+    // Constructor
+    window.moveResizedChanged.connect(moveResizedChanged);
+    window.outputChanged.connect(outputChanged);
+    window.desktopsChanged.connect(desktopsChanged);
+    window.maximizedChanged.connect(maximizedChanged);
+    window.minimizedChanged.connect(minimizedChanged);
+    window.fullScreenChanged.connect(fullScreenChanged);
+    window.frameGeometryChanged.connect(frameGeometryChanged);
+    window.frameGeometryAboutToChange.connect(frameGeometryAboutToChange);
+    function remove() {
+        window.moveResizedChanged.disconnect(moveResizedChanged);
+        window.outputChanged.disconnect(outputChanged);
+        window.desktopsChanged.disconnect(desktopsChanged);
+        window.maximizedChanged.disconnect(maximizedChanged);
+        window.fullScreenChanged.disconnect(fullScreenChanged);
+        window.frameGeometryChanged.disconnect(frameGeometryChanged);
+        window.frameGeometryAboutToChange.disconnect(frameGeometryAboutToChange);
     }
-    else {
-        return -1;
-    }
+    return {
+        window: window,
+        isDisabledByDefault: isDisabledByDefault,
+        isEnabled: isEnabled,
+        enable: enable,
+        disable: disable,
+        setFrameGeometry: setFrameGeometry,
+        isOnOutput: isOnOutput,
+        isOnDesktop: isOnDesktop,
+        remove: remove,
+    };
 }
-function disable(client, index, shouldNotFollow) {
-    index = index || find(client);
-    if (index > -1) {
-        remove(client, index, shouldNotFollow);
-        var addClient_1 = function () { return add(client); };
-        client.shadeChanged.connect(addClient_1);
-        disabled[client.windowId] = {
-            index: index,
-            screen: client.screen,
-            desktop: client.desktop,
-            disconnect: function () {
-                client.shadeChanged.disconnect(addClient_1);
-            },
-        };
-        toplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
-    }
-}
-var clientManager = {
-    add: add,
-    addWithForce: addWithForce,
-    addAll: addAll$1,
-    find: find,
-    filter: filter,
-    disable: disable,
-    remove: remove,
-    toggle: toggle,
-    startMove: startMove,
-    finishMove: finishMove,
-    swap: swap,
-    resize: resize,
-    tileAll: tileAll,
-};
 
-var __assign = (undefined && undefined.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
+function wm() {
+    var _tiling = false;
+    var layers = {};
+    var tiles = [];
+    var callbacks = {
+        isTiling: isTiling,
+        enableWindow: enableWindow,
+        pushWindow: pushWindow,
+        resizeWindow: resizeWindow,
+        moveWindow: moveWindow,
     };
-    return __assign.apply(this, arguments);
-};
-var resizeStep = 20;
-var registerShortcut = 
-// @ts-ignore, KWin global
-registerShortcut ||
-    function () {
-        // This is never called, exists only as a dumb workaround to include this file in rollup
-        workspace.currentDesktop = workspace.currentDesktop;
-    };
-function registerShortcuts() {
-    registerShortcut("Quarter: Reset Current Layout", "Quarter: Reset Current Layout", "Meta+R", function () {
-        toplevelManager.restoreLayout(workspace.activeScreen, workspace.currentDesktop);
-        clientManager.tileAll(workspace.activeScreen, workspace.currentDesktop);
-    });
-    registerShortcut("Quarter: Reset All Layouts", "Quarter: Reset All Layout", "Meta+Shift+R", function () {
-        toplevelManager.forEach(function (screen, desktop) {
-            toplevelManager.restoreLayout(screen, desktop);
-            clientManager.tileAll(screen, desktop);
+    function isTiling() {
+        return _tiling;
+    }
+    // Layers
+    function addLayer(output, desktop) {
+        if (config.exclude(output, desktop))
+            return;
+        var id = output.serialNumber + desktop.id;
+        if (layers[id])
+            return;
+        var newLayer = layer(output, desktop);
+        layers[id] = newLayer;
+    }
+    function tileLayers() {
+        if (_tiling)
+            return;
+        _tiling = true;
+        Object.values(layers).forEach(function (layer) {
+            layer.tile(tiles);
         });
-    });
-    registerShortcut("Quarter: Float On/Off", "Quarter: Float On/Off", "Meta+F", function () {
-        return clientManager.toggle(workspace.activeClient);
-    });
-    registerShortcut("Quarter: + Gap Size", "Quarter: + Gap Size", "Meta+Shift+PgUp", function () {
-        gaps$1.increase();
-        for (var i = 0; i < workspace.numScreens; i++) {
-            clientManager.tileAll(i, workspace.currentDesktop);
+        _tiling = false;
+    }
+    // Tiles
+    function swapTiles(i, j) {
+        var tile = tiles[i];
+        tiles[i] = tiles[j];
+        tiles[j] = tile;
+    }
+    // Windows
+    function addWindow(window) {
+        if (isWindowAllowed(window)) {
+            var newTile = tile(window, callbacks);
+            tiles.push(newTile);
+            tileLayers();
         }
-    });
-    registerShortcut("Quarter: - Gap Size", "Quarter: - Gap Size", "Meta+Shift+PgDown", function () {
-        gaps$1.decrease();
-        for (var i = 0; i < workspace.numScreens; i++) {
-            clientManager.tileAll(i, workspace.currentDesktop);
-        }
-    });
-    // Resize
-    function resizeClient(direction, amount) {
-        var client = workspace.activeClient;
-        var newGeometry = client.geometry;
-        var oldGeometry = client.geometry;
-        var index = clientManager.find(client);
+    }
+    function removeWindow(window) {
+        var index = tiles.findIndex(function (tile) { return tile.window.internalId === window.internalId; });
+        var tile = tiles[index];
         if (index > -1) {
-            switch (direction) {
-                case "top":
-                    newGeometry.y += -amount;
-                    newGeometry.height += amount > 0 ? amount : 0;
-                    break;
-                case "left":
-                    newGeometry.x += -amount;
-                    newGeometry.width += amount > 0 ? amount : 0;
-                    break;
-                case "bottom":
-                    newGeometry.height += amount;
-                    break;
-                case "right":
-                    newGeometry.width += amount;
-                    break;
-            }
-            clientManager.resize(__assign(__assign({}, client), { geometry: newGeometry }), oldGeometry);
-            clientManager.tileAll(client.screen, client.desktop);
+            tile.remove();
+            tiles.splice(index, 1);
+            tileLayers();
         }
     }
-    registerShortcut("Quarter: + Window Size Top", "Quarter: + Window Size Top", "Meta+K", function () {
-        resizeClient("top", resizeStep);
-    });
-    registerShortcut("Quarter: - Window Size Top", "Quarter: - Window Size Top", "Meta+Shift+K", function () {
-        resizeClient("top", -resizeStep);
-    });
-    registerShortcut("Quarter: + Window Size Left", "Quarter: + Window Size Left", "Meta+H", function () {
-        resizeClient("left", resizeStep);
-    });
-    registerShortcut("Quarter: - Window Size Left", "Quarter: - Window Size Left", "Meta+Shift+H", function () {
-        resizeClient("left", -resizeStep);
-    });
-    registerShortcut("Quarter: + Window Size Right", "Quarter: + Window Size Right", "Meta+L", function () {
-        resizeClient("right", resizeStep);
-    });
-    registerShortcut("Quarter: - Window Size Right", "Quarter: - Window Size Right", "Meta+Shift+L", function () {
-        resizeClient("right", -resizeStep);
-    });
-    registerShortcut("Quarter: + Window Size Bottom", "Quarter: + Window Size Bottom", "Meta+J", function () {
-        resizeClient("bottom", resizeStep);
-    });
-    registerShortcut("Quarter: - Window Size Bottom", "Quarter: - Window Size Bottom", "Meta+Shift+J", function () {
-        resizeClient("bottom", -resizeStep);
-    });
-    // Move
-    function nextClient(direction) {
-        var activeClient = workspace.activeClient;
-        var clients = clientManager.filter(activeClient.screen, activeClient.desktop);
-        clients = clients.filter(function (client) {
-            switch (direction) {
-                case "top":
-                    return client.geometry.y < activeClient.geometry.y;
-                case "left":
-                    return client.geometry.x < activeClient.geometry.x;
-                case "bottom":
-                    return client.geometry.y > activeClient.geometry.y;
-                case "right":
-                    return client.geometry.x > activeClient.geometry.x;
+    function resizeWindow(window, oldRect) {
+        window.desktops.forEach(function (desktop) {
+            var layer = layers[window.output.serialNumber + desktop.id];
+            if (layer) {
+                layer.resizeWindow(window, oldRect);
             }
         });
-        clients.sort(function (clientA, clientB) {
-            return (geometryUtils.distance(activeClient.geometry, clientA.geometry) -
-                geometryUtils.distance(activeClient.geometry, clientB.geometry));
-        });
-        return clients[0];
+        tileLayers();
     }
-    function moveClient(direction) {
-        var i = clientManager.find(workspace.activeClient);
-        var j = clientManager.find(nextClient(direction));
-        if (i > -1 && j > -1) {
-            clientManager.swap(i, j);
-            clientManager.tileAll(workspace.activeScreen, workspace.currentDesktop);
-        }
-    }
-    registerShortcut("Quarter: Move Up", "Quarter: Move Up", "Alt+Shift+K", function () {
-        moveClient("top");
-    });
-    registerShortcut("Quarter: Move Left", "Quarter: Move Left", "Alt+Shift+H", function () {
-        moveClient("left");
-    });
-    registerShortcut("Quarter: Move Down", "Quarter: Move Down", "Alt+Shift+J", function () {
-        moveClient("bottom");
-    });
-    registerShortcut("Quarter: Move Right", "Quarter: Move Right", "Alt+Shift+L", function () {
-        moveClient("right");
-    });
-    function focusClient(direction) {
-        var focusableClient = nextClient(direction);
-        workspace.clientList().some(function (client) {
-            if (focusableClient.windowId === client.windowId) {
-                workspace.activeClient = client;
-                return true;
+    function moveWindow(window, oldRect) {
+        var nearestTile = tiles.find(function (tile) { return tile.window.internalId === window.internalId; });
+        var nearestDistance = math.distanceTo(window.frameGeometry, oldRect);
+        tiles.forEach(function (tile) {
+            if (window.internalId !== tile.window.internalId) {
+                var distance = math.distanceTo(window.frameGeometry, tile.window.frameGeometry);
+                if (distance < nearestDistance) {
+                    nearestTile = tile;
+                    nearestDistance = distance;
+                }
             }
         });
+        var i = tiles.findIndex(function (tile) { return tile.window.internalId === window.internalId; });
+        var j = tiles.findIndex(function (tile) { return tile.window.internalId === nearestTile.window.internalId; });
+        if (i !== j) {
+            swapTiles(i, j);
+        }
+        tileLayers();
     }
-    registerShortcut("Quarter: Focus Up", "Quarter: Focus Up", "Alt+K", function () {
-        focusClient("top");
-    });
-    registerShortcut("Quarter: Focus Left", "Quarter: Focus Left", "Alt+H", function () {
-        focusClient("left");
-    });
-    registerShortcut("Quarter: Focus Down", "Quarter: Focus Down", "Alt+J", function () {
-        focusClient("bottom");
-    });
-    registerShortcut("Quarter: Focus Right", "Quarter: Focus Right", "Alt+L", function () {
-        focusClient("right");
-    });
-}
-var shortcuts = {
-    registerShortcuts: registerShortcuts,
-};
-
-function registerSignals() {
-    if (config.autoTile) {
-        workspace.clientAdded.connect(function (client) {
-            if (client) {
-                clientManager.addWithForce(client);
-            }
+    function enableWindow(window) {
+        tileLayers();
+    }
+    function pushWindow(window) {
+        var index = tiles.findIndex(function (tile) { return tile.window.internalId === window.internalId; });
+        if (index > -1) {
+            var tile_1 = tiles[index];
+            tiles.splice(index, 1);
+            tiles.push(tile_1);
+        }
+        tileLayers();
+    }
+    function isWindowAllowed(window) {
+        return (window.managed &&
+            window.normalWindow &&
+            window.moveable &&
+            window.resizeable &&
+            window.rect.width >= config.minWidth &&
+            window.rect.height >= config.minHeight &&
+            config.processes.indexOf(window.resourceClass.toString().toLowerCase()) === -1 &&
+            config.processes.indexOf(window.resourceName.toString().toLowerCase()) === -1 &&
+            !config.captions.some(function (caption) { return window.caption.toLowerCase().includes(caption.toLowerCase()); }));
+    }
+    // Constructor
+    workspace.screens.forEach(function (output) {
+        workspace.desktops.forEach(function (desktop) {
+            addLayer(output, desktop);
         });
+    });
+    workspace.stackingOrder.forEach(function (window) {
+        addWindow(window);
+    });
+    // Signals
+    workspace.currentDesktopChanged.connect(tileLayers);
+    workspace.windowAdded.connect(addWindow);
+    workspace.windowRemoved.connect(removeWindow);
+    workspace.windowActivated.connect(tileLayers);
+    // Shortcuts
+    function toggleActiveTile() {
+        var tile = tiles.find(function (tile) { return tile.window.internalId === workspace.activeWindow.internalId; });
+        toggleTile(tile);
     }
-    workspace.clientUnminimized.connect(function (client) {
-        if (client && config.autoTile) {
-            clientManager.addWithForce(client);
-        }
-    });
-    workspace.clientRemoved.connect(function (client) {
-        if (client) {
-            clientManager.remove(client);
-        }
-    });
-    workspace.clientMinimized.connect(function (client) {
-        if (client) {
-            clientManager.disable(client);
-        }
-    });
-    workspace.clientMaximizeSet.connect(function (client, h, v) {
-        if (client && h && v) {
-            clientManager.disable(client, undefined, true);
-            workspace.activeClient = client;
-        }
-        else if (client && !h && !v) {
-            if (config.autoTile) {
-                clientManager.addWithForce(client);
-            }
-        }
-    });
-    workspace.clientFullScreenSet.connect(function (client, fs) {
-        if (client && fs) {
-            clientManager.disable(client, undefined, true);
+    function toggleTile(tile) {
+        if (tile.isEnabled()) {
+            tile.disable(true);
+            tileLayers();
+            workspace.activeWindow = tile.window;
         }
         else {
-            if (config.autoTile) {
-                clientManager.addWithForce(client);
-            }
+            tile.enable(true);
+            pushWindow(tile.window);
         }
-    });
-    workspace.desktopPresenceChanged.connect(function (client, desktop) {
-        if (client) {
-            clientManager.tileAll(client.screen, desktop);
+    }
+    registerShortcut("(YAKTS) Tile Window", "", "Meta+F", toggleActiveTile);
+    function actionsMenu(window) {
+        var tile = tiles.find(function (tile) { return tile.window.internalId === window.internalId; });
+        if (tile) {
+            return {
+                text: "Tile Window",
+                checkable: true,
+                checked: tile.isEnabled(),
+                triggered: function () {
+                    toggleTile(tile);
+                },
+            };
         }
-    });
-    workspace.clientActivated.connect(function (client) {
-        if (client) {
-            clientManager.tileAll(client.screen, client.desktop);
-        }
-    });
-    workspace.numberDesktopsChanged.connect(function (previousDesktops) {
-        if (workspace.desktops > previousDesktops) {
-            toplevelManager.addDesktop(workspace.desktops);
-        }
-        else {
-            toplevelManager.removeDesktop(previousDesktops);
-        }
-        toplevelManager.forEachScreen(workspace.currentDesktop, function (screen, desktop) {
-            clientManager.tileAll(screen, desktop);
-        });
-    });
-    workspace.numberScreensChanged.connect(function (count) {
-        toplevelManager.addAll();
-    });
-    workspace.screenResized.connect(function (screen) {
-        clientManager.tileAll(screen, workspace.currentDesktop);
-    });
+    }
+    registerUserActionsMenu(actionsMenu);
 }
-var signals = {
-    registerSignals: registerSignals,
-};
 
-toplevelManager.addAll();
-clientManager.addAll();
-shortcuts.registerShortcuts();
-signals.registerSignals();
+wm();

@@ -1,78 +1,129 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
-      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd" >
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
     <kcfgfile name=""/>
+
     <group name="">
-      <entry name="autoTile" type="bool">
-        <label>Automatically tile windows</label>
-        <default>true</default>
-      </entry>
-      <entry name="ignoreJava" type="bool">
-        <label>Ignore all Java windows</label>
-        <default>false</default>
-      </entry>
-      <entry name="followClients" type="bool">
-        <label>Follow clients across desktops</label>
-        <default>true</default>
-      </entry>
-    	<entry name="gap" type="int">
-        <label>Pixels between the windows and screen edges</label>
-        <default>8</default>
-		  </entry>
-      <entry name="maxClients" type="int">
-        <label>Maximum amount of clients to tile on a screen</label>
-        <default>-1</default>
-		  </entry>
-      <entry name="marginTop" type="int">
-        <label>Additional pixels from the top of the screen</label>
-        <default>0</default>
-		  </entry>
-      <entry name="marginLeft" type="int">
-        <label>Additional pixels from the left of the screen</label>
-        <default>0</default>
-		  </entry>
-      <entry name="marginBottom" type="int">
-        <label>Additional pixels from the bottom of the screen</label>
-        <default>0</default>
-		  </entry>
-      <entry name="marginRight" type="int">
-        <label>Additional pixels from the right of the screen</label>
-        <default>0</default>
-		  </entry>
-      <entry name="layout" type="int">
-        <label>Tiling layout</label>
-        <default>0</default>
-		  </entry>
-      <entry name="">
-      <entry name="minWidth" type="int">
-        <label>Minimum Program Width</label>
-        <default>256</default>
-      </entry>
-      <entry name="minHeight" type="int">
-        <label>Minimum Program Height</label>
-        <default>256</default>
-      </entry>
-      <entry name="ignoredScreens" type="string">
-  	    <label>Screens that should be ignored by the script</label>
-  	    <default></default>
-      </entry>
-      <entry name="ignoredDesktops" type="string">
-  	    <label>Desktops that should be ignored by the script</label>
-  	    <default></default>
-      </entry>
-      <entry name="ignoredActivities" type="string">
-  	    <label>Activities that should be ignored by the script</label>
-  	    <default></default>
-      </entry>
-      <entry name="ignoredClients" type="string">
-  	    <label>Programs that should be ignored by the script (e.g. "kate", "steam")</label>
-  	    <default>wine, steam</default>
-      </entry>
-      <entry name="ignoredCaptions" type="string">
-  	    <label>Captions that should be ignored by the script (e.g. "Quit GIMP")</label>
-  	    <default>Quit GIMP, Create a New Image</default>
-      </entry>
-   	</group>
+        <entry name="auto_0" type="bool">
+            <default>true</default>
+        </entry>
+        <entry name="auto_1" type="bool">
+            <default>true</default>
+        </entry>
+        <entry name="auto_2" type="bool">
+            <default>true</default>
+        </entry>
+        <entry name="auto_3" type="bool">
+            <default>true</default>
+        </entry>
+        
+        <entry name="gap_0" type="int">
+            <default>8</default>
+        </entry>
+        <entry name="gap_1" type="int">
+            <default>8</default>
+        </entry>
+        <entry name="gap_2" type="int">
+            <default>8</default>
+        </entry>
+        <entry name="gap_3" type="int">
+            <default>8</default>
+        </entry>
+
+        <entry name="marginLeft_0" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginTop_0" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginRight_0" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginBottom_0" type="int">
+            <default>0</default>
+        </entry>
+
+        <entry name="marginLeft_1" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginTop_1" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginRight_1" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginBottom_1" type="int">
+            <default>0</default>
+        </entry>
+
+        <entry name="marginLeft_2" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginTop_2" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginRight_2" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginBottom_2" type="int">
+            <default>0</default>
+        </entry>
+
+        <entry name="marginLeft_3" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginTop_3" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginRight_3" type="int">
+            <default>0</default>
+        </entry>
+        <entry name="marginBottom_3" type="int">
+            <default>0</default>
+        </entry>
+
+        <entry name="layout_0" type="int">
+            <default>1</default>
+        </entry>
+        <entry name="layout_1" type="int">
+            <default>1</default>
+        </entry>
+        <entry name="layout_2" type="int">
+            <default>1</default>
+        </entry>
+        <entry name="layout_3" type="int">
+            <default>1</default>
+        </entry>
+
+        <entry name="limit_0" type="int">
+            <default>-1</default>
+        </entry>
+        <entry name="limit_1" type="int">
+            <default>-1</default>
+        </entry>
+        <entry name="limit_2" type="int">
+            <default>-1</default>
+        </entry>
+        <entry name="limit_3" type="int">
+            <default>-1</default>
+        </entry>
+
+        <entry name="minWidth" type="int">
+            <default>256</default>
+        </entry>
+        <entry name="minHeight" type="int">
+            <default>256</default>
+        </entry>
+
+        <entry name="desktops" type="string">
+            <default></default>
+        </entry>
+
+        <entry name="processes" type="string">
+            <default>wine, steam</default>
+        </entry>
+        <entry name="captions" type="string">
+            <default>Quit GIMP, Create a new Image</default>
+        </entry>
+    </group>
+
 </kcfg>
