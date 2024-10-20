@@ -1,4 +1,4 @@
-import { DEV, maximizeArea, workspace } from "./kwin";
+import { maximizeArea, workspace } from "./kwin";
 import math from "./math";
 import { KWinOutput, KWinVirtualDesktop, KWinWindow } from "./types/kwin";
 import { QRect } from "./types/qt";
@@ -45,8 +45,6 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
   // @param capture - Inciates whether the window's frameGeometry should be used as its originalGeometry when restored later
   function enable(manual?: boolean, capture?: boolean) {
-    if (DEV) console.log(`tile.ts: "${window.caption}".enable(${manual}, ${capture})`);
-
     if (manual || _disabled) {
       _disabled = false;
       _enabled = true;
@@ -60,8 +58,6 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
   // @param restore - Indicates the window's frameGeometry should be restored to its original rect
   function disable(manual?: boolean, restore?: boolean) {
-    if (DEV) console.log(`tile.ts: "${window.caption}".disable(${manual}, ${restore})`);
-
     if (!manual) _disabled = true;
     _enabled = false;
 
@@ -135,14 +131,10 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   function frameGeometryChanged(oldRect: QRect) {
     if (!callbacks.isTiling() && !window.move && !window.resize && !_move && !_resize && _isKeyboard) {
       if (_oldGeometryKeyboard) {
-        if (DEV) console.log(`tile.ts: "${window.caption}".frameGeometryChanged(2)`);
-
         startMove(_oldGeometryKeyboard);
         stopMove();
         _oldGeometryKeyboard = undefined;
       } else {
-        if (DEV) console.log(`tile.ts: "${window.caption}".frameGeometryChanged(1)`);
-
         _oldGeometryKeyboard = oldRect;
       }
 

@@ -1,5 +1,5 @@
 import config from "./config";
-import { DEV, registerShortcut, workspace } from "./kwin";
+import { registerShortcut, workspace } from "./kwin";
 import { layer, Layers } from "./layer";
 import math from "./math";
 import { tile, Tile } from "./tile";

@@ -1,5 +1,4 @@
 import math from "../math";
-import { Tile } from "../tile";
 import { KWinWindow } from "../types/kwin";
 import { QRect } from "../types/qt";
 import { Layout } from "./layout";
@@ -58,6 +57,7 @@ function _getRects(rect: QRect, separators: Separators, count: number): Array<QR
 export function TwoByTwoVertical(oi: number, rect: QRect): Layout {
   const id = "2X2V";
   const limit = 4;
+  const minSizeMultiplier = 0.15;
 
   let hs = rect.y + rect.height * 0.5;
   let vs = rect.x + rect.width * 0.5;
@@ -97,11 +97,11 @@ export function TwoByTwoVertical(oi: number, rect: QRect): Layout {
       }
     }
 
-    const maxV = 0.75 * (rect.x + rect.width);
-    const minV = rect.x + rect.width * 0.25;
+    const maxV = (1 - minSizeMultiplier) * (rect.x + rect.width);
+    const minV = rect.x + rect.width * minSizeMultiplier;
 
-    const maxH = 0.75 * (rect.y + rect.height);
-    const minH = rect.y + rect.height * 0.25;
+    const maxH = (1 - minSizeMultiplier) * (rect.y + rect.height);
+    const minH = rect.y + rect.height * minSizeMultiplier;
 
     separators.v[0] = Math.min(Math.max(minV, separators.v[0]), maxV);
     separators.v[1] = Math.min(Math.max(minV, separators.v[1]), maxV);

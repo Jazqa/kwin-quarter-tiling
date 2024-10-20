@@ -194,6 +194,98 @@ var config = {
     exclude: exclude,
 };
 
+function Columns(oi, rect) {
+    var id = "Columns";
+    var minWidth = 500;
+    var limit = rect.width / (minWidth * 1.5);
+    var width = rect.x + rect.width;
+    var separators = [];
+    var resized = [];
+    function adjustRect(newRect) {
+        rect = newRect;
+    }
+    function flushSeparators(windows) {
+        if (windows.length > separators.length) {
+            for (var i = 0; i < resized.length; i++) {
+                if (resized[i]) {
+                    resized[i] *= 0.5;
+                }
+            }
+        }
+        separators.splice(windows.length - 1);
+        resized.splice(windows.length - 1);
+    }
+    function getRects(windows) {
+        flushSeparators(windows);
+        for (var i = 0; i < windows.length; i++) {
+            var j = i + 1;
+            var d = windows.length / j;
+            var base = width / d;
+            var res = resized[i] || 0;
+            separators[i] = base + res;
+        }
+        var rects = [];
+        for (var i = 0; i < separators.length; i++) {
+            var end = separators[i];
+            var start = rect.x;
+            if (i > 0) {
+                start = separators[i - 1];
+            }
+            rects.push({ x: start, y: rect.y, width: end - start, height: rect.height });
+        }
+        return rects;
+    }
+    function resizeWindow(window, oldRect) {
+        var newRect = math.clone(window.frameGeometry);
+        var x = oldRect.x;
+        var separatorDir = -1; // Right
+        if (newRect.x - oldRect.x === 0) {
+            x = oldRect.x + oldRect.width;
+            separatorDir = 1; // Left
+        }
+        var i = -1;
+        var distance = x - rect.x;
+        var distanceAbs = Math.abs(distance);
+        for (var j = 0; j < separators.length; j++) {
+            var newDistance = x - separators[j];
+            var newDistanceAbs = Math.abs(newDistance);
+            if (newDistanceAbs < distanceAbs) {
+                distance = newDistance;
+                distanceAbs = newDistanceAbs;
+                i = j;
+            }
+        }
+        // Stops resizing from screen edges
+        if (i < 0 || i === separators.length - 1)
+            return;
+        if (!resized[0])
+            resized[i] = 0;
+        var diff = oldRect.width - newRect.width;
+        if (separatorDir > 0) {
+            diff = newRect.width - oldRect.width;
+        }
+        if (!resized[i]) {
+            resized[i] = 0;
+        }
+        var newSeparator = separators[i] + diff;
+        // Stops resizing over screen edges or other separators
+        if (newSeparator <= rect.x + minWidth || newSeparator >= rect.x + rect.width - minWidth)
+            return;
+        if (newSeparator <= separators[i - 1] + minWidth || newSeparator >= separators[i + 1] - minWidth)
+            return;
+        resized[i] = resized[i] + diff;
+    }
+    function restore() { }
+    return {
+        id: id,
+        limit: limit,
+        getRects: getRects,
+        resizeWindow: resizeWindow,
+        adjustRect: adjustRect,
+        restore: restore,
+    };
+}
+
 function Disabled(oi, rect) {
     var id = "Disabled";
     var limit = 0;
@@ -254,7 +346,7 @@ function _getRects(rect, separators, count) {
 function TwoByTwoHorizontal(oi, rect) {
     var id = "2X2H";
     var limit = 4;
-    var minSizeMultiplier = 0.1;
+    var minSizeMultiplier = 0.15;
     var hs = rect.y + rect.height * 0.5;
     var vs = rect.x + rect.width * 0.5;
     var separators = { h: [hs, hs], v: vs };
@@ -357,6 +449,7 @@ function _getRects$1(rect, separators, count) {
 function TwoByTwoVertical(oi, rect) {
     var id = "2X2V";
     var limit = 4;
+    var minSizeMultiplier = 0.15;
     var hs = rect.y + rect.height * 0.5;
     var vs = rect.x + rect.width * 0.5;
     var separators = { h: hs, v: [vs, vs] };
@@ -393,10 +486,10 @@ function TwoByTwoVertical(oi, rect) {
                 separators.v[0] += newRect.x === oldRect.x ? newRect.width - oldRect.width : 0;
             }
         }
-        var maxV = 0.75 * (rect.x + rect.width);
-        var minV = rect.x + rect.width * 0.25;
-        var maxH = 0.75 * (rect.y + rect.height);
-        var minH = rect.y + rect.height * 0.25;
+        var maxV = (1 - minSizeMultiplier) * (rect.x + rect.width);
+        var minV = rect.x + rect.width * minSizeMultiplier;
+        var maxH = (1 - minSizeMultiplier) * (rect.y + rect.height);
+        var minH = rect.y + rect.height * minSizeMultiplier;
         separators.v[0] = Math.min(Math.max(minV, separators.v[0]), maxV);
         separators.v[1] = Math.min(Math.max(minV, separators.v[1]), maxV);
         separators.h = Math.min(Math.max(minH, separators.h), maxH);
@@ -420,6 +513,7 @@ var layouts = {
     "0": Disabled,
     "1": TwoByTwoHorizontal,
     "2": TwoByTwoVertical,
+    "3": Columns,
 };
 
 function layer(output, desktop) {
@@ -488,7 +582,6 @@ function tile(window, callbacks) {
     // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
     // @param capture - Inciates whether the window's frameGeometry should be used as its originalGeometry when restored later
     function enable(manual, capture) {
-        console.log("tile.ts: \"" + window.caption + "\".enable(" + manual + ", " + capture + ")");
         if (manual || _disabled) {
             _disabled = false;
             _enabled = true;
@@ -500,7 +593,6 @@ function tile(window, callbacks) {
     // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
     // @param restore - Indicates the window's frameGeometry should be restored to its original rect
     function disable(manual, restore) {
-        console.log("tile.ts: \"" + window.caption + "\".disable(" + manual + ", " + restore + ")");
         if (!manual)
             _disabled = true;
         _enabled = false;
@@ -568,13 +660,11 @@ function tile(window, callbacks) {
     function frameGeometryChanged(oldRect) {
         if (!callbacks.isTiling() && !window.move && !window.resize && !_move && !_resize && _isKeyboard) {
             if (_oldGeometryKeyboard) {
-                console.log("tile.ts: \"" + window.caption + "\".frameGeometryChanged(2)");
                 startMove(_oldGeometryKeyboard);
                 stopMove();
                 _oldGeometryKeyboard = undefined;
             }
             else {
-                console.log("tile.ts: \"" + window.caption + "\".frameGeometryChanged(1)");
                 _oldGeometryKeyboard = oldRect;
             }
             _isKeyboard = false;

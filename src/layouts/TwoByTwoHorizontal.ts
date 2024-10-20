@@ -2,7 +2,6 @@ import math from "../math";
 import { KWinWindow } from "../types/kwin";
 import { QRect } from "../types/qt";
 import { Layout } from "./layout";
-import { Tile } from "../tile";
 
 interface Separators {
   h: Array<number>;
@@ -58,7 +57,7 @@ function _getRects(rect: QRect, separators: Separators, count: number): Array<QR
 export function TwoByTwoHorizontal(oi: number, rect: QRect): Layout {
   const id = "2X2H";
   const limit = 4;
-  const minSizeMultiplier = 0.1;
+  const minSizeMultiplier = 0.15;
 
   let hs = rect.y + rect.height * 0.5;
   let vs = rect.x + rect.width * 0.5;
