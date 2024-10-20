@@ -535,7 +535,18 @@ function tile(window, callbacks) {
             stopResize();
         }
     }
+    function fullScreenChanged() {
+        if (window.fullScreen) {
+            disable();
+        }
+        else {
+            enable();
+        }
+        callbacks.enableWindow(window);
+    }
     function maximizedChanged() {
+        if (window.fullScreen)
+            return;
         if (isMaximized()) {
             disable();
         }
@@ -543,6 +554,15 @@ function tile(window, callbacks) {
             enable();
         }
         callbacks.enableWindow(window);
+    }
+    function minimizedChanged() {
+        if (window.minimized) {
+            disable();
+        }
+        else {
+            enable();
+        }
+        callbacks.pushWindow(window);
     }
     function isMaximized() {
         var desktop = _desktops[0] || window.desktops[0] || workspace.desktops[0];
@@ -580,15 +600,18 @@ function tile(window, callbacks) {
         return window.desktops.length === 1 && window.desktops[0].id === desktop.id;
     }
     // Constructor
-    // Signals
     window.moveResizedChanged.connect(moveResizedChanged);
     window.outputChanged.connect(outputChanged);
     window.desktopsChanged.connect(desktopsChanged);
     window.maximizedChanged.connect(maximizedChanged);
+    window.minimizedChanged.connect(minimizedChanged);
+    window.fullScreenChanged.connect(fullScreenChanged);
     function remove() {
         window.moveResizedChanged.disconnect(moveResizedChanged);
         window.outputChanged.disconnect(outputChanged);
         window.desktopsChanged.disconnect(desktopsChanged);
+        window.maximizedChanged.disconnect(maximizedChanged);
+        window.fullScreenChanged.disconnect(fullScreenChanged);
     }
     return {
         window: window,

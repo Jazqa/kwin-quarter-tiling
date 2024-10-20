@@ -104,7 +104,19 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     }
   }
 
+  function fullScreenChanged() {
+    if (window.fullScreen) {
+      disable();
+    } else {
+      enable();
+    }
+
+    callbacks.enableWindow(window);
+  }
+
   function maximizedChanged() {
+    if (window.fullScreen) return;
+
     if (isMaximized()) {
       disable();
     } else {
@@ -112,6 +124,16 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
     }
 
     callbacks.enableWindow(window);
+  }
+
+  function minimizedChanged() {
+    if (window.minimized) {
+      disable();
+    } else {
+      enable();
+    }
+
+    callbacks.pushWindow(window);
   }
 
   function isMaximized() {
@@ -157,17 +179,19 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   }
 
   // Constructor
-
-  // Signals
   window.moveResizedChanged.connect(moveResizedChanged);
   window.outputChanged.connect(outputChanged);
   window.desktopsChanged.connect(desktopsChanged);
   window.maximizedChanged.connect(maximizedChanged);
+  window.minimizedChanged.connect(minimizedChanged);
+  window.fullScreenChanged.connect(fullScreenChanged);
 
   function remove() {
     window.moveResizedChanged.disconnect(moveResizedChanged);
     window.outputChanged.disconnect(outputChanged);
     window.desktopsChanged.disconnect(desktopsChanged);
+    window.maximizedChanged.disconnect(maximizedChanged);
+    window.fullScreenChanged.disconnect(fullScreenChanged);
   }
 
   return {
