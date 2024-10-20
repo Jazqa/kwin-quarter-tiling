@@ -16,16 +16,17 @@ The script is not supposed to be a replacement for a tiling window manager, but 
 
 ## Installation
 
-Arch Linux: [AUR](https://aur.archlinux.org/packages/kwin-scripts-quarter-tiling-git/)
+**Arch Linux:** [AUR](https://aur.archlinux.org/packages/kwin-scripts-quarter-tiling-git/)
 
-Other: [KDE Store](https://store.kde.org/p/1187647/)
+**Other:** [KDE Store](https://store.kde.org/p/1187647/)
 
-Manually:
+**Manual:**
 
     git clone https://github.com/Jazqa/kwin-yakts.git
     plasmapkg2 --type kwinscript -i ./kwin-yakts
     mkdir -p ~/.local/share/kservices5
     ln -sf ~/.local/share/kwin/scripts/quarter-tiling/metadata.desktop ~/.local/share/kservices5/kwin-script-quarter-tiling.desktop
+    rm -r ./kwin-yakts
 
 ## Configuration
 
@@ -42,9 +43,11 @@ Go to `System Settings » Shortcuts » Global Shortcuts » KWin` and search for 
 
 ## Updates
 
-**Git**
+**Git:**
 
-`git clone https://github.com/Jazqa/kwin-quarter-tiling.git && plasmapkg2 --type kwinscript -u kwin-quarter-tiling`
+    git clone https://github.com/Jazqa/kwin-yakts.git
+    plasmapkg2 --type kwinscript -u ./kwin-yakts
+    rm -r ./kwin-yakts
 
 Alternatively, set this repository as the git origin of `~/.local/share/kwin/scripts/quarter-tiling`. If you don't know how to do this, move the hidden .git folder inside the cloned folder to the location above. After this, the script can be updated by using `git fetch origin && git pull`.
 
@@ -54,7 +57,7 @@ Arch users can keep the script updated through AUR.
 
 ## Uninstallation
 
-`plasmapkg2 --type kwinscript -r .local/share/kwin/scripts/quarter-tiling`
+    plasmapkg2 --type kwinscript -r quarter-tiling
 
 ## Contributions and adjustments
 
