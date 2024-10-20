@@ -55,6 +55,7 @@ function getTiles(rect: QRect, separators: Separators, count: number): Array<QRe
 }
 
 export function TwoByTwoHorizontal(oi: number, rect: QRect): Layout {
+  const id = "2X2H";
   const limit = 4;
 
   let hs = rect.y + rect.height * 0.5;
@@ -117,6 +118,7 @@ export function TwoByTwoHorizontal(oi: number, rect: QRect): Layout {
   }
 
   return {
+    id,
     limit,
     tileWindows,
     resizeWindow,

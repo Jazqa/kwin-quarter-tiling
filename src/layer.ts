@@ -23,7 +23,7 @@ export interface Layer {
 
 export function layer(output: KWinOutput, desktop: KWinVirtualDesktop): Layer {
   const id = output.serialNumber + desktop.id;
-  const oi = math.outputIndex(output);
+  const oi = math.kcfgOutputIndex(output);
 
   let _rect = math.withMargin(oi, maximizeArea(output, desktop));
   let _layout = layouts[config.layout[oi]](oi, _rect);

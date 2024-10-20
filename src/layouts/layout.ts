@@ -7,6 +7,11 @@ import { QRect } from "../types/qt";
 
 export interface Layout {
   /*
+   * Identifier for the layout
+   */
+  id: string;
+
+  /*
    * Maximum amount of windows the Layout can tile
    */
   limit: number;

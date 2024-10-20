@@ -21,6 +21,17 @@ function maximizeArea(output, desktop) {
     return workspace.clientArea(2, output, desktop);
 }
 
+// 2ed6
+// Used to fetch configuration values for individual outputs (configuration value format: kcfg_<key>_<index>)
+// Unlike proper .qml, the required .ui configuration interface doesn't support detecting outputs, so the configuration interface is hard-coded for up to 4 outputs
+function kcfgOutputIndex(output) {
+    var index = workspace.screens.findIndex(function (wsoutput) { return wsoutput.serialNumber === output.serialNumber; });
+    // Theoretically supports more than 4 outputs by defaulting to 1st's configuration
+    if (index === -1) {
+        index = 0;
+    }
+    return index;
+}
 function outputIndex(output) {
     return workspace.screens.findIndex(function (wsoutput) { return wsoutput.serialNumber === output.serialNumber; });
 }
@@ -69,6 +80,7 @@ function distanceTo(rectA, rectB) {
     return Math.abs(rectA.x - rectB.x) + Math.abs(rectA.y - rectB.y);
 }
 var math = {
+    kcfgOutputIndex: kcfgOutputIndex,
     outputIndex: outputIndex,
     desktopIndex: desktopIndex,
     clone: clone,
@@ -161,11 +173,11 @@ var captions = __spreadArrays([
     .toLowerCase()
     .split(", ")
     .filter(function (caption) { return caption; }));
-var outputs = readConfigString("outputs", "").split(", ");
 var desktops = readConfigString("desktops", "").split(", ");
 var exclude = function (output, desktop) {
-    return (outputs.indexOf(math.outputIndex(output).toString()) > -1 ||
-        desktops.indexOf(math.desktopIndex(desktop).toString()) > -1);
+    // 04c1
+    // layout[math.outputIndex(output)] ===  "DISABLED"
+    return desktops.indexOf(math.desktopIndex(desktop).toString()) > -1;
 };
 var config = {
     auto: auto,
@@ -178,18 +190,19 @@ var config = {
     minHeight: minHeight,
     processes: processes,
     captions: captions,
-    outputs: outputs,
     desktops: desktops,
     exclude: exclude,
 };
 
 function Disabled(oi, rect) {
+    var id = "Disabled";
     var limit = 0;
     function tileWindows(windowsOnLayout) { }
     function resizeWindow(windowOnLayout, oldRect) { }
     function adjustRect(rect) { }
     function restore() { }
     return {
+        id: id,
         limit: limit,
         tileWindows: tileWindows,
         resizeWindow: resizeWindow,
@@ -239,6 +252,7 @@ function getTiles(rect, separators, count) {
     return tiles;
 }
 function TwoByTwoHorizontal(oi, rect) {
+    var id = "2X2H";
     var limit = 4;
     var hs = rect.y + rect.height * 0.5;
     var vs = rect.x + rect.width * 0.5;
@@ -293,6 +307,7 @@ function TwoByTwoHorizontal(oi, rect) {
         separators = { h: [hs, hs], v: vs };
     }
     return {
+        id: id,
         limit: limit,
         tileWindows: tileWindows,
         resizeWindow: resizeWindow,
@@ -342,6 +357,7 @@ function getTiles$1(rect, separators, count) {
     return tiles;
 }
 function TwoByTwoVertical(oi, rect) {
+    var id = "2X2V";
     var limit = 4;
     var hs = rect.y + rect.height * 0.5;
     var vs = rect.x + rect.width * 0.5;
@@ -396,6 +412,7 @@ function TwoByTwoVertical(oi, rect) {
         separators = { h: hs, v: [vs, vs] };
     }
     return {
+        id: id,
         limit: limit,
         tileWindows: tileWindows,
         resizeWindow: resizeWindow,
@@ -423,7 +440,7 @@ var layouts = {
 
 function layer(output, desktop) {
     var id = output.serialNumber + desktop.id;
-    var oi = math.outputIndex(output);
+    var oi = math.kcfgOutputIndex(output);
     var _rect = math.withMargin(oi, maximizeArea(output, desktop));
     var _layout = layouts[config.layout[oi]](oi, _rect);
     if (config.limit[oi] > -1) {

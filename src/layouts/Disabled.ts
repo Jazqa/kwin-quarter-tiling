@@ -3,6 +3,7 @@ import { QRect } from "../types/qt";
 import { Layout } from "./layout";
 
 export function Disabled(oi: number, rect: QRect): Layout {
+  const id = "Disabled";
   const limit = 0;
 
   function tileWindows(windowsOnLayout: Array<KWinWindow>) {}
@@ -11,6 +12,7 @@ export function Disabled(oi: number, rect: QRect): Layout {
   function restore() {}
 
   return {
+    id,
     limit,
     tileWindows,
     resizeWindow,

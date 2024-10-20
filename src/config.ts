@@ -97,14 +97,12 @@ const captions: Array<string> = [
     .filter((caption) => caption),
 ];
 
-const outputs: Array<string> = readConfigString("outputs", "").split(", ");
 const desktops: Array<string> = readConfigString("desktops", "").split(", ");
 
 const exclude = function (output: KWinOutput, desktop: KWinVirtualDesktop) {
-  return (
-    outputs.indexOf(math.outputIndex(output).toString()) > -1 ||
-    desktops.indexOf(math.desktopIndex(desktop).toString()) > -1
-  );
+  // 04c1
+  // layout[math.outputIndex(output)] ===  "DISABLED"
+  return desktops.indexOf(math.desktopIndex(desktop).toString()) > -1;
 };
 
 export default {
@@ -118,7 +116,6 @@ export default {
   minHeight,
   processes,
   captions,
-  outputs,
   desktops,
   exclude,
 };

@@ -3,6 +3,20 @@ import { workspace } from "./kwin";
 import { KWinOutput, KWinVirtualDesktop } from "./types/kwin";
 import { QRect } from "./types/qt";
 
+// 2ed6
+// Used to fetch configuration values for individual outputs (configuration value format: kcfg_<key>_<index>)
+// Unlike proper .qml, the required .ui configuration interface doesn't support detecting outputs, so the configuration interface is hard-coded for up to 4 outputs
+function kcfgOutputIndex(output: KWinOutput) {
+  let index = workspace.screens.findIndex((wsoutput) => wsoutput.serialNumber === output.serialNumber);
+
+  // Theoretically supports more than 4 outputs by defaulting to 1st's configuration
+  if (index === -1) {
+    index = 0;
+  }
+
+  return index;
+}
+
 function outputIndex(output: KWinOutput) {
   return workspace.screens.findIndex((wsoutput) => wsoutput.serialNumber === output.serialNumber);
 }
@@ -69,6 +83,7 @@ function distanceTo(rectA: QRect, rectB: QRect) {
 }
 
 export default {
+  kcfgOutputIndex,
   outputIndex,
   desktopIndex,
   clone,
