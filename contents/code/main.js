@@ -104,8 +104,12 @@ var __spreadArrays = (undefined && undefined.__spreadArrays) || function () {
             r[k] = a[j];
     return r;
 };
-var auto = readConfigString("auto", true) === "true";
-var follow = readConfigString("follow", true) === "true";
+var auto = [
+    readConfigString("auto_0", true) === "true",
+    readConfigString("auto_1", true) === "true",
+    readConfigString("auto_2", true) === "true",
+    readConfigString("auto_3", true) === "true",
+];
 var gap = [
     readConfig("gap_0", 8),
     readConfig("gap_1", 8),
@@ -187,7 +191,6 @@ var exclude = function (output, desktop) {
 };
 var config = {
     auto: auto,
-    follow: follow,
     gap: gap,
     margin: margin,
     layout: layout,
@@ -679,8 +682,14 @@ function tile(window, callbacks) {
     var _oldGeometry;
     var _isKeyboard = false;
     var _oldGeometryKeyboard;
-    if (!config.auto || window.minimized || window.fullScreen || isMaximized()) {
+    if (isDisabledByDefault()) {
         disable();
+    }
+    function isAutoTilingEnabled() {
+        return config.auto[math.kcfgOutputIndex(window.output)];
+    }
+    function isDisabledByDefault() {
+        return !isAutoTilingEnabled() || window.minimized || window.fullScreen || isMaximized();
     }
     function isEnabled() {
         return _enabled;
@@ -688,7 +697,7 @@ function tile(window, callbacks) {
     // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
     // @param capture - Inciates whether the window's frameGeometry should be used as its originalGeometry when restored later
     function enable(manual, capture) {
-        if (manual || _disabled) {
+        if (manual || (_disabled && isAutoTilingEnabled())) {
             _disabled = false;
             _enabled = true;
             if (capture) {
@@ -818,7 +827,12 @@ function tile(window, callbacks) {
     function outputChanged(force) {
         if (force || !_move) {
             _output = window.output;
-            enable();
+            if (isAutoTilingEnabled()) {
+                enable();
+            }
+            else {
+                disable();
+            }
             callbacks.pushWindow(window);
         }
     }
@@ -860,6 +874,7 @@ function tile(window, callbacks) {
     }
     return {
         window: window,
+        isDisabledByDefault: isDisabledByDefault,
         isEnabled: isEnabled,
         enable: enable,
         disable: disable,

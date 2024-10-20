@@ -10,9 +10,12 @@ interface Margin {
   right: number;
 }
 
-const auto: boolean = readConfigString("auto", true) === "true";
-
-const follow: boolean = readConfigString("follow", true) === "true";
+const auto: Array<boolean> = [
+  readConfigString("auto_0", true) === "true",
+  readConfigString("auto_1", true) === "true",
+  readConfigString("auto_2", true) === "true",
+  readConfigString("auto_3", true) === "true",
+];
 
 const gap: Array<number> = [
   readConfig("gap_0", 8),
@@ -107,7 +110,6 @@ const exclude = function (output: KWinOutput, desktop: KWinVirtualDesktop) {
 
 export default {
   auto,
-  follow,
   gap,
   margin,
   layout,

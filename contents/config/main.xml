@@ -3,13 +3,19 @@
     <kcfgfile name=""/>
 
     <group name="">
-        <entry name="auto" type="bool">
+        <entry name="auto_0" type="bool">
             <default>true</default>
         </entry>
-        <entry name="follow" type="bool">
-            <default>false</default>
+        <entry name="auto_1" type="bool">
+            <default>true</default>
         </entry>
-
+        <entry name="auto_2" type="bool">
+            <default>true</default>
+        </entry>
+        <entry name="auto_3" type="bool">
+            <default>true</default>
+        </entry>
+        
         <entry name="gap_0" type="int">
             <default>8</default>
         </entry>

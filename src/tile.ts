@@ -7,6 +7,7 @@ import { Callbacks } from "./wm";
 
 export interface Tile {
   window: KWinWindow;
+  isDisabledByDefault: () => boolean;
   isEnabled: () => boolean;
   enable: (manual?: boolean, capture?: boolean) => void;
   disable: (manual?: boolean, restore?: boolean) => void;
@@ -35,8 +36,16 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   let _isKeyboard = false;
   let _oldGeometryKeyboard: QRect | undefined;
 
-  if (!config.auto || window.minimized || window.fullScreen || isMaximized()) {
+  if (isDisabledByDefault()) {
     disable();
+  }
+
+  function isAutoTilingEnabled() {
+    return config.auto[math.kcfgOutputIndex(window.output)];
+  }
+
+  function isDisabledByDefault() {
+    return !isAutoTilingEnabled() || window.minimized || window.fullScreen || isMaximized();
   }
 
   function isEnabled() {
@@ -46,7 +55,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   // @param manual  - Indicates whether the action was performed manually by the user or automatically by the script
   // @param capture - Inciates whether the window's frameGeometry should be used as its originalGeometry when restored later
   function enable(manual?: boolean, capture?: boolean) {
-    if (manual || _disabled) {
+    if (manual || (_disabled && isAutoTilingEnabled())) {
       _disabled = false;
       _enabled = true;
 
@@ -191,7 +200,13 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
   function outputChanged(force?: boolean) {
     if (force || !_move) {
       _output = window.output;
-      enable();
+
+      if (isAutoTilingEnabled()) {
+        enable();
+      } else {
+        disable();
+      }
+
       callbacks.pushWindow(window);
     }
   }
@@ -239,6 +254,7 @@ export function tile(window: KWinWindow, callbacks: Callbacks): Tile {
 
   return {
     window,
+    isDisabledByDefault,
     isEnabled,
     enable,
     disable,
