@@ -293,10 +293,10 @@ function TwoByTwoHorizontal(oi, rect) {
                 separators.h[0] += newRect.y === oldRect.y ? newRect.height - oldRect.height : 0;
             }
         }
-        var maxV = 0.9 * (rect.x + rect.width);
-        var minV = rect.x + rect.width * 0.1;
-        var maxH = 0.9 * (rect.y + rect.height);
-        var minH = rect.y + rect.height * 0.1;
+        var maxV = 0.75 * (rect.x + rect.width);
+        var minV = rect.x + rect.width * 0.25;
+        var maxH = 0.75 * (rect.y + rect.height);
+        var minH = rect.y + rect.height * 0.25;
         separators.v = Math.min(Math.max(minV, separators.v), maxV);
         separators.h[0] = Math.min(Math.max(minH, separators.h[0]), maxH);
         separators.h[1] = Math.min(Math.max(minH, separators.h[1]), maxH);
@@ -398,10 +398,10 @@ function TwoByTwoVertical(oi, rect) {
                 separators.v[0] += newRect.x === oldRect.x ? newRect.width - oldRect.width : 0;
             }
         }
-        var maxV = 0.9 * (rect.x + rect.width);
-        var minV = rect.x + rect.width * 0.1;
-        var maxH = 0.9 * (rect.y + rect.height);
-        var minH = rect.y + rect.height * 0.1;
+        var maxV = 0.75 * (rect.x + rect.width);
+        var minV = rect.x + rect.width * 0.25;
+        var maxH = 0.75 * (rect.y + rect.height);
+        var minH = rect.y + rect.height * 0.25;
         separators.v[0] = Math.min(Math.max(minV, separators.v[0]), maxV);
         separators.v[1] = Math.min(Math.max(minV, separators.v[1]), maxV);
         separators.h = Math.min(Math.max(minH, separators.h), maxH);

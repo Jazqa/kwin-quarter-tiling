@@ -99,11 +99,11 @@ export function TwoByTwoHorizontal(oi: number, rect: QRect): Layout {
       }
     }
 
-    const maxV = 0.9 * (rect.x + rect.width);
-    const minV = rect.x + rect.width * 0.1;
+    const maxV = 0.75 * (rect.x + rect.width);
+    const minV = rect.x + rect.width * 0.25;
 
-    const maxH = 0.9 * (rect.y + rect.height);
-    const minH = rect.y + rect.height * 0.1;
+    const maxH = 0.75 * (rect.y + rect.height);
+    const minH = rect.y + rect.height * 0.25;
 
     separators.v = Math.min(Math.max(minV, separators.v), maxV);
 
