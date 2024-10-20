@@ -165,12 +165,12 @@ var processes = __spreadArrays([
     "Latte Dock"
 ], readConfigString("processes", "wine, steam").toLowerCase().split(", "), [readConfigString("java", false) === "true" ? "sun-awt-x11-xframepeer" : ""]);
 var captions = __spreadArrays([
+    "Configure — System Settings",
     "File Upload",
     "Move to Trash",
     "Quit GIMP",
     "Create a New Image"
 ], readConfigString("captions", "Quit GIMP, Create a New Image")
-    .toLowerCase()
     .split(", ")
     .filter(function (caption) { return caption; }));
 var desktops = readConfigString("desktops", "").split(", ");
@@ -869,7 +869,7 @@ function wm() {
             window.rect.height >= config.minHeight &&
             config.processes.indexOf(window.resourceClass.toString().toLowerCase()) === -1 &&
             config.processes.indexOf(window.resourceName.toString().toLowerCase()) === -1 &&
-            config.captions.some(function (caption) { return window.caption.toString().toLowerCase().indexOf(caption) === -1; }));
+            !config.captions.some(function (caption) { return window.caption.toLowerCase().includes(caption.toLowerCase()); }));
     }
     // Constructor
     workspace.screens.forEach(function (output) {

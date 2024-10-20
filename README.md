@@ -21,6 +21,8 @@ An easy tiling script for KWin.
     git checkout plasma-6
     kpackagetool6 --type=KWin/Script -r quarter-tiling || true
     kpackagetool6 --type=KWin/Script -i .
+    cd ..
+    rm -rf ./kwin-quarter-tiling
 
 ## Configuration
 
@@ -32,7 +34,7 @@ KWin shortcuts can be found in `System Settings > Shortcuts > Global Shortcuts >
 
 All `(Quarter Tiling) <ACTION>` -shortcuts are used exclusively by the script, but the script supports a variety of KWin shortcuts as well. For example, KWin's `Move Window <DIRECTION>` -shortcuts also move the script's tiles.
 
-**Binding the `(Quarter Tiling) Tile Window` -shortcut is recommended, because it makes untiling problematic windows easy.**
+Binding the `(Quarter Tiling) Tile Window` -shortcut is recommended, because it makes untiling problematic windows easy.
 
 ## Updates
 
@@ -43,12 +45,15 @@ All `(Quarter Tiling) <ACTION>` -shortcuts are used exclusively by the script, b
     git checkout plasma-6
     kpackagetool6 --type=KWin/Script -r quarter-tiling || true
     kpackagetool6 --type=KWin/Script -i .
+    cd ..
+    rm -rf ./kwin-quarter-tiling
 
 Alternatively, set this repository as the origin of `~/.local/share/kwin/scripts/quarter-tiling` to update it with `git pull`.
 
 ## Uninstallation
 
     kpackagetool6 --type=KWin/Script -r quarter-tiling
+    qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.cleanUp
 
 The script can also be uninstalled from `System Settings > Window Management > KWin Scripts`.
 

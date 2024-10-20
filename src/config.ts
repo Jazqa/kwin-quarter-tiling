@@ -87,12 +87,12 @@ const processes: Array<string> = [
 ];
 
 const captions: Array<string> = [
+  "Configure — System Settings",
   "File Upload",
   "Move to Trash",
   "Quit GIMP",
   "Create a New Image",
   ...readConfigString("captions", "Quit GIMP, Create a New Image")
-    .toLowerCase()
     .split(", ")
     .filter((caption) => caption),
 ];

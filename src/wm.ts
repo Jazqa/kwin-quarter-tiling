@@ -144,7 +144,7 @@ export function wm() {
       window.rect.height >= config.minHeight &&
       config.processes.indexOf(window.resourceClass.toString().toLowerCase()) === -1 &&
       config.processes.indexOf(window.resourceName.toString().toLowerCase()) === -1 &&
-      config.captions.some((caption) => window.caption.toString().toLowerCase().indexOf(caption) === -1)
+      !config.captions.some((caption) => window.caption.toLowerCase().includes(caption.toLowerCase()))
     );
   }
 
