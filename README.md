@@ -16,7 +16,7 @@ An easy tiling script for KWin.
 
 **Manual:**
 
-    git clone https://github.com/Jazqa/kwin-quarter-tiling.git && kpackagetool6 --type=KWin/Script -i ./kwin-quarter-tiling
+    git clone https://github.com/Jazqa/kwin-quarter-tiling.git && kpackagetool6 --type=KWin/Script -r quarter-tiling || true && kpackagetool6 --type=KWin/Script -i ./kwin-quarter-tiling
 
 ## Configuration
 
@@ -34,7 +34,7 @@ All `(Quarter Tiling) <ACTION>` -shortcuts are used exclusively by the script, b
 
 **Git:**
 
-    git clone https://github.com/Jazqa/kwin-quarter-tiling.git && kpackagetool6 --type=KWin/Script -i ./kwin-quarter-tiling
+    git clone https://github.com/Jazqa/kwin-quarter-tiling.git && kpackagetool6 --type=KWin/Script -r quarter-tiling || true && kpackagetool6 --type=KWin/Script -i ./kwin-quarter-tiling
 
 Alternatively, set this repository as the origin of `~/.local/share/kwin/scripts/quarter-tiling` to update it with `git pull`.
 
