@@ -186,7 +186,7 @@ export function wm() {
     }
   }
 
-  registerShortcut("(YAKTS) Tile Window", "Toggles tiling for the active window", "Meta+F", toggleActiveTile);
+  registerShortcut("(YAKTS) Tile Window", "", "Meta+F", toggleActiveTile);
 
   function actionsMenu(window: KWinWindow) {
     const tile = tiles.find((tile) => tile.window.internalId === window.internalId);
