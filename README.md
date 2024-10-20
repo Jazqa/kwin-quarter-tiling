@@ -17,11 +17,8 @@ Plasma 5 version is archived in [`plasma-5`](https://github.com/Jazqa/kwin-quart
 **Manual:**
 
     git clone https://github.com/Jazqa/kwin-yakts.git
-    cd ./kwin-yakts
-    git checkout plasma-6
     kpackagetool6 --type=KWin/Script -r yakts || true
-    kpackagetool6 --type=KWin/Script -i .
-    cd ..
+    kpackagetool6 --type=KWin/Script -i ./kwin-yakts
     rm -rf ./kwin-yakts
 
 ## Configuration
@@ -41,11 +38,8 @@ Binding the `(YAKTS) Tile Window` -shortcut is recommended, because it makes unt
 **Git:**
 
     git clone https://github.com/Jazqa/kwin-yakts.git
-    cd ./kwin-yakts
-    git checkout plasma-6
     kpackagetool6 --type=KWin/Script -r yakts || true
-    kpackagetool6 --type=KWin/Script -i .
-    cd ..
+    kpackagetool6 --type=KWin/Script -i ./kwin-yakts
     rm -rf ./kwin-yakts
 
 Alternatively, set this repository as the origin of `~/.local/share/kwin/scripts/yakts` to update it with `git pull`.
