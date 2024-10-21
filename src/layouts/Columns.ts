@@ -1,78 +1,87 @@
-import math from "../math";
-import { KWinWindow } from "../types/kwin";
+import { rectClone } from "../math";
 import { QRect } from "../types/qt";
-import { Layout } from "./layout";
+import { Window } from "../window";
+import { Layout } from "../types/layout";
 
-export function Columns(oi: number, rect: QRect): Layout {
-  const id = "Columns";
-  const minWidth = 500;
-  const limit = rect.width / (minWidth * 1.5);
+export class Columns implements Layout {
+  id: string = "Columns";
 
-  const width = rect.x + rect.width;
+  minWindowWidth: number = 500;
 
-  const separators = [];
-  const resized = [];
+  rect: QRect;
+  limit: number;
 
-  function adjustRect(newRect: QRect) {
-    rect = newRect;
-    restore();
+  separators: Array<number> = [];
+  resized: Array<number> = [];
+
+  constructor(rect: QRect) {
+    this.rect = rect;
+    this.limit = 2;
   }
 
-  function flushSeparators(windows: Array<KWinWindow>) {
-    if (windows.length > separators.length) {
-      for (var i = 0; i < resized.length; i++) {
-        if (resized[i]) {
-          resized[i] *= 0.5;
+  adjustRect = (newRect: QRect) => {
+    this.rect = newRect;
+    this.reset();
+  };
+
+  resetSeparators = (windows: Array<Window>) => {
+    if (windows.length > this.separators.length) {
+      for (var i = 0; i < this.resized.length; i++) {
+        if (this.resized[i]) {
+          this.resized[i] *= 0.5;
         }
       }
     }
 
-    separators.splice(windows.length - 1);
-    resized.splice(windows.length - 1);
-  }
+    this.separators.splice(windows.length - 1);
+    this.resized.splice(windows.length - 1);
+  };
 
-  function getRects(windows: Array<KWinWindow>) {
-    flushSeparators(windows);
+  tileWindows = (windows: Array<Window>) => {
+    this.resetSeparators(windows);
 
     for (var i = 0; i < windows.length; i++) {
       const j = i + 1;
       const d = windows.length / j;
-      const base = width / d;
-      const res = resized[i] || 0;
-      separators[i] = base + res;
+      const base = this.rect.x + this.rect.width / d;
+      const res = this.resized[i] || 0;
+      this.separators[i] = base + res;
     }
 
-    const rects = [];
-    for (var i = 0; i < separators.length; i++) {
-      let end = separators[i];
-      let start = rect.x;
+    const tiles = [];
+    for (var i = 0; i < this.separators.length; i++) {
+      let end = this.separators[i];
+      let start = this.rect.x;
       if (i > 0) {
-        start = separators[i - 1];
+        start = this.separators[i - 1];
       }
 
-      rects.push({ x: start, y: rect.y, width: end - start, height: rect.height });
+      tiles.push({ x: start, y: this.rect.y, width: end - start, height: this.rect.height });
     }
 
-    return rects;
-  }
+    windows.forEach((window, index) => {
+      const tile = tiles[index];
+      window.setFrameGeometry(tile);
+    });
+  };
 
-  function resizeWindow(window: KWinWindow, oldRect: QRect) {
-    const newRect = math.clone(window.frameGeometry);
+  resizeWindow = (window: Window, oldRect: QRect) => {
+    const newRect = rectClone(window.kwin.frameGeometry);
 
     let x = oldRect.x;
 
     let separatorDir = -1; // Right
     if (newRect.x - oldRect.x === 0) {
-      x = oldRect.x + oldRect.width;
+      x = oldRect.right;
       separatorDir = 1; // Left
     }
 
     let i = -1;
-    let distance = x - rect.x;
+    let distance = x - this.rect.x;
     let distanceAbs = Math.abs(distance);
 
-    for (var j = 0; j < separators.length; j++) {
-      const newDistance = x - separators[j];
+    for (var j = 0; j < this.separators.length; j++) {
+      const newDistance = x - this.separators[j];
       const newDistanceAbs = Math.abs(newDistance);
 
       if (newDistanceAbs < distanceAbs) {
@@ -83,34 +92,29 @@ export function Columns(oi: number, rect: QRect): Layout {
     }
 
     // Stops resizing from screen edges
-    if (i < 0 || i === separators.length - 1) return;
+    if (i < 0 || i === this.separators.length - 1) return;
 
     let diff = oldRect.width - newRect.width;
     if (separatorDir > 0) {
       diff = newRect.width - oldRect.width;
     }
 
-    if (!resized[i]) {
-      resized[i] = 0;
+    // Stops resizing over screen edges and other separators
+    const prevSeparator = i === 0 ? this.rect.x : this.separators[i - 1];
+    const minX = prevSeparator + this.minWindowWidth;
+    if (this.separators[i] + diff <= minX) {
+      diff = minX - this.separators[i];
     }
 
-    let newSeparator = separators[i] + diff;
+    const nextSeparator = i === this.separators.length - 1 ? this.rect.right : this.separators[i + 1];
+    const maxX = nextSeparator - this.minWindowWidth;
+    if (this.separators[i] + diff >= maxX) {
+      diff = maxX - this.separators[i];
+    }
 
-    // Stops resizing over screen edges or other separators
-    if (newSeparator <= rect.x + minWidth || newSeparator >= rect.x + rect.width - minWidth) return;
-    if (newSeparator <= separators[i - 1] + minWidth || newSeparator >= separators[i + 1] - minWidth) return;
-
-    resized[i] = resized[i] + diff;
-  }
-
-  function restore() {}
-
-  return {
-    id,
-    limit,
-    getRects,
-    resizeWindow,
-    adjustRect,
-    restore,
+    if (!this.resized[i]) this.resized[i] = 0;
+    this.resized[i] = this.resized[i] + diff;
   };
+
+  reset() {}
 }

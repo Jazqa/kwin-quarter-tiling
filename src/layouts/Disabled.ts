@@ -1,23 +1,19 @@
-import { Tile } from "../tile";
-import { KWinWindow } from "../types/kwin";
+import { rectClone } from "../math";
 import { QRect } from "../types/qt";
-import { Layout } from "./layout";
+import { Window } from "../window";
+import { Layout } from "../types/layout";
 
-export function Disabled(oi: number, rect: QRect): Layout {
-  const id = "Disabled";
-  const limit = 0;
+export class Disabled implements Layout {
+  id: string = "Disabled";
 
-  function getRects(windows: Array<KWinWindow>) {}
-  function resizeWindow(windows: KWinWindow, oldRect: QRect) {}
-  function adjustRect(rect: QRect) {}
-  function restore() {}
+  rect: QRect;
+  limit: number = 0;
 
-  return {
-    id,
-    limit,
-    getRects,
-    resizeWindow,
-    adjustRect,
-    restore,
-  };
+  adjustRect = (newRect: QRect) => {};
+
+  tileWindows = (windows: Array<Window>) => {};
+
+  resizeWindow = (window: Window, oldRect: QRect) => {};
+
+  reset() {}
 }

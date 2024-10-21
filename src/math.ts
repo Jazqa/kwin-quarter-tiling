@@ -1,95 +1,92 @@
-import config from "./config";
-import { workspace } from "./kwin";
-import { KWinOutput, KWinVirtualDesktop } from "./types/kwin";
+import { Margin } from "./config";
 import { QRect } from "./types/qt";
 
-// 2ed6
-// Used to fetch configuration values for individual outputs (configuration value format: kcfg_<key>_<index>)
-// Unlike proper .qml, the required .ui configuration interface doesn't support detecting outputs, so the configuration interface is hard-coded for up to 4 outputs
-function kcfgOutputIndex(output: KWinOutput) {
-  let index = workspace.screens.findIndex((wsoutput) => wsoutput.serialNumber === output.serialNumber);
+export const rectClone = (rect: QRect): QRect => {
+  const { x, y, width, height, left, top, bottom, right } = rect;
+  return { x, y, width, height, left, top, bottom, right };
+};
 
-  // Theoretically supports more than 4 outputs by defaulting to 1st's configuration
-  if (index === -1) {
-    index = 0;
-  }
+export const rectCombineV = (rectA: QRect, rectB): QRect => {
+  const rect = rectClone(rectA);
 
-  return index;
-}
+  rect.y = Math.min(rectA.y, rectB.y);
+  rect.height = rectA.height + rectB.height;
+  rect.top = Math.min(rectA.top, rectB.top);
+  rect.bottom = Math.max(rectA.bottom, rectB.bottom);
 
-function outputIndex(output: KWinOutput) {
-  return workspace.screens.findIndex((wsoutput) => wsoutput.serialNumber === output.serialNumber);
-}
+  return rect;
+};
 
-function desktopIndex(desktop: KWinVirtualDesktop) {
-  return workspace.desktops.findIndex((wsdesktop) => wsdesktop.id === desktop.id);
-}
+export const rectDivideV = (rect: QRect): Array<QRect> => {
+  const rectA = rectClone(rect);
 
-function clone(rect: QRect): QRect {
-  const { x, y, width, height } = rect;
-  return { x, y, width, height };
-}
+  rectA.height *= 0.5;
 
-function withGap(oi: number, rect: QRect): QRect {
-  const gap = config.gap[oi];
-  let { x, y, width, height } = rect;
+  const rectB = rectClone(rectA);
+
+  rectA.bottom = rectA.y + rectA.height;
+
+  rectB.y = rectA.bottom;
+  rectB.top = rectA.bottom;
+
+  return [rectA, rectB];
+};
+
+export const rectGap = (rect: QRect, gap: number): QRect => {
+  let { x, y, width, height, left, top, bottom, right } = rect;
 
   x += gap;
   y += gap;
   width -= gap * 2;
   height -= gap * 2;
 
-  return { x, y, width, height };
-}
+  left += gap;
+  top += gap;
+  bottom -= gap;
+  right -= gap;
 
-function withoutGap(oi: number, rect: QRect): QRect {
-  const gap = config.gap[oi];
-  let { x, y, width, height } = rect;
+  return { x, y, width, height, left, top, bottom, right };
+};
 
-  x -= gap;
-  y -= gap;
-  width += gap * 2;
-  height += gap * 2;
+export const rectMargin = (rect: QRect, margin: Margin): QRect => {
+  let { x, y, width, height, left, top, bottom, right } = rect;
 
-  return { x, y, width, height };
-}
+  x += margin.left;
+  y += margin.top;
+  width -= margin.left + margin.right;
+  height -= margin.top + margin.bottom;
 
-function withMargin(oi: number, rect: QRect): QRect {
-  const gap = config.gap[oi];
-  const margin = config.margin[oi];
+  left += margin.left;
+  top += margin.top;
+  bottom -= margin.bottom;
+  right -= margin.right;
 
-  let { x, y, width, height } = rect;
+  return { x, y, width, height, left, top, bottom, right };
+};
 
-  y += gap + margin.top;
-  x += gap + margin.left;
+export const rectCenterTo = (rectA: QRect, rectB: QRect): QRect => {
+  let { x, y, width, height, left, top, bottom, right } = rectA;
 
-  height -= gap * 2 + margin.top + margin.bottom;
-  width -= gap * 2 + margin.left + margin.right;
+  x = rectB.right * 0.5 - width * 0.5;
+  y = rectB.bottom * 0.5 - height * 0.5;
+  left = x;
+  top = y;
+  bottom = y + height;
+  right = x + width;
 
-  return { x, y, width, height };
-}
+  return { x, y, width, height, left, top, bottom, right };
+};
 
-function centerTo(rectA: QRect, rectB: QRect) {
-  let { x, y, width, height } = rectA;
-
-  x = rectB.x + rectB.width * 0.5 - width * 0.5;
-  y = rectB.y + rectB.height * 0.5 - height * 0.5;
-
-  return { x, y, width, height };
-}
-
-function distanceTo(rectA: QRect, rectB: QRect) {
+export const distanceTo = (rectA: QRect, rectB: QRect): number => {
   return Math.abs(rectA.x - rectB.x) + Math.abs(rectA.y - rectB.y);
-}
+};
 
-export default {
-  kcfgOutputIndex,
-  outputIndex,
-  desktopIndex,
-  clone,
-  withGap,
-  withoutGap,
-  withMargin,
-  centerTo,
-  distanceTo,
+const inRange = (value: number, min: number, max: number) => {
+  return value >= min && value <= max;
+};
+
+export const overlapsWith = (rectA: QRect, rectB: QRect): boolean => {
+  const x = inRange(rectA.x, rectB.x, rectB.x + rectB.width) || inRange(rectB.x, rectA.x, rectA.x + rectA.width);
+  const y = inRange(rectA.y, rectB.y, rectB.y + rectB.height) || inRange(rectB.y, rectA.y, rectA.y + rectA.height);
+  return x && y;
 };

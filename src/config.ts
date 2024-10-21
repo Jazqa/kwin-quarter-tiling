@@ -1,9 +1,6 @@
-import { workspace } from "./kwin";
-import { KWinOutput, KWinVirtualDesktop } from "./types/kwin";
-import { readConfig, readConfigString } from "./kwin";
-import math from "./math";
+import { readConfigString } from "./kwin";
 
-interface Margin {
+export interface Margin {
   top: number;
   left: number;
   bottom: number;
@@ -100,13 +97,9 @@ const captions: Array<string> = [
     .filter((caption) => caption),
 ];
 
-const desktops: Array<string> = readConfigString("desktops", "").split(", ");
-
-const exclude = function (output: KWinOutput, desktop: KWinVirtualDesktop) {
-  // 04c1
-  // layout[math.outputIndex(output)] ===  "DISABLED"
-  return desktops.indexOf(math.desktopIndex(desktop).toString()) > -1;
-};
+const desktops: Array<number> = readConfigString("desktops", "")
+  .split(", ")
+  .map((s) => Number(s));
 
 export default {
   auto,
@@ -119,5 +112,4 @@ export default {
   processes,
   captions,
   desktops,
-  exclude,
 };

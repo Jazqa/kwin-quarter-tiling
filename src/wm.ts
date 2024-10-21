@@ -1,140 +1,80 @@
 import config from "./config";
-import { registerShortcut, registerUserActionsMenu, workspace } from "./kwin";
-import { layer, Layers } from "./layer";
-import math from "./math";
-import { tile, Tile } from "./tile";
-import { KWinOutput, KWinVirtualDesktop, KWinWindow } from "./types/kwin";
+import { Desktop, kwinDesktopIndex } from "./desktop";
+import * as math from "./math";
+import { KWinVirtualDesktop, KWinWindow } from "./types/kwin";
 import { QRect } from "./types/qt";
+import { Window } from "./window";
 
-export interface Callbacks {
-  isTiling: () => boolean;
-  enableWindow: (window: KWinWindow) => void;
-  pushWindow: (window: KWinWindow) => void;
-  resizeWindow: (window: KWinWindow, oldRect: QRect) => void;
-  moveWindow: (window: KWinWindow, oldRect: QRect) => void;
-}
+export class WM {
+  tiling: boolean = false;
+  desktops: Array<Desktop> = [];
+  windows: Array<Window> = [];
 
-export function wm() {
-  let _tiling = false;
+  isTiling() {
+    return this.tiling;
+  }
 
-  const layers: Layers = {};
-  const tiles: Array<Tile> = [];
+  constructor() {
+    workspace.desktops.forEach(this.addKwinDesktop);
+    workspace.stackingOrder.forEach(this.addKwinWindow);
 
-  const callbacks = {
-    isTiling,
-    enableWindow,
-    pushWindow,
-    resizeWindow,
-    moveWindow,
+    workspace.currentDesktopChanged.connect(this.tileWindows);
+    workspace.windowAdded.connect(this.addKwinWindow);
+    workspace.windowRemoved.connect(this.removeKwinWindow);
+    workspace.windowActivated.connect(this.tileWindows);
+
+    registerShortcut("(YAKTS) Tile Window", "", "Meta+F", this.toggleActiveWindow);
+    registerUserActionsMenu(this.actionsMenu);
+  }
+
+  // KWin Actions
+  actionsMenu = (kwinWindow: KWinWindow) => {
+    const window = this.windows.find((window) => window.kwin.internalId === kwinWindow.internalId);
+    if (window) {
+      return {
+        text: "Tile Window",
+        checkable: true,
+        checked: window.isEnabled(),
+        triggered: () => {
+          this.toggleWindow(window);
+        },
+      };
+    }
   };
 
-  function isTiling() {
-    return _tiling;
-  }
+  // KWin Desktops
+  addKwinDesktop = (kwinDesktop: KWinVirtualDesktop) => {
+    // Desktop is excluded
+    if (config.desktops.indexOf(kwinDesktopIndex(kwinDesktop))) return;
 
-  // Layers
-  function addLayer(output: KWinOutput, desktop: KWinVirtualDesktop) {
-    if (config.exclude(output, desktop)) return;
+    // Desktop is already initialized
+    if (this.desktops.some((desktop) => desktop.kwin.id === kwinDesktop.id)) return;
 
-    const id = output.serialNumber + desktop.id;
-    if (layers[id]) return;
+    const desktop = new Desktop(this, kwinDesktop);
+    this.desktops.push(desktop);
+  };
 
-    const newLayer = layer(output, desktop);
-
-    layers[id] = newLayer;
-  }
-
-  function tileLayers() {
-    if (_tiling) return;
-
-    _tiling = true;
-
-    Object.values(layers).forEach((layer) => {
-      layer.tile(tiles);
-    });
-
-    _tiling = false;
-  }
-
-  // Tiles
-  function swapTiles(i: number, j: number) {
-    const tile: Tile = tiles[i];
-    tiles[i] = tiles[j];
-    tiles[j] = tile;
-  }
-
-  // Windows
-  function addWindow(window: KWinWindow) {
-    if (isWindowAllowed(window)) {
-      const newTile = tile(window, callbacks);
-      tiles.push(newTile);
-      tileLayers();
+  // KWin Windows
+  addKwinWindow = (kwinWindow: KWinWindow) => {
+    if (this.isKwinWindowAllowed(kwinWindow)) {
+      const window = new Window(this, kwinWindow);
+      this.windows.push(window);
+      this.tileWindows();
     }
-  }
+  };
 
-  function removeWindow(window: KWinWindow) {
-    const index = tiles.findIndex((tile) => tile.window.internalId === window.internalId);
-    const tile = tiles[index];
+  removeKwinWindow = (kwinWindow: KWinWindow) => {
+    const index = this.windows.findIndex((window) => window.kwin.internalId === kwinWindow.internalId);
+    const window = this.windows[index];
 
     if (index > -1) {
-      tile.remove();
-      tiles.splice(index, 1);
-      tileLayers();
+      window.deconstruct();
+      this.windows.splice(index, 1);
+      this.tileWindows();
     }
-  }
+  };
 
-  function resizeWindow(window: KWinWindow, oldRect: QRect) {
-    window.desktops.forEach((desktop) => {
-      const layer = layers[window.output.serialNumber + desktop.id];
-      if (layer) {
-        layer.resizeWindow(window, oldRect);
-      }
-    });
-
-    tileLayers();
-  }
-
-  function moveWindow(window: KWinWindow, oldRect: QRect) {
-    let nearestTile = tiles.find((tile) => tile.window.internalId === window.internalId);
-    let nearestDistance = math.distanceTo(window.frameGeometry, oldRect);
-
-    tiles.forEach((tile) => {
-      if (window.internalId !== tile.window.internalId) {
-        const distance = math.distanceTo(window.frameGeometry, tile.window.frameGeometry);
-        if (distance < nearestDistance) {
-          nearestTile = tile;
-          nearestDistance = distance;
-        }
-      }
-    });
-
-    const i = tiles.findIndex((tile) => tile.window.internalId === window.internalId);
-    const j = tiles.findIndex((tile) => tile.window.internalId === nearestTile.window.internalId);
-
-    if (i !== j) {
-      swapTiles(i, j);
-    }
-
-    tileLayers();
-  }
-
-  function enableWindow(window: KWinWindow) {
-    tileLayers();
-  }
-
-  function pushWindow(window: KWinWindow) {
-    const index = tiles.findIndex((tile) => tile.window.internalId === window.internalId);
-
-    if (index > -1) {
-      const tile = tiles[index];
-      tiles.splice(index, 1);
-      tiles.push(tile);
-    }
-
-    tileLayers();
-  }
-
-  function isWindowAllowed(window: KWinWindow) {
+  isKwinWindowAllowed = (window: KWinWindow) => {
     return (
       window.managed &&
       window.normalWindow &&
@@ -146,61 +86,94 @@ export function wm() {
       config.processes.indexOf(window.resourceName.toString().toLowerCase()) === -1 &&
       !config.captions.some((caption) => window.caption.toLowerCase().includes(caption.toLowerCase()))
     );
-  }
+  };
 
-  // Constructor
-  workspace.screens.forEach((output) => {
-    workspace.desktops.forEach((desktop) => {
-      addLayer(output, desktop);
+  // Windows
+  filterWindows = () => {
+    return this.windows.filter((window) => window.isEnabled());
+  };
+
+  tileWindows = () => {
+    if (this.tiling) return;
+
+    this.tiling = true;
+
+    this.desktops.forEach((desktop) => {
+      if (desktop.kwin.id === workspace.currentDesktop.id) {
+        desktop.tileWindows(this.filterWindows());
+      }
     });
-  });
 
-  workspace.stackingOrder.forEach((window) => {
-    addWindow(window);
-  });
+    this.tiling = false;
+  };
 
-  // Signals
-  workspace.currentDesktopChanged.connect(tileLayers);
+  swapWindows = (i: number, j: number) => {
+    const window: Window = this.windows[i];
+    this.windows[i] = this.windows[j];
+    this.windows[j] = window;
+  };
 
-  workspace.windowAdded.connect(addWindow);
+  moveWindow = (window: Window, oldRect: QRect) => {
+    let nearestWindow = this.windows.find(({ kwin }) => kwin.internalId === window.kwin.internalId);
+    let nearestDistance = math.distanceTo(window.kwin.frameGeometry, oldRect);
 
-  workspace.windowRemoved.connect(removeWindow);
+    this.windows.forEach(({ kwin }, index) => {
+      if (kwin.internalId !== window.kwin.internalId) {
+        const distance = math.distanceTo(kwin.frameGeometry, window.kwin.frameGeometry);
+        if (distance < nearestDistance) {
+          nearestWindow = this.windows[index];
+          nearestDistance = distance;
+        }
+      }
+    });
 
-  workspace.windowActivated.connect(tileLayers);
+    const i = this.windows.findIndex(({ kwin }) => kwin.internalId === window.kwin.internalId);
+    const j = this.windows.findIndex(({ kwin }) => kwin.internalId === nearestWindow.kwin.internalId);
 
-  // Shortcuts
+    if (i !== j) {
+      this.swapWindows(i, j);
+    }
 
-  function toggleActiveTile() {
-    const tile = tiles.find((tile) => tile.window.internalId === workspace.activeWindow.internalId);
-    toggleTile(tile);
-  }
+    this.tileWindows();
+  };
 
-  function toggleTile(tile: Tile) {
-    if (tile.isEnabled()) {
-      tile.disable(true);
-      tileLayers();
-      workspace.activeWindow = tile.window;
+  resizeWindow = (window: Window, oldRect: QRect) => {
+    const desktop = this.desktops.find((desktop) => desktop.kwin.id === window.kwin.desktops[0].id);
+    if (!desktop) return;
+
+    desktop.resizeWindow(window, oldRect);
+    this.tileWindows();
+  };
+
+  tileWindow = (window: Window) => {
+    this.tileWindows();
+  };
+
+  pushWindow = (window: Window) => {
+    const index = this.windows.findIndex(({ kwin }) => kwin.internalId === window.kwin.internalId);
+
+    if (index > -1) {
+      const window = this.windows[index];
+      this.windows.splice(index, 1);
+      this.windows.push(window);
+    }
+
+    this.tileWindows();
+  };
+
+  toggleActiveWindow = () => {
+    const window = this.windows.find(({ kwin }) => kwin.internalId === workspace.activeWindow.internalId);
+    this.toggleWindow(window);
+  };
+
+  toggleWindow = (window: Window) => {
+    if (window.isEnabled()) {
+      window.disable(true);
+      this.tileWindows();
+      workspace.activeWindow = window.kwin;
     } else {
-      tile.enable(true);
-      pushWindow(tile.window);
+      window.enable(true);
+      this.pushWindow(window);
     }
-  }
-
-  registerShortcut("(YAKTS) Tile Window", "", "Meta+F", toggleActiveTile);
-
-  function actionsMenu(window: KWinWindow) {
-    const tile = tiles.find((tile) => tile.window.internalId === window.internalId);
-    if (tile) {
-      return {
-        text: "Tile Window",
-        checkable: true,
-        checked: tile.isEnabled(),
-        triggered: function () {
-          toggleTile(tile);
-        },
-      };
-    }
-  }
-
-  registerUserActionsMenu(actionsMenu);
+  };
 }
