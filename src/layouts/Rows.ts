@@ -92,7 +92,7 @@ export class Rows implements Layout {
       }
     }
 
-    // Stops resizing from screen edges
+    // Stops resizing from rect edges
     if (i < 0 || i === this.separators.length - 1) return;
 
     let diff = oldRect.height - newRect.height;
@@ -100,7 +100,7 @@ export class Rows implements Layout {
       diff = newRect.height - oldRect.height;
     }
 
-    // Stops resizing over screen edges and other separators
+    // Stops resizing over rect edges and other separators
     const prevSeparator = i === 0 ? this.rect.y : this.separators[i - 1];
     const minY = prevSeparator + this.minWindowHeight;
     if (this.separators[i] + diff <= minY) {

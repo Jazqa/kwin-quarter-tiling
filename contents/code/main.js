@@ -109,9 +109,35 @@ var config = {
     desktops: desktops,
 };
 
+var Edge = /** @class */ (function () {
+    function Edge(edge) {
+        this.top = 0;
+        this.left = 0;
+        this.bottom = 0;
+        this.right = 0;
+        if (edge) {
+            this.top = edge.top || 0;
+            this.left = edge.left || 0;
+            this.bottom = edge.bottom || 0;
+            this.right = edge.right || 0;
+        }
+    }
+    return Edge;
+}());
 var rectClone = function (rect) {
     var x = rect.x, y = rect.y, width = rect.width, height = rect.height, left = rect.left, top = rect.top, bottom = rect.bottom, right = rect.right;
     return { x: x, y: y, width: width, height: height, left: left, top: top, bottom: bottom, right: right };
+};
+var rectAdd = function (rect, edge) {
+    var newRect = rectClone(rect);
+    Object.keys(edge).forEach(function (key) {
+        newRect[key] += edge[key];
+    });
+    newRect.x = newRect.left;
+    newRect.y = newRect.top;
+    newRect.width = newRect.right - newRect.left;
+    newRect.height = newRect.bottom - newRect.top;
+    return newRect;
 };
 var rectCombineV = function (rectA, rectB) {
     var rect = rectClone(rectA);
@@ -176,10 +202,10 @@ var overlapsWith = function (rectA, rectB) {
     return x && y;
 };
 
+var i = 0;
 var Columns = /** @class */ (function () {
     function Columns(rect) {
         var _this = this;
-        this.id = "Columns";
         this.minWindowWidth = 500;
         this.separators = [];
         this.resized = [];
@@ -224,10 +250,10 @@ var Columns = /** @class */ (function () {
         this.resizeWindow = function (window, oldRect) {
             var newRect = rectClone(window.kwin.frameGeometry);
             var x = oldRect.x;
-            var separatorDir = -1; // Right
+            var separatorDir = -1;
             if (newRect.x - oldRect.x === 0) {
                 x = oldRect.right;
-                separatorDir = 1; // Left
+                separatorDir = 1;
             }
             var i = -1;
             var distance = x - _this.rect.x;
@@ -241,14 +267,15 @@ var Columns = /** @class */ (function () {
                     i = j;
                 }
             }
-            // Stops resizing from screen edges
+            var edges = _this.checkEdges(i, oldRect, newRect);
+            // Stop resizing from rect edges
             if (i < 0 || i === _this.separators.length - 1)
-                return;
+                return edges;
             var diff = oldRect.width - newRect.width;
             if (separatorDir > 0) {
                 diff = newRect.width - oldRect.width;
             }
-            // Stops resizing over screen edges and other separators
+            // Stops resizing over rect edges and other separators
             var prevSeparator = i === 0 ? _this.rect.x : _this.separators[i - 1];
             var minX = prevSeparator + _this.minWindowWidth;
             if (_this.separators[i] + diff <= minX) {
@@ -262,7 +289,26 @@ var Columns = /** @class */ (function () {
             if (!_this.resized[i])
                 _this.resized[i] = 0;
             _this.resized[i] = _this.resized[i] + diff;
+            return edges;
         };
+        this.checkEdges = function (index, newRect, oldRect) {
+            var edge = new Edge();
+            if (newRect.top !== oldRect.top) {
+                edge.top = oldRect.top - newRect.top;
+            }
+            if (newRect.bottom !== oldRect.bottom) {
+                edge.bottom = oldRect.bottom - newRect.bottom;
+            }
+            if (index < 0 && newRect.width !== oldRect.width) {
+                edge.left = oldRect.width - newRect.width;
+            }
+            if (index === _this.separators.length - 1 && newRect.width !== oldRect.width) {
+                edge.left = oldRect.width - newRect.width;
+            }
+            return edge;
+        };
+        this.id = "C" + i;
+        i++;
         this.rect = rect;
         this.limit = 2;
     }
@@ -294,6 +340,30 @@ var Full = /** @class */ (function () {
             _this.limit -= layoutB.limit;
             layoutA.adjustRect(rectCombineV(layoutA.rect, layoutB.rect));
         };
+        // TODO: STOP RESIZING OVER THE SCREEN EDGES
+        this.resizeLayout = function (layoutA, edgeA) {
+            _this.layouts.forEach(function (layoutB) {
+                if (layoutB.id === layoutA.id)
+                    return;
+                var edgeB = new Edge();
+                if (layoutB.rect.top === layoutA.rect.bottom) {
+                    edgeB.top += edgeA.bottom;
+                }
+                if (layoutB.rect.left === layoutA.rect.right) {
+                    edgeB.left += edgeA.right;
+                }
+                if (layoutB.rect.bottom === layoutA.rect.top) {
+                    edgeB.bottom += edgeA.top;
+                }
+                if (layoutB.rect.right === layoutA.rect.left) {
+                    edgeB.right += edgeA.left;
+                }
+                var rectB = rectAdd(layoutB.rect, edgeB);
+                layoutB.adjustRect(rectB);
+            });
+            var rectA = rectAdd(layoutA.rect, edgeA);
+            layoutA.adjustRect(rectA);
+        };
         this.tileWindows = function (windows) {
             var length = _this.layouts.length;
             var layoutA = _this.layouts[length - 1];
@@ -312,9 +382,13 @@ var Full = /** @class */ (function () {
             });
         };
         this.resizeWindow = function (window, oldRect) {
-            _this.layouts.forEach(function (layout) {
-                if (overlapsWith(layout.rect, window.kwin.frameGeometry)) {
-                    layout.resizeWindow(window, oldRect);
+            _this.layouts.some(function (layout) {
+                if (overlapsWith(layout.rect, oldRect)) {
+                    var edge = layout.resizeWindow(window, oldRect);
+                    if (edge) {
+                        _this.resizeLayout(layout, edge);
+                    }
+                    return true;
                 }
             });
         };

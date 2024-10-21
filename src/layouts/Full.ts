@@ -1,4 +1,4 @@
-import { overlapsWith, rectClone, rectCombineV, rectDivideV } from "../math";
+import { Edge, overlapsWith, rectAdd, rectCombineV, rectDivideV } from "../math";
 import { QRect } from "../types/qt";
 import { Window } from "../window";
 import { Layout } from "../types/layout";
@@ -45,6 +45,37 @@ export class Full implements Layout {
     layoutA.adjustRect(rectCombineV(layoutA.rect, layoutB.rect));
   };
 
+  // TODO: STOP RESIZING OVER THE SCREEN EDGES
+  resizeLayout = (layoutA: Layout, edgeA: Edge) => {
+    this.layouts.forEach((layoutB) => {
+      if (layoutB.id === layoutA.id) return;
+
+      const edgeB = new Edge();
+
+      if (layoutB.rect.top === layoutA.rect.bottom) {
+        edgeB.top += edgeA.bottom;
+      }
+
+      if (layoutB.rect.left === layoutA.rect.right) {
+        edgeB.left += edgeA.right;
+      }
+
+      if (layoutB.rect.bottom === layoutA.rect.top) {
+        edgeB.bottom += edgeA.top;
+      }
+
+      if (layoutB.rect.right === layoutA.rect.left) {
+        edgeB.right += edgeA.left;
+      }
+
+      const rectB = rectAdd(layoutB.rect, edgeB);
+      layoutB.adjustRect(rectB);
+    });
+
+    const rectA = rectAdd(layoutA.rect, edgeA);
+    layoutA.adjustRect(rectA);
+  };
+
   tileWindows = (windows: Array<Window>) => {
     const length = this.layouts.length;
     const layoutA = this.layouts[length - 1];
@@ -65,9 +96,15 @@ export class Full implements Layout {
   };
 
   resizeWindow = (window: Window, oldRect: QRect) => {
-    this.layouts.forEach((layout) => {
-      if (overlapsWith(layout.rect, window.kwin.frameGeometry)) {
-        layout.resizeWindow(window, oldRect);
+    this.layouts.some((layout) => {
+      if (overlapsWith(layout.rect, oldRect)) {
+        const edge = layout.resizeWindow(window, oldRect);
+
+        if (edge) {
+          this.resizeLayout(layout, edge);
+        }
+
+        return true;
       }
     });
   };

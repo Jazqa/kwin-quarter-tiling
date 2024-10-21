@@ -1,12 +1,43 @@
 import { Margin } from "./config";
-import { QRect } from "./types/qt";
+import { QEdge, QRect } from "./types/qt";
+
+export class Edge implements QEdge {
+  top: number = 0;
+  left: number = 0;
+  bottom: number = 0;
+  right: number = 0;
+
+  constructor(edge?: QEdge) {
+    if (edge) {
+      this.top = edge.top || 0;
+      this.left = edge.left || 0;
+      this.bottom = edge.bottom || 0;
+      this.right = edge.right || 0;
+    }
+  }
+}
 
 export const rectClone = (rect: QRect): QRect => {
   const { x, y, width, height, left, top, bottom, right } = rect;
   return { x, y, width, height, left, top, bottom, right };
 };
 
-export const rectCombineV = (rectA: QRect, rectB): QRect => {
+export const rectAdd = (rect: QRect, edge: QEdge): QRect => {
+  const newRect = rectClone(rect);
+
+  Object.keys(edge).forEach((key) => {
+    newRect[key] += edge[key];
+  });
+
+  newRect.x = newRect.left;
+  newRect.y = newRect.top;
+  newRect.width = newRect.right - newRect.left;
+  newRect.height = newRect.bottom - newRect.top;
+
+  return newRect;
+};
+
+export const rectCombineV = (rectA: QRect, rectB: QRect): QRect => {
   const rect = rectClone(rectA);
 
   rect.y = Math.min(rectA.y, rectB.y);

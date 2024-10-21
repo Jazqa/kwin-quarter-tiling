@@ -1,10 +1,12 @@
-import { rectClone } from "../math";
+import { Edge, rectClone } from "../math";
+import { Layout } from "../types/layout";
 import { QRect } from "../types/qt";
 import { Window } from "../window";
-import { Layout } from "../types/layout";
+
+let i = 0;
 
 export class Columns implements Layout {
-  id: string = "Columns";
+  id: string;
 
   minWindowWidth: number = 500;
 
@@ -15,6 +17,9 @@ export class Columns implements Layout {
   resized: Array<number> = [];
 
   constructor(rect: QRect) {
+    this.id = "C" + i;
+    i++;
+
     this.rect = rect;
     this.limit = 2;
   }
@@ -65,15 +70,15 @@ export class Columns implements Layout {
     });
   };
 
-  resizeWindow = (window: Window, oldRect: QRect) => {
+  resizeWindow = (window: Window, oldRect: QRect): Edge => {
     const newRect = rectClone(window.kwin.frameGeometry);
 
     let x = oldRect.x;
 
-    let separatorDir = -1; // Right
+    let separatorDir = -1;
     if (newRect.x - oldRect.x === 0) {
       x = oldRect.right;
-      separatorDir = 1; // Left
+      separatorDir = 1;
     }
 
     let i = -1;
@@ -91,15 +96,17 @@ export class Columns implements Layout {
       }
     }
 
-    // Stops resizing from screen edges
-    if (i < 0 || i === this.separators.length - 1) return;
+    const edges = this.checkEdges(i, oldRect, newRect);
+
+    // Stop resizing from rect edges
+    if (i < 0 || i === this.separators.length - 1) return edges;
 
     let diff = oldRect.width - newRect.width;
     if (separatorDir > 0) {
       diff = newRect.width - oldRect.width;
     }
 
-    // Stops resizing over screen edges and other separators
+    // Stops resizing over rect edges and other separators
     const prevSeparator = i === 0 ? this.rect.x : this.separators[i - 1];
     const minX = prevSeparator + this.minWindowWidth;
     if (this.separators[i] + diff <= minX) {
@@ -114,6 +121,30 @@ export class Columns implements Layout {
 
     if (!this.resized[i]) this.resized[i] = 0;
     this.resized[i] = this.resized[i] + diff;
+
+    return edges;
+  };
+
+  checkEdges = (index: number, newRect: QRect, oldRect: QRect): Edge => {
+    const edge: Edge = new Edge();
+
+    if (newRect.top !== oldRect.top) {
+      edge.top = oldRect.top - newRect.top;
+    }
+
+    if (newRect.bottom !== oldRect.bottom) {
+      edge.bottom = oldRect.bottom - newRect.bottom;
+    }
+
+    if (index < 0 && newRect.width !== oldRect.width) {
+      edge.left = oldRect.width - newRect.width;
+    }
+
+    if (index === this.separators.length - 1 && newRect.width !== oldRect.width) {
+      edge.left = oldRect.width - newRect.width;
+    }
+
+    return edge;
   };
 
   reset() {}

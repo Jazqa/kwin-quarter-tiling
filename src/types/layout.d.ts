@@ -1,5 +1,6 @@
-import { QRect } from "./qt";
+import { Edge } from "../math";
 import { Window } from "../window";
+import { QEdge, QRect } from "./qt";
 
 /*
  * An interface which all tiling layouts should implement
@@ -35,7 +36,7 @@ export interface Layout {
    *  @param window   - The window that was resized
    *  @param oldRect  - QRect of the window when windowStartUserMovedResized was triggered
    */
-  resizeWindow: (window: Window, oldRect: QRect) => void;
+  resizeWindow: (window: Window, oldRect: QRect) => Edge | void;
 
   /*
    *  Adjusts the available tiling space of the Layout
